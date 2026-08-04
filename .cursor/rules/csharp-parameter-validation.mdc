@@ -1,0 +1,44 @@
+---
+description: C# parameter validation — guard clauses at method start, no ?? throw
+globs: **/*.cs
+alwaysApply: false
+---
+
+# Parameter validation
+
+When a method needs to validate arguments, put **guard clauses at the beginning** of the method body — before any other logic.
+
+Add validation only when there is a real contract to enforce (null references, empty strings, invalid ranges, etc.). Do not add redundant checks on every private helper.
+
+## Preferred style
+
+Use `Argument.ThrowIfNull` from Common:
+
+```csharp
+public void Process(string path, IReadOnlyList<Item> items)
+{
+    Argument.ThrowIfNull(path);
+    Argument.ThrowIfNullOrEmpty(items);
+
+    // method logic...
+}
+```
+
+## Avoid
+
+Do **not** validate via assignment with null-coalescing throw:
+
+```csharp
+// ❌ BAD
+path = path ?? throw new ArgumentNullException(nameof(path));
+this._path = path ?? throw new ArgumentNullException(nameof(path));
+```
+
+Do **not** bury validation mid-method or inline it in expressions/assignments.
+
+## Exception choice
+
+- `Argument.ThrowIfNull` / `ArgumentNullException` — null reference where a value is required
+- `ArgumentException` — non-null but invalid (empty string, out of range, unknown enum value, etc.)
+
+Use `nameof(parameter)` for non-null validation exception parameter names.

@@ -1,0 +1,45 @@
+---
+description: Preserve git history when moving or renaming files and folders
+alwaysApply: true
+---
+
+# Preserve Git History on Move/Rename
+
+When relocating or renaming tracked files or directories, **always use Git** so history (`git log`, `git blame`) follows the path.
+
+## Required workflow
+
+- **Single file**: `git mv old/path new/path`
+- **Directory (with contents)**: `git mv old/dir new/dir`
+
+Do **not**:
+
+- Delete the old path and create/copy files at the new path (Git treats this as delete + add; history is lost unless manually recovered)
+- Use plain `mv` / `cp` / editor “move” without staging via `git mv` (same problem)
+
+## After the move
+
+1. Update imports, references, and config paths as needed.
+2. Stage only intentional changes; the rename itself should appear as `renamed:` in `git status` / `git diff`.
+
+## Examples
+
+```bash
+# File
+git mv src/utils/helpers.ts src/lib/helpers.ts
+
+# Folder
+git mv src/legacy src/v2
+```
+
+## If history was already broken
+
+If files were already moved without `git mv`, recover history with:
+
+```bash
+git log --follow -- path/to/file
+# or rewrite the last commit if it hasn't been pushed:
+git mv wrong/path right/path && git commit --amend --no-edit
+```
+
+Only amend when the user explicitly allows it and the commit has not been pushed.

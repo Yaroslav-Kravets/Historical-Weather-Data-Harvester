@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- Copy this file to Options.config and set Directory paths for your machine. -->
+<Options>
+	<DateFrom>2003-01-01</DateFrom>
+
+	<DownloadsAtOneGo Min="1" Max="10" />
+	<SecondsBetweenDays Min="1" Max="30" />
+	<SecondsBetweenDownloads Min="30" Max="60" />
+	<SecondsToFirstDownload Min="5" Max="10" />
+
+	<Regions>
+		<!-- Northernmost point -->
+		<Region>
+			<Name>Hremiach</Name>
+			<Directory>/path/to/weather/Real/Hremyach/</Directory>
+			<URLMask>http://meteo.ua/archive/1675/gremyach/{0}</URLMask>
+		</Region>
+		<!-- Southernmost point (almost) -->
+		<Region>
+			<Name>Sevastopol</Name>
+			<Directory>/path/to/weather/Real/Sevastopol/</Directory>
+			<URLMask>http://meteo.ua/archive/146/sevastopol/{0}</URLMask>
+		</Region>
+		<!-- Westernmost point -->
+		<Region>
+			<Name>Solomonove</Name>
+			<Directory>/path/to/weather/Real/Solomonove/</Directory>
+			<URLMask>http://meteo.ua/archive/18933/solomonovo/{0}</URLMask>
+		</Region>
+		<!-- Easternmost point -->
+		<Region>
+			<Name>Chervona Zirka</Name>
+			<Directory>/path/to/weather/Real/Chervona-Zirka/</Directory>
+			<URLMask>http://meteo.ua/archive/29130/chervonaya-zirka/{0}</URLMask>
+		</Region>
+
+		<!-- Hoverla (highest point?) -->
+		<Region>
+			<Name>Hoverla</Name>
+			<Directory>/path/to/weather/Real/Hoverla/</Directory>
+			<URLMask>http://meteo.ua/archive/18583/goverla/{0}</URLMask>
+		</Region>
+		<!-- Lowest point (?) -->
+		<Region>
+			<Name>Kuyalnyk</Name>
+			<Directory>/path/to/weather/Real/Kuyalnyk/</Directory>
+			<URLMask>http://meteo.ua/archive/20920/kuyalnik/{0}</URLMask>
+		</Region>
+
+		<Region>
+			<Name>Mariupol</Name>
+			<Directory>/path/to/weather/Real/Mariupol/</Directory>
+			<URLMask>http://meteo.ua/archive/180/mariupol/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Sloviansk</Name>
+			<Directory>/path/to/weather/Real/Sloviansk/</Directory>
+			<URLMask>http://meteo.ua/archive/28158/slavyansk/{0}</URLMask>
+		</Region>
+
+		<Region>
+			<Name>Ivano-Frankivsk</Name>
+			<Directory>/path/to/weather/Real/Ivano-Frankivsk/</Directory>
+			<URLMask>http://meteo.ua/archive/170/ivano-frankovsk/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Zhytomyr</Name>
+			<Directory>/path/to/weather/Real/Zhytomyr/</Directory>
+			<URLMask>http://meteo.ua/archive/170/jitomir/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Lviv</Name>
+			<Directory>/path/to/weather/Real/Lviv/</Directory>
+			<URLMask>http://meteo.ua/archive/170/lvov/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Ternopil</Name>
+			<Directory>/path/to/weather/Real/Ternopil/</Directory>
+			<URLMask>http://meteo.ua/archive/170/ternopol/{0}</URLMask>
+		</Region>
+
+		<Region>
+			<Name>Kyiv</Name>
+			<Directory>/path/to/weather/Real/Kyiv/</Directory>
+			<URLMask>http://meteo.ua/archive/34/kiev/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Simferopol</Name>
+			<Directory>/path/to/weather/Real/Simferopol/</Directory>
+			<URLMask>http://meteo.ua/archive/134/simferopol/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Donetsk</Name>
+			<Directory>/path/to/weather/Real/Donetsk/</Directory>
+			<URLMask>http://meteo.ua/archive/169/donetsk/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Luhansk</Name>
+			<Directory>/path/to/weather/Real/Luhansk/</Directory>
+			<URLMask>http://meteo.ua/archive/170/lugansk/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Odesa</Name>
+			<Directory>/path/to/weather/Real/Odesa/</Directory>
+			<URLMask>http://meteo.ua/archive/111/odessa/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Kharkiv</Name>
+			<Directory>/path/to/weather/Real/Kharkiv/</Directory>
+			<URLMask>http://meteo.ua/archive/150/harkov/{0}</URLMask>
+		</Region>
+		<Region>
+			<Name>Uzhhorod</Name>
+			<Directory>/path/to/weather/Real/Uzhhorod/</Directory>
+			<URLMask>http://meteo.ua/archive/83/ujgorod/{0}</URLMask>
+		</Region>
+	</Regions>
+</Options>

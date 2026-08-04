@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Pipeline.Parser</RootNamespace>
+    <AssemblyName>Pipeline.Parser</AssemblyName>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CsvHelper" Version="33.1.0" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.4" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.10" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Common\Common.csproj" />
+    <ProjectReference Include="..\Pipeline.Core\Pipeline.Core.csproj" />
+    <ProjectReference Include="..\HtmlLog\HtmlLog.csproj" />
+    <ProjectReference Include="..\Pipeline.SourceFileSystem\Pipeline.SourceFileSystem.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,23 @@
+---
+description: Do not modify HtmlScrapper unless the user explicitly requests it
+alwaysApply: true
+---
+
+# Do Not Modify HtmlScrapper
+
+The **HtmlScrapper** project is out of scope for routine work.
+
+## Required behavior
+
+- **Do not** edit, create, delete, rename, or refactor any file under `src/HtmlScrapper/` unless the user **explicitly** asks to change that project.
+- **Do not** change HtmlScrapper as a side effect of other tasks (Processor, Common, tests, appsettings, CI, etc.).
+
+## Allowed without explicit request
+
+- **Read** HtmlScrapper files for reference.
+- **Mention** HtmlScrapper in plans when other projects depend on it.
+
+## When explicitly requested
+
+- Apply only the requested HtmlScrapper changes.
+- Use `git mv` for renames per project git history rules.

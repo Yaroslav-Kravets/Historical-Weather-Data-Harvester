@@ -1,0 +1,21 @@
+---
+description: Do not merge branches or PRs unless the user explicitly asks
+alwaysApply: true
+---
+
+# Do Not Merge Without Explicit Request
+
+Do **not** merge branches or pull requests unless the user **explicitly** asks you to merge.
+
+## Allowed without explicit request
+
+- Read-only inspection (`git log`, `git branch`, `gh pr view`, `gh pr checks`).
+- Creating PRs when the user explicitly asks (separate from merging).
+- Pushing branches when the user explicitly asks.
+
+## Requires explicit user request
+
+- Local merge: `git merge`, `git merge --ff-only`, and similar merge commands.
+- Remote merge: `gh pr merge` (squash, rebase, or merge), or any GitHub automation that merges a PR.
+
+When a merge is needed for verification or to finish work, **ask first** or wait until the user says to merge.

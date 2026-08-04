@@ -1,0 +1,24 @@
+<Project>
+  <!--
+    Solution-wide MSBuild settings for .editorconfig code-style rules (e.g. IDE0005).
+    EnforceCodeStyleInBuild runs style analyzers during dotnet build, not only in the IDE.
+    GenerateDocumentationFile is required for IDE0005 (unused usings) to report on CLI builds.
+    CS1591 is suppressed because we enable XML doc generation without documenting every public API yet.
+  -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
+  </PropertyGroup>
+  <!--
+    StyleCop.Analyzers rule severities are configured in .editorconfig.
+    Pin the 1.2 beta: stable 1.1.x does not cover newer C# syntax used in this solution
+    (file-scoped namespaces, collection expressions, primary constructors, etc.). Downgrading
+    to 1.1.118 would produce large numbers of false positives. Revisit when a stable 1.2+ ships.
+  -->
+  <ItemGroup>
+    <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.556" PrivateAssets="all" />
+    <AdditionalFiles Include="$(MSBuildThisFileDirectory)stylecop.json" Link="stylecop.json" />
+  </ItemGroup>
+</Project>
+

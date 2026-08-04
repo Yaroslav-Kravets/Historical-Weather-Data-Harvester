@@ -1,0 +1,21 @@
+---
+description: Do not run the application or pipeline unless the user explicitly asks
+alwaysApply: true
+---
+
+# Do Not Run Code Without Explicit Request
+
+Do **not** run the Processor or HtmlScrapper unless the user **explicitly** asks you to run them.
+
+## Allowed without explicit request
+
+- `dotnet build` and `dotnet test` when verifying changes during implementation or CI fixes.
+- Read-only inspection (`git status`, `git log`, reading files, grep).
+
+## Requires explicit user request
+
+- `dotnet run` on Processor or HtmlScrapper.
+- Full pipeline runs against real data paths (e.g. `HistoricalWeatherFilesRoot`).
+- Any long-running or data-producing execution outside build/test.
+
+When verification needs a pipeline run, **ask first** or wait until the user says to run it.

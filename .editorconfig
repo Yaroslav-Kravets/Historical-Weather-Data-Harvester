@@ -1,0 +1,67 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+trim_trailing_whitespace = true
+
+# MSBuild XML files use the standard dotnet 2-space indentation
+[*.{csproj,props,targets}]
+indent_size = 2
+
+# Visual Studio always writes solution files with tab indentation and a BOM
+[*.sln]
+indent_style = tab
+charset = utf-8-bom
+
+# Legacy HtmlScrapper config files keep their original tab indentation and BOM
+[src/HtmlScrapper/*.config*]
+indent_style = tab
+charset = utf-8-bom
+
+[*.cs]
+# Using directives: System.* first (alphabetically), then all other namespaces alphabetically
+dotnet_sort_system_directives_first = true:warning
+dotnet_separate_import_directive_groups = false:warning
+# Remove unnecessary using directives (requires Directory.Build.props for dotnet build)
+dotnet_diagnostic.IDE0005.severity = warning
+# Require this. qualifier for instance members (pairs with dotnet_style_qualification_* below)
+dotnet_diagnostic.IDE0009.severity = warning
+# Enforce .editorconfig formatting (indentation, spacing, newlines, using order, etc.)
+dotnet_diagnostic.IDE0055.severity = warning
+# CA1852: Seal internal types that are not inherited within the assembly
+dotnet_diagnostic.CA1852.severity = warning
+
+# Require this. qualifier for all non-static instance members
+dotnet_style_qualification_for_field = true:warning
+dotnet_style_qualification_for_property = true:warning
+dotnet_style_qualification_for_method = true:warning
+dotnet_style_qualification_for_event = true:warning
+csharp_prefer_braces = true:warning
+csharp_style_allow_multiple_blank_lines_experimental = false:warning
+
+# StyleCop.Analyzers: all rule categories enabled as warnings, with specific opt-outs below
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpecialRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.SpacingRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.ReadabilityRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.OrderingRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.NamingRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.MaintainabilityRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.LayoutRules.severity = warning
+dotnet_analyzer_diagnostic.category-StyleCop.CSharp.DocumentationRules.severity = warning
+dotnet_diagnostic.SA1004.severity = warning
+# XML documentation is not required on every member; formatting rules for existing docs stay on.
+# TODO: document the public API gradually, then re-enable these rules (set back to warning).
+dotnet_diagnostic.SA1600.severity = none
+dotnet_diagnostic.SA1601.severity = none
+dotnet_diagnostic.SA1602.severity = none
+dotnet_diagnostic.SA1611.severity = none
+dotnet_diagnostic.SA1616.severity = none
+dotnet_diagnostic.SA1618.severity = none
+
+# global using directives must precede namespace declarations, so SA1200 cannot apply
+[*GlobalUsings*.cs]
+dotnet_diagnostic.SA1200.severity = none

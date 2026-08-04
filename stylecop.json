@@ -1,0 +1,10 @@
+{
+  "$schema": "https://raw.githubusercontent.com/DotNetAnalyzers/StyleCopAnalyzers/master/StyleCop.Analyzers/StyleCop.Analyzers/Settings/stylecop.schema.json",
+  "settings": {
+    "documentationRules": {
+      "xmlHeader": false,
+      "companyName": "NTU \"KhPI\"",
+      "copyrightText": "---------------------------------------------------------------------------\nUniversity: {companyName}\nAuthors:\n  Yaroslav Kravets <beeengine1983@gmail.com>\n  ORCID: https://orcid.org/0000-0002-3893-1607\n  Iryna Liutenko <cherliv68@gmail.com>\n  ORCID: https://orcid.org/0000-0003-4357-1826\n---------------------------------------------------------------------------"
+    }
+  }
+}

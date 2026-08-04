@@ -1,0 +1,22 @@
+---
+description: Do not commit unless the user explicitly asks
+alwaysApply: true
+---
+
+# Do Not Commit Without Explicit Request
+
+Do **not** run `git commit`, `git commit --amend`, or create commits in any other way unless the user **explicitly** asks you to commit.
+
+If it is unclear whether the user wants a commit, **ask first** rather than committing proactively.
+
+## Allowed without explicit request
+
+- Read-only git inspection (`git status`, `git diff`, `git log`).
+
+Staging rules are defined in `no-stage-without-explicit-ask.mdc`. An explicit commit request still permits staging as part of that commit workflow.
+
+## Requires explicit user request
+
+- Any command that creates or rewrites commits (`git commit`, `git commit --amend`, empty commits).
+
+Do **not** amend unless the user explicitly requests it and other safety conditions from existing git rules are met (e.g. commit not pushed).

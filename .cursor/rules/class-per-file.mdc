@@ -1,0 +1,28 @@
+---
+description: Feature-oriented folder organization and private nested type criteria
+alwaysApply: true
+---
+
+# Class File Organization
+
+- Place related types into feature-oriented folders (for example `Settings/Colors`).
+- When adding new top-level types, create folders as needed to keep files grouped by responsibility.
+- Avoid multi-class utility dumps; split unrelated top-level types into focused files.
+
+## Private nested types (narrow exception)
+
+Nest as **`private`** only when **all** of the following hold:
+
+- consumed exclusively by one top-level class;
+- a small record or POCO (data carrier only);
+- **no methods, constructors with mapping logic, or computed properties**;
+- **no attributes** (no `[Name]`, `[Format]`, `[TypeConverter]`, `[Xml*]`, etc.).
+
+## When not to nest privately
+
+- Type has serialization/mapping attributes or any behavior → separate top-level file (`public` or `internal`).
+- Shared across multiple top-level types (even in the same assembly) → separate top-level file.
+
+## Tests
+
+Test classes stay one per file (unchanged).

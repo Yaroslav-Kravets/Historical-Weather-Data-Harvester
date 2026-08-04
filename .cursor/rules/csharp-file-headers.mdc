@@ -1,0 +1,41 @@
+---
+description: StyleCop file headers and C# formatting conventions for this repo
+globs: "**/*.cs"
+alwaysApply: false
+---
+
+# C# file headers and formatting
+
+## Mandatory StyleCop file header
+
+Every `.cs` file must start with the StyleCop header defined in `stylecop.json` (`xmlHeader: false`). Do **not** re-suppress `SA1633` in `.editorconfig`.
+
+Canonical shape (affiliation comes from `{companyName}` → `NTU "KhPI"`):
+
+```csharp
+// ---------------------------------------------------------------------------
+// University: NTU "KhPI"
+// Authors:
+//   Yaroslav Kravets <beeengine1983@gmail.com>
+//   ORCID: https://orcid.org/0000-0002-3893-1607
+//   Iryna Liutenko <cherliv68@gmail.com>
+//   ORCID: https://orcid.org/0000-0003-4357-1826
+// ---------------------------------------------------------------------------
+```
+
+- Use **Western** name order (`Yaroslav Kravets`, `Iryna Liutenko`) in headers, `stylecop.json`, and assembly copyright attributes.
+- Keep `copyrightText` using `University: {companyName}` so the affiliation is defined once in `companyName`.
+- New or renamed `.cs` files must include this exact header (including under `src/HtmlScrapper/` when that project is explicitly in scope for the task).
+- Wire `stylecop.json` via `Directory.Build.props` `AdditionalFiles`; do not remove that link.
+
+## Formatting
+
+Follow `.editorconfig` for this solution:
+
+- UTF-8, LF, final newline, trim trailing whitespace
+- 4-space indent for C#; 2-space for `*.{csproj,props,targets}`
+- `this.` qualification for instance members (`IDE0009` / `dotnet_style_qualification_*`)
+- Sorted usings (`dotnet_sort_system_directives_first`); remove unused usings (`IDE0005`)
+- Prefer fixing via `dotnet build` / `dotnet format` warnings (`IDE0055`, StyleCop) over ad-hoc style changes
+
+When adding code, match neighboring file style; do not mass-reformat unrelated files.

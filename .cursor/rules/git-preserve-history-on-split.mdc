@@ -1,0 +1,35 @@
+---
+description: Preserve git history when splitting one file into two
+alwaysApply: true
+---
+
+# Preserve Git History on File Split
+
+When **one tracked file is split into two**, the successor that inherits **most of the original code** must keep git history via `git mv`. The smaller extracted portion is a **new file**.
+
+## Required workflow
+
+1. Compare the two resulting files — identify which will contain more of the original code.
+2. `git mv old/path larger_successor/path` (rename allowed).
+3. Edit the renamed file in place: remove extracted code, update namespace/class name.
+4. Create the smaller extract as a **new file** with only the extracted logic.
+
+## Do not
+
+- Delete the original and create two new files at different paths (loses `git log --follow`).
+- Use plain `mv` / editor move without `git mv`.
+
+## 1 → many (original path must remain)
+
+When the original path must stay (e.g. `Program.cs` as entry point), keep history on the original file. All extracted modules are new files.
+
+## Example
+
+```bash
+# WeatherDataCsvWriter.cs (~117 lines) → parsed writer (~70) + normalized writer (~40)
+git mv Processor/WeatherDataCsvWriter.cs \
+       Processor/Parsing/ParsedWeatherDataCsvWriter.cs
+# Edit ParsedWeatherDataCsvWriter.cs; create NormalizedWeatherDataCsvWriter.cs fresh
+```
+
+After the split, `git status` should show `renamed:` for the history-carrying file.
