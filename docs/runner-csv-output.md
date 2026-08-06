@@ -6,7 +6,7 @@ How **Pipeline.Runner** writes CSV files after a run.
 
 ## Overview
 
-Pipeline Runner orchestrates parsing, denormalization, and optional time normalization: historical weather HTML files are parsed, grouped by place, and written as CSV output under `HtmlLog_<timestamp>/parsed/`. Wide-format denormalized CSVs are written at the `parsed/` stage root when at least one place has data rows. When `RunTimeNormalization` is enabled (default), observation-time normalization runs and writes under `HtmlLog_<timestamp>/time-normalized/`. Each place gets its own file. Weather conditions are stored as English labels in a single column in narrow CSVs. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair.
+Pipeline Runner orchestrates parsing, denormalization, optional time normalization, and optional analysis: historical weather HTML files are parsed, grouped by place, and written as CSV output under `HtmlLog_<timestamp>/parsed/`. Wide-format denormalized CSVs are written at the `parsed/` stage root when at least one place has data rows. When `RunTimeNormalization` is enabled (default), observation-time normalization runs and writes under `HtmlLog_<timestamp>/time-normalized/`. Each place gets its own file. Weather conditions are stored as English labels in a single column in narrow CSVs. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `weather-characteristics-usage.csv` and the matching usage table appended to that stage’s `result{timestamp}.html`.
 
 ---
 
