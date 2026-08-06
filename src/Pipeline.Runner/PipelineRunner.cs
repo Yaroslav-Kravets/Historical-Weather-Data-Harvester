@@ -95,17 +95,7 @@ public sealed class PipelineRunner
                 this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
                 parsedStageDirectory,
                 this.settings.RunInParallel));
-
-            if (!this.settings.RunTimeNormalization
-                && !this.settings.RunAnalysis
-                && !this.settings.RunHtmlLogCsvComparison)
-            {
-                var logger = denormStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
-            }
         }
-
-        var deferFinish = this.settings.RunAnalysis || this.settings.RunHtmlLogCsvComparison;
 
         if (this.settings.RunTimeNormalization)
         {
@@ -122,12 +112,6 @@ public sealed class PipelineRunner
                     timeNormalizedStageDirectory,
                     this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"result{logDateTime}.html"),
                     this.settings.RunInParallel));
-
-                if (!deferFinish)
-                {
-                    var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                    logger.LogInformation("Finish");
-                }
             }
         }
 
@@ -153,12 +137,6 @@ public sealed class PipelineRunner
                     this.settings.RunTimeNormalization ? timeNormalizedStageDirectory : null,
                     timeNormalizedHtmlReportPath,
                     runTimestamp));
-
-                if (!this.settings.RunHtmlLogCsvComparison)
-                {
-                    var logger = analysisStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                    logger.LogInformation("Finish");
-                }
             }
         }
 
@@ -191,9 +169,19 @@ public sealed class PipelineRunner
                             "(SUMMARY includes equal, not-equal, and error counts).");
                         break;
                 }
-
-                logger.LogInformation("Finish");
             }
+        }
+
+        using (var finishStage = StageServiceProviderFactory.Create(
+            this.configuration,
+            this.fileSystem,
+            parsedStageDirectory,
+            this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
+            services => services.AddParserServices()))
+        {
+            finishStage.ServiceProvider
+                .GetRequiredService<ILogger<PipelineRunner>>()
+                .LogInformation("Finish");
         }
     }
 }

@@ -186,48 +186,6 @@ public sealed class HtmlLogWriter : IDisposable
         fileSystem.File.WriteAllText(htmlReportPath, updatedHtml, Utf8Bom);
     }
 
-    private static string? RemoveTableContainerByTitle(string html, string tableTitle)
-    {
-        var titleMarker = $@"<div class=""table-title"">{EscapeHtml(tableTitle)}</div>";
-        var titleIndex = html.IndexOf(titleMarker, StringComparison.Ordinal);
-        if (titleIndex < 0)
-        {
-            return null;
-        }
-
-        const string containerStart = @"        <div class=""table-container"">";
-        var start = html.LastIndexOf(containerStart, titleIndex, StringComparison.Ordinal);
-        if (start < 0)
-        {
-            return null;
-        }
-
-        var tableEnd = html.IndexOf("</table>", titleIndex, StringComparison.Ordinal);
-        if (tableEnd < 0)
-        {
-            return null;
-        }
-
-        var closeDiv = html.IndexOf("</div>", tableEnd, StringComparison.Ordinal);
-        if (closeDiv < 0)
-        {
-            return null;
-        }
-
-        var end = closeDiv + "</div>".Length;
-        if (end < html.Length && html[end] == '\r')
-        {
-            end++;
-        }
-
-        if (end < html.Length && html[end] == '\n')
-        {
-            end++;
-        }
-
-        return html.Remove(start, end - start);
-    }
-
     /// <summary>
     /// Writes a table from a collection of flat class objects.
     /// Uses property/field names as column headers and values as row data.
@@ -340,6 +298,48 @@ public sealed class HtmlLogWriter : IDisposable
             this.fileManager.RemoveHandler(this.filePath);
             this.isDisposed = true;
         }
+    }
+
+    private static string? RemoveTableContainerByTitle(string html, string tableTitle)
+    {
+        var titleMarker = $@"<div class=""table-title"">{EscapeHtml(tableTitle)}</div>";
+        var titleIndex = html.IndexOf(titleMarker, StringComparison.Ordinal);
+        if (titleIndex < 0)
+        {
+            return null;
+        }
+
+        const string containerStart = @"        <div class=""table-container"">";
+        var start = html.LastIndexOf(containerStart, titleIndex, StringComparison.Ordinal);
+        if (start < 0)
+        {
+            return null;
+        }
+
+        var tableEnd = html.IndexOf("</table>", titleIndex, StringComparison.Ordinal);
+        if (tableEnd < 0)
+        {
+            return null;
+        }
+
+        var closeDiv = html.IndexOf("</div>", tableEnd, StringComparison.Ordinal);
+        if (closeDiv < 0)
+        {
+            return null;
+        }
+
+        var end = closeDiv + "</div>".Length;
+        if (end < html.Length && html[end] == '\r')
+        {
+            end++;
+        }
+
+        if (end < html.Length && html[end] == '\n')
+        {
+            end++;
+        }
+
+        return html.Remove(start, end - start);
     }
 
     private static bool IsIndexedProperty(PropertyInfo property)
