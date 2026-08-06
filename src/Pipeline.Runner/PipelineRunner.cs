@@ -211,7 +211,7 @@ public sealed class PipelineRunner
             this.fileSystem,
             parsedStageDirectory,
             this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
-            services => services.AddParserServices()))
+            _ => { }))
         {
             finishStage.ServiceProvider
                 .GetRequiredService<ILogger<PipelineRunner>>()
