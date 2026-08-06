@@ -64,5 +64,5 @@ These exit codes apply to the standalone CLI. When Pipeline Runner runs chain co
 
 ## Related docs
 
-- [Pipeline Runner CSV output](runner-csv-output.md) — output layout, manifests, place resolution
+- [Pipeline Runner CSV output](runner-csv-output.md) — output layout, column contracts, manifests, place resolution
 - Pipeline Runner can run chain comparison after a pipeline finish via `RunHtmlLogCsvComparison` (see the repository [README](../README.md#pipeline-runner))
