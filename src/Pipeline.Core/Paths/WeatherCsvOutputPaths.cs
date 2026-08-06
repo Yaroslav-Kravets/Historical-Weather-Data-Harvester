@@ -26,6 +26,8 @@ public static class WeatherCsvOutputPaths
 
     public const string WeatherCharacteristicsManifestFileName = "weather-characteristics.csv";
 
+    public const string WeatherCharacteristicsUsageFileName = "weather-characteristics-usage.csv";
+
     public static bool IsParsedStageManifestFileName(string fileName) =>
         fileName.Equals(ParsedSourceFilesManifestFileName, StringComparison.OrdinalIgnoreCase)
         || fileName.Equals(ParsedPlacesManifestFileName, StringComparison.OrdinalIgnoreCase)

@@ -15,6 +15,7 @@ using HtmlLogCsvComparer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -120,6 +121,31 @@ public sealed class PipelineRunner
 
                 var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
                 logger.LogInformation("Finish");
+            }
+        }
+
+        if (this.settings.RunAnalysis)
+        {
+            var parsedHtmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, $"result{logDateTime}.html");
+            var timeNormalizedHtmlReportPath = this.settings.RunTimeNormalization
+                ? this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"result{logDateTime}.html")
+                : null;
+
+            using (var analysisStage = StageServiceProviderFactory.Create(
+                this.configuration,
+                this.fileSystem,
+                parsedStageDirectory,
+                this.fileSystem.Path.Combine(parsedStageDirectory, $"log-analysis{logDateTime}.log"),
+                services => services.AddAnalysisServices()))
+            {
+                var analysisPipeline = analysisStage.ServiceProvider
+                    .GetRequiredService<AnalysisPipeline>();
+                analysisPipeline.Run(new AnalysisRunOptions(
+                    parsedStageDirectory,
+                    parsedHtmlReportPath,
+                    this.settings.RunTimeNormalization ? timeNormalizedStageDirectory : null,
+                    timeNormalizedHtmlReportPath,
+                    runTimestamp));
             }
         }
 

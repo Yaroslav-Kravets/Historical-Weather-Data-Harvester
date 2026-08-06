@@ -22,6 +22,8 @@ public sealed class RunnerSettings
 
     public bool RunHtmlLogCsvComparison { get; set; } = true;
 
+    public bool RunAnalysis { get; set; } = true;
+
     public static RunnerSettings Load(IConfiguration configuration)
     {
         Argument.ThrowIfNull(configuration);

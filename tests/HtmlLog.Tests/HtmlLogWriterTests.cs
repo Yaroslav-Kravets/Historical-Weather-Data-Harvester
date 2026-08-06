@@ -121,4 +121,25 @@ public sealed class HtmlLogWriterTests
         using var second = new HtmlLogWriter(fileManager, reportPath, "Second");
         second.WriteTable(new[] { new { Name = "b" } }, "Table");
     }
+
+    [Fact]
+    public void RenderTableHtml_ReturnsTableFragmentWithoutDocumentChrome()
+    {
+        var html = HtmlLogWriter.RenderTableHtml(
+            new[] { new { EnglishName = "Clear", RowCount = 1 } },
+            "Available Weather Characteristics");
+
+        Assert.Contains("table-container", html, StringComparison.Ordinal);
+        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("English Name", html, StringComparison.Ordinal);
+        Assert.Contains("Clear", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("<!DOCTYPE html>", html, StringComparison.Ordinal);
+        Assert.DoesNotContain(HtmlLogWriter.FooterStartMarker, html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void RenderTableHtml_ReturnsEmpty_WhenItemsEmpty()
+    {
+        Assert.Equal(string.Empty, HtmlLogWriter.RenderTableHtml(Array.Empty<object>(), "Empty"));
+    }
 }

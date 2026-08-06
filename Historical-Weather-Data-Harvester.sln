@@ -51,6 +51,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipeline.SourceFileSystem",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipeline.SourceFileSystem.Tests", "tests\Pipeline.SourceFileSystem.Tests\Pipeline.SourceFileSystem.Tests.csproj", "{13E550CC-E795-47C3-B875-4E93FDCE868A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipeline.Analysis", "src\Pipeline.Analysis\Pipeline.Analysis.csproj", "{8923031D-76FA-470D-A15D-393ADE66190D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Pipeline.Analysis.Tests", "tests\Pipeline.Analysis.Tests\Pipeline.Analysis.Tests.csproj", "{97044904-7DF0-4771-8410-795B4AA2042B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -145,6 +149,14 @@ Global
 		{13E550CC-E795-47C3-B875-4E93FDCE868A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{13E550CC-E795-47C3-B875-4E93FDCE868A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{13E550CC-E795-47C3-B875-4E93FDCE868A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8923031D-76FA-470D-A15D-393ADE66190D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8923031D-76FA-470D-A15D-393ADE66190D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8923031D-76FA-470D-A15D-393ADE66190D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8923031D-76FA-470D-A15D-393ADE66190D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97044904-7DF0-4771-8410-795B4AA2042B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97044904-7DF0-4771-8410-795B4AA2042B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97044904-7DF0-4771-8410-795B4AA2042B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97044904-7DF0-4771-8410-795B4AA2042B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -161,5 +173,7 @@ Global
 		{A1B2C3D4-E5F6-4789-A012-3456789ABCDE} = {395DB203-3CDF-4C70-B85E-DBDB0FFE7BBD}
 		{6D2547EE-C357-4280-9E94-C2B677422746} = {3D5570E5-3817-4964-9C09-68DD5C7DD211}
 		{13E550CC-E795-47C3-B875-4E93FDCE868A} = {395DB203-3CDF-4C70-B85E-DBDB0FFE7BBD}
+		{8923031D-76FA-470D-A15D-393ADE66190D} = {3D5570E5-3817-4964-9C09-68DD5C7DD211}
+		{97044904-7DF0-4771-8410-795B4AA2042B} = {395DB203-3CDF-4C70-B85E-DBDB0FFE7BBD}
 	EndGlobalSection
 EndGlobal

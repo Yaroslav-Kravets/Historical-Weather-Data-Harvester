@@ -20,6 +20,7 @@ HtmlLog_<timestamp>/
     parsed-source-files.csv        # (place, date) → winning source HTML path
     parsed-places.csv              # places seen in this run
     weather-characteristics.csv    # weather flags seen in this run
+    weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
     Kyiv.csv                       # wide format; see Denormalized weather characteristics
     Kharkiv.csv
     ...
@@ -28,6 +29,7 @@ HtmlLog_<timestamp>/
       Kharkiv.csv
       ...
   time-normalized/               # only when RunTimeNormalization is true
+    weather-characteristics-usage.csv  # same analysis over time-normalized rows
     Kyiv.csv                     # wide format
     Kharkiv.csv
     ...
@@ -39,6 +41,7 @@ HtmlLog_<timestamp>/
 
 - **`parsed/`** — parsing stage logs, manifests, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root.
 - **`time-normalized/`** — time normalization stage logs, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root. Created only when `RunTimeNormalization` is `true`.
+- **`weather-characteristics-usage.csv`** — written by the weather-characteristics analysis stage (default on via `RunAnalysis`) under each analyzed stage root. One row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/normalized-columns/*.csv` rows). The same table is appended to the stage HTML log `result{timestamp}.html` before the report footer.
 
 Both `normalized-columns/` trees use the same narrow CSV shape (`CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs at both stage roots (`parsed/` and `time-normalized/`) include a leading `Place` column.
 
@@ -177,6 +180,21 @@ Lists every weather characteristic **that actually occurred** in the parsed data
 
 Use it to see which original NameInHtml terms were seen and how they are labeled in English output.
 
+### `weather-characteristics-usage.csv`
+
+Written by [`Pipeline.Analysis`](src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran).
+
+Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags with occurrence counts over all `{stage}/normalized-columns/*.csv` data rows:
+
+| Column | Description |
+|--------|-------------|
+| `EnglishName` | English display name |
+| `NameInHtml` | Original HTML string |
+| `RowCount` | Number of data rows where the flag bit is set |
+| `PercentOfRows` | `RowCount / totalDataRows * 100`, formatted to two decimal places with `%` |
+
+Rows are sorted by `EnglishName`. Percentages may sum above 100% when rows carry multiple flags. The same table is appended to the stage HTML log `result{timestamp}.html` (before the footer).
+
 ---
 
 ## Place names
@@ -237,6 +255,7 @@ See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, m
 | `DenormalizedWeatherDataCsvReader` | Pipeline.Core | Reads wide-format CSVs from the `parsed/` stage root for normalization |
 | `DenormalizedWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format denormalized per-place CSVs |
 | `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/normalized-columns/`, writes wide CSVs at `parsed/` root |
+| `AnalysisPipeline` | Pipeline.Analysis | Reads `{stage}/normalized-columns/`, writes `weather-characteristics-usage.csv` + HTML |
 | `WeatherCsvColumns` | Pipeline.Core | Canonical column header names |
 
-Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, and `tests/Pipeline.TimeNormalizer.Tests`.
+Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.
