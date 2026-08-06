@@ -60,7 +60,8 @@ public sealed class WeatherCharacteristicUsageAggregator
                     rowCount,
                     percent);
             })
-            .OrderBy(row => row.EnglishName, StringComparer.OrdinalIgnoreCase)
+            .OrderByDescending(row => row.PercentOfRows)
+            .ThenBy(row => row.EnglishName, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 }
