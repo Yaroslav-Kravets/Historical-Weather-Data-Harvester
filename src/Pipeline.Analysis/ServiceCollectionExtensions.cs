@@ -12,6 +12,7 @@ namespace Pipeline.Analysis;
 using Common;
 using HtmlLog;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pipeline.Core;
 
 public static class ServiceCollectionExtensions
@@ -22,10 +23,10 @@ public static class ServiceCollectionExtensions
 
         services.AddPipelineCoreServices();
         services.AddHtmlLogServices();
-        services.AddSingleton<WeatherCharacteristicUsageAggregator>();
-        services.AddSingleton<WeatherCharacteristicUsageCsvWriter>();
-        services.AddSingleton<WeatherCharacteristicUsageReportWriter>();
-        services.AddSingleton<AnalysisPipeline>();
+        services.TryAddSingleton<WeatherCharacteristicUsageAggregator>();
+        services.TryAddSingleton<WeatherCharacteristicUsageCsvWriter>();
+        services.TryAddSingleton<WeatherCharacteristicUsageReportWriter>();
+        services.TryAddSingleton<AnalysisPipeline>();
 
         return services;
     }

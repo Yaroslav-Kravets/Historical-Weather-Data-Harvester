@@ -11,6 +11,7 @@ namespace HtmlLog;
 
 using Common;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 public static class ServiceCollectionExtensions
 {
@@ -22,7 +23,7 @@ public static class ServiceCollectionExtensions
     {
         Argument.ThrowIfNull(services);
 
-        services.AddSingleton<HtmlLogFileManager>();
+        services.TryAddSingleton<HtmlLogFileManager>();
 
         return services;
     }

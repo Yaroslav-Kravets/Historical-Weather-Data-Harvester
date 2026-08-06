@@ -193,7 +193,7 @@ Unlike `weather-characteristics.csv`, this file lists the **full catalog** of kn
 | `RowCount` | Number of data rows where the flag bit is set |
 | `PercentOfRows` | `RowCount / totalDataRows * 100`, formatted to two decimal places with `%` |
 
-Rows are sorted by `EnglishName`. Percentages may sum above 100% when rows carry multiple flags. The same table is written into the stage HTML log `result{timestamp}.html` before that report closes.
+Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages may sum above 100% when rows carry multiple flags. The same table is written into the stage HTML log `result{timestamp}.html` before that report closes.
 
 ---
 

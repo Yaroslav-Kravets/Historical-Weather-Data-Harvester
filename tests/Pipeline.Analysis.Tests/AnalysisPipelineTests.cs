@@ -120,6 +120,29 @@ public sealed class AnalysisPipelineTests
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void AnalyzeStage_Throws_WhenNoPlaceCsvsAndRequired()
+    {
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
+        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
+        var pipeline = this.CreatePipeline();
+
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing");
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
+                parsedStageDirectory,
+                htmlWriter,
+                Required: true)));
+
+        Assert.Contains("No place CSV files found", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+    }
+
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
         new(new DateTime(2003, 1, 1, 0, 0, 0), characteristics, -5, 0, 1.0m, 750, 70);
 
