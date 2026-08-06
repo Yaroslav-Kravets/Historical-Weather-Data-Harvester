@@ -58,12 +58,6 @@ public sealed class WeatherCharacteristicUsageReportWriter
             })
             .ToList();
 
-        var tableHtml = HtmlLogWriter.RenderTableHtml(tableRows, UsageTableTitle);
-        if (tableHtml.Length == 0)
-        {
-            return;
-        }
-
         if (!this.fileSystem.File.Exists(htmlReportPath))
         {
             using (var htmlWriter = new HtmlLogWriter(
@@ -78,6 +72,12 @@ public sealed class WeatherCharacteristicUsageReportWriter
                 "Wrote weather characteristics HTML report to {ReportPath} ({RowCount} rows)",
                 htmlReportPath,
                 usageRows.Count);
+            return;
+        }
+
+        var tableHtml = HtmlLogWriter.RenderTableHtml(tableRows, UsageTableTitle);
+        if (tableHtml.Length == 0)
+        {
             return;
         }
 
