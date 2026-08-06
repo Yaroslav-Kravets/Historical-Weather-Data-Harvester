@@ -18,6 +18,12 @@ using Common;
 /// </summary>
 internal sealed class HtmlLogFileHandler : IDisposable
 {
+    /// <summary>
+    /// Exact footer opening markup written by <see cref="WriteFooter"/>; used to insert
+    /// additional sections into a closed HTML report before the footer.
+    /// </summary>
+    internal const string FooterStartMarker = "        <div class=\"footer\">";
+
     private readonly StreamWriter writer;
     private readonly string filePath;
     private readonly string title;
@@ -99,7 +105,7 @@ internal sealed class HtmlLogFileHandler : IDisposable
                 return;
             }
 
-            this.writer.WriteLine(@"        <div class=""footer"">
+            this.writer.WriteLine($@"{FooterStartMarker}
             End of summary report
         </div>
     </div>

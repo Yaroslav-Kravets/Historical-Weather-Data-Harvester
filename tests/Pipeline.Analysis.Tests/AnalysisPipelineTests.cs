@@ -55,14 +55,14 @@ public sealed class AnalysisPipelineTests
         Assert.Contains("Rain,дождь,1,50.00%", usageCsv, StringComparison.Ordinal);
 
         var html = this.fileSystem.File.ReadAllText(htmlReportPath);
-        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("English Name", html, StringComparison.Ordinal);
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("50.00%", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
-            html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
+            html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
 
         Assert.Empty(this.fileSystem.Directory.GetFiles(parsedStageDirectory, "weather-characteristics*.html"));
@@ -104,7 +104,7 @@ public sealed class AnalysisPipelineTests
                 parsedStageDirectory,
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
         Assert.Contains("Clear,ясно,1,100.00%", parsedUsage, StringComparison.Ordinal);
-        Assert.Contains("Available Weather Characteristics", this.fileSystem.File.ReadAllText(parsedHtmlReportPath), StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", this.fileSystem.File.ReadAllText(parsedHtmlReportPath), StringComparison.Ordinal);
 
         var timeNormalizedUsage = this.fileSystem.File.ReadAllText(
             this.fileSystem.Path.Combine(
@@ -112,7 +112,7 @@ public sealed class AnalysisPipelineTests
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
         Assert.Contains("Rain,дождь,2,100.00%", timeNormalizedUsage, StringComparison.Ordinal);
         Assert.Contains(
-            "Available Weather Characteristics",
+            "Weather Characteristics Usage",
             this.fileSystem.File.ReadAllText(timeNormalizedHtmlReportPath),
             StringComparison.Ordinal);
     }

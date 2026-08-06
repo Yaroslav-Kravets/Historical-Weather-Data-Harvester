@@ -58,18 +58,31 @@ public sealed class WeatherCharacteristicUsageAggregatorTests
     }
 
     [Fact]
-    public void Aggregate_OrdersByEnglishName()
+    public void Aggregate_OrdersByPercentDescendingThenEnglishNameAscending()
     {
         var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
         {
-            ["Kyiv"] = [CreateRow(WeatherCharacteristics.Rain)],
+            ["Kyiv"] =
+            [
+                CreateRow(WeatherCharacteristics.Clear),
+                CreateRow(WeatherCharacteristics.Clear),
+                CreateRow(WeatherCharacteristics.Rain),
+                CreateRow(WeatherCharacteristics.Snow),
+            ],
         };
 
         var usageRows = this.aggregator.Aggregate(rowsByPlace);
+        var orderedNames = usageRows.Select(row => row.EnglishName).ToList();
 
         Assert.Equal(
-            usageRows.Select(row => row.EnglishName).OrderBy(name => name, StringComparer.OrdinalIgnoreCase),
-            usageRows.Select(row => row.EnglishName));
+            usageRows
+                .OrderByDescending(row => row.PercentOfRows)
+                .ThenBy(row => row.EnglishName, StringComparer.OrdinalIgnoreCase)
+                .Select(row => row.EnglishName),
+            orderedNames);
+
+        Assert.True(orderedNames.IndexOf("Clear") < orderedNames.IndexOf("Rain"));
+        Assert.True(orderedNames.IndexOf("Rain") < orderedNames.IndexOf("Snow"));
     }
 
     [Fact]

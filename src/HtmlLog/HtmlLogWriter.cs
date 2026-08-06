@@ -21,12 +21,6 @@ using ScottPlot;
 /// </summary>
 public sealed class HtmlLogWriter : IDisposable
 {
-    /// <summary>
-    /// Exact footer opening markup written by <see cref="HtmlLogFileHandler"/>; used to insert
-    /// additional sections into a closed HTML report before the footer.
-    /// </summary>
-    private const string FooterStartMarker = "        <div class=\"footer\">";
-
     private static readonly Encoding Utf8Bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
 
     private readonly HtmlLogFileManager fileManager;
@@ -175,7 +169,7 @@ public sealed class HtmlLogWriter : IDisposable
             existingHtml = RemoveTableContainerByTitle(existingHtml, replaceTableTitle) ?? existingHtml;
         }
 
-        var footerIndex = existingHtml.IndexOf(FooterStartMarker, StringComparison.Ordinal);
+        var footerIndex = existingHtml.IndexOf(HtmlLogFileHandler.FooterStartMarker, StringComparison.Ordinal);
         if (footerIndex < 0)
         {
             throw new InvalidOperationException(

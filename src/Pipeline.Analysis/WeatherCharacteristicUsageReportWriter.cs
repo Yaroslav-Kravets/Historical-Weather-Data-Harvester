@@ -17,7 +17,7 @@ using Microsoft.Extensions.Logging;
 
 public sealed class WeatherCharacteristicUsageReportWriter
 {
-    private const string UsageTableTitle = "Available Weather Characteristics";
+    private const string UsageTableTitle = "Weather Characteristics Usage";
 
     private readonly ILogger<WeatherCharacteristicUsageReportWriter> logger;
     private readonly IFileSystem fileSystem;

@@ -33,13 +33,13 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
             reportPath);
 
         var html = this.fileSystem.File.ReadAllText(reportPath);
-        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("100.00%", html, StringComparison.Ordinal);
         Assert.Contains("Stage Placeholder", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
-            html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
+            html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
     }
 
@@ -58,7 +58,7 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
             reportPath);
 
         var html = this.fileSystem.File.ReadAllText(reportPath);
-        Assert.Equal(1, CountOccurrences(html, "Available Weather Characteristics"));
+        Assert.Equal(1, CountOccurrences(html, "Weather Characteristics Usage"));
         Assert.Contains("дождь", html, StringComparison.Ordinal);
         Assert.Contains("50.00%", html, StringComparison.Ordinal);
         Assert.DoesNotContain("ясно", html, StringComparison.Ordinal);
@@ -79,7 +79,7 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
 
         Assert.True(this.fileSystem.File.Exists(reportPath));
         var html = this.fileSystem.File.ReadAllText(reportPath);
-        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("дождь", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
     }

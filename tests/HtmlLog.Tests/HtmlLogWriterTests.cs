@@ -127,10 +127,10 @@ public sealed class HtmlLogWriterTests
     {
         var html = HtmlLogWriter.RenderTableHtml(
             new[] { new { EnglishName = "Clear", RowCount = 1 } },
-            "Available Weather Characteristics");
+            "Weather Characteristics Usage");
 
         Assert.Contains("table-container", html, StringComparison.Ordinal);
-        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("English Name", html, StringComparison.Ordinal);
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<!DOCTYPE html>", html, StringComparison.Ordinal);
@@ -156,8 +156,8 @@ public sealed class HtmlLogWriterTests
 
         var fragment = HtmlLogWriter.RenderTableHtml(
             new[] { new { EnglishName = "Clear", RowCount = 1 } },
-            "Available Weather Characteristics");
-        HtmlLogWriter.InsertHtmlBeforeFooter(fileSystem, reportPath, fragment, "Available Weather Characteristics");
+            "Weather Characteristics Usage");
+        HtmlLogWriter.InsertHtmlBeforeFooter(fileSystem, reportPath, fragment, "Weather Characteristics Usage");
 
         using (var stream = fileSystem.File.OpenRead(reportPath))
         {
@@ -167,9 +167,9 @@ public sealed class HtmlLogWriterTests
         }
 
         var html = fileSystem.File.ReadAllText(reportPath);
-        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.True(
-            html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
+            html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
     }
 

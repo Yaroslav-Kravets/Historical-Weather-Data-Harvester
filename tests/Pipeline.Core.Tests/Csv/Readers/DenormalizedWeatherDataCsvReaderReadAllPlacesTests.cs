@@ -134,6 +134,11 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
         this.testContext.FileSystem.File.WriteAllText(
             this.testContext.FileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.ParsedPlacesManifestFileName),
             "EnglishName,NameInHtml\nKyiv,Киеве\n");
+        this.testContext.FileSystem.File.WriteAllText(
+            this.testContext.FileSystem.Path.Combine(
+                parsedStageDirectory,
+                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName),
+            "EnglishName,NameInHtml,RowCount,PercentOfRows\nClear,ясно,1,100.00%\n");
         this.writer.WritePlaceRows(
             parsedStageDirectory,
             "Kyiv.csv",
@@ -154,6 +159,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
         Assert.Single(places);
         Assert.True(places.ContainsKey("Kyiv"));
         Assert.False(places.ContainsKey("parsed-places"));
+        Assert.False(places.ContainsKey("weather-characteristics-usage"));
     }
 
     [Fact]
