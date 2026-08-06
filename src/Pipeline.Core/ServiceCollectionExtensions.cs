@@ -20,7 +20,7 @@ using Pipeline.Core.Csv.Writers;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers shared Pipeline.Core CSV and converter services used by Parser, Denormalizer, and TimeNormalizer.
+    /// Registers shared Pipeline.Core CSV and converter services used by Parser, Denormalizer, TimeNormalizer, and Analysis.
     /// </summary>
     /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
     public static IServiceCollection AddPipelineCoreServices(this IServiceCollection services)
