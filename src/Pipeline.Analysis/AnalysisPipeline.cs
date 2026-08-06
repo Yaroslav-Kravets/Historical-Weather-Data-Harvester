@@ -11,6 +11,7 @@ namespace Pipeline.Analysis;
 
 using System.IO.Abstractions;
 using Common;
+using HtmlLog;
 using Microsoft.Extensions.Logging;
 
 public sealed class AnalysisPipeline
@@ -45,48 +46,19 @@ public sealed class AnalysisPipeline
         this.usageReportWriter = usageReportWriter;
     }
 
-    public void Run(AnalysisRunOptions options)
+    public void AnalyzeStage(AnalysisRunOptions options)
     {
         Argument.ThrowIfNull(options);
-        Argument.ThrowIfNull(options.ParsedStageDirectory);
-        Argument.ThrowIfNull(options.ParsedHtmlReportPath);
+        Argument.ThrowIfNull(options.StageDirectory);
+        Argument.ThrowIfNull(options.HtmlWriter);
 
-        if (!string.IsNullOrWhiteSpace(options.TimeNormalizedStageDirectory))
-        {
-            Argument.ThrowIf(
-                options.TimeNormalizedHtmlReportPath,
-                path => string.IsNullOrWhiteSpace(path),
-                "TimeNormalizedHtmlReportPath is required when TimeNormalizedStageDirectory is set.",
-                nameof(options.TimeNormalizedHtmlReportPath));
-        }
-
-        this.logger.LogInformation("Weather characteristics analysis stage start");
-
-        this.AnalyzeStage(
-            options.ParsedStageDirectory,
-            options.ParsedHtmlReportPath,
-            required: true);
-
-        if (!string.IsNullOrWhiteSpace(options.TimeNormalizedStageDirectory))
-        {
-            this.AnalyzeStage(
-                options.TimeNormalizedStageDirectory!,
-                options.TimeNormalizedHtmlReportPath!,
-                required: false);
-        }
-
-        this.logger.LogInformation("Weather characteristics analysis stage complete");
-    }
-
-    private void AnalyzeStage(string stageDirectory, string htmlReportPath, bool required)
-    {
         var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
-            stageDirectory,
+            options.StageDirectory,
             WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
 
         if (!this.fileSystem.Directory.Exists(normalizedColumnsDirectory))
         {
-            if (required)
+            if (options.Required)
             {
                 throw new DirectoryNotFoundException(
                     $"Weather CSV directory not found: {normalizedColumnsDirectory}");
@@ -95,7 +67,7 @@ public sealed class AnalysisPipeline
             this.logger.LogWarning(
                 "Skipping weather characteristics analysis for {StageDirectory}; " +
                 "normalized-columns directory not found: {NormalizedColumnsDirectory}",
-                stageDirectory,
+                options.StageDirectory,
                 normalizedColumnsDirectory);
             return;
         }
@@ -103,7 +75,7 @@ public sealed class AnalysisPipeline
         var rowsByPlace = this.normalizedColumnsWeatherDataCsvReader.ReadAllPlaces(normalizedColumnsDirectory);
         if (rowsByPlace.Count == 0)
         {
-            if (required)
+            if (options.Required)
             {
                 throw new InvalidOperationException(
                     $"No place CSV files found in {normalizedColumnsDirectory}");
@@ -112,18 +84,18 @@ public sealed class AnalysisPipeline
             this.logger.LogWarning(
                 "Skipping weather characteristics analysis for {StageDirectory}; " +
                 "no place CSV files in {NormalizedColumnsDirectory}",
-                stageDirectory,
+                options.StageDirectory,
                 normalizedColumnsDirectory);
             return;
         }
 
         this.logger.LogInformation(
             "Analyzing weather characteristics for {StageDirectory} ({PlaceCount} places)",
-            stageDirectory,
+            options.StageDirectory,
             rowsByPlace.Count);
 
         var usageRows = this.usageAggregator.Aggregate(rowsByPlace);
-        this.usageCsvWriter.Write(usageRows, stageDirectory);
-        this.usageReportWriter.Write(usageRows, htmlReportPath);
+        this.usageCsvWriter.Write(usageRows, options.StageDirectory);
+        this.usageReportWriter.Write(usageRows, options.HtmlWriter);
     }
 }

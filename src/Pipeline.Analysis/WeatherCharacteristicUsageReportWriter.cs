@@ -10,7 +10,6 @@
 namespace Pipeline.Analysis;
 
 using System.Globalization;
-using System.IO.Abstractions;
 using Common;
 using HtmlLog;
 using Microsoft.Extensions.Logging;
@@ -20,27 +19,19 @@ public sealed class WeatherCharacteristicUsageReportWriter
     private const string UsageTableTitle = "Weather Characteristics Usage";
 
     private readonly ILogger<WeatherCharacteristicUsageReportWriter> logger;
-    private readonly IFileSystem fileSystem;
-    private readonly HtmlLogFileManager htmlLogFileManager;
 
     public WeatherCharacteristicUsageReportWriter(
-        ILogger<WeatherCharacteristicUsageReportWriter> logger,
-        IFileSystem fileSystem,
-        HtmlLogFileManager htmlLogFileManager)
+        ILogger<WeatherCharacteristicUsageReportWriter> logger)
     {
         Argument.ThrowIfNull(logger);
-        Argument.ThrowIfNull(fileSystem);
-        Argument.ThrowIfNull(htmlLogFileManager);
 
         this.logger = logger;
-        this.fileSystem = fileSystem;
-        this.htmlLogFileManager = htmlLogFileManager;
     }
 
-    public void Write(IReadOnlyList<WeatherCharacteristicUsageRow> usageRows, string htmlReportPath)
+    public void Write(IReadOnlyList<WeatherCharacteristicUsageRow> usageRows, HtmlLogWriter htmlWriter)
     {
         Argument.ThrowIfNull(usageRows);
-        Argument.ThrowIfNull(htmlReportPath);
+        Argument.ThrowIfNull(htmlWriter);
 
         if (usageRows.Count == 0)
         {
@@ -58,38 +49,10 @@ public sealed class WeatherCharacteristicUsageReportWriter
             })
             .ToList();
 
-        if (!this.fileSystem.File.Exists(htmlReportPath))
-        {
-            using (var htmlWriter = new HtmlLogWriter(
-                this.htmlLogFileManager,
-                htmlReportPath,
-                "Historical Weather Data Harvester — Weather Characteristics"))
-            {
-                htmlWriter.WriteTable(tableRows, UsageTableTitle);
-            }
-
-            this.logger.LogInformation(
-                "Wrote weather characteristics HTML report to {ReportPath} ({RowCount} rows)",
-                htmlReportPath,
-                usageRows.Count);
-            return;
-        }
-
-        var tableHtml = HtmlLogWriter.RenderTableHtml(tableRows, UsageTableTitle);
-        if (tableHtml.Length == 0)
-        {
-            return;
-        }
-
-        HtmlLogWriter.InsertHtmlBeforeFooter(
-            this.fileSystem,
-            htmlReportPath,
-            tableHtml,
-            replaceTableTitle: UsageTableTitle);
+        htmlWriter.WriteTable(tableRows, UsageTableTitle);
 
         this.logger.LogInformation(
-            "Appended weather characteristics table to {ReportPath} ({RowCount} rows)",
-            htmlReportPath,
+            "Wrote weather characteristics usage table ({RowCount} rows)",
             usageRows.Count);
     }
 

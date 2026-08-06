@@ -9,8 +9,10 @@
 
 namespace Pipeline.TimeNormalizer;
 
+using HtmlLog;
+
 public sealed record TimeNormalizingRunOptions(
     string ParsedStageDirectory,
     string TimeNormalizedStageDirectory,
-    string HtmlReportPath,
+    HtmlLogWriter HtmlWriter,
     bool RunInParallel);

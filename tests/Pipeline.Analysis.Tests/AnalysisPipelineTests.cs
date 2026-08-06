@@ -20,7 +20,7 @@ public sealed class AnalysisPipelineTests
     private readonly IFileSystem fileSystem = InMemoryFileSystem.Create();
 
     [Fact]
-    public void Run_WritesCsvAndAppendsTableToParsedHtmlLog()
+    public void AnalyzeStage_WritesCsvAndUsageTableBeforeFooter()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
@@ -35,14 +35,20 @@ public sealed class AnalysisPipelineTests
         var htmlReportPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
             "result2026-08-06_08-00-00.html");
-        this.WriteMinimalHtmlReport(htmlReportPath, "Parsing");
+        this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
 
         var pipeline = this.CreatePipeline();
-        pipeline.Run(new AnalysisRunOptions(
-            parsedStageDirectory,
-            htmlReportPath,
-            TimeNormalizedStageDirectory: null,
-            TimeNormalizedHtmlReportPath: null));
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing"))
+        {
+            htmlWriter.WriteTable(
+                new[] { new { Metric = "Placeholder", Value = "1" } },
+                "Stage Placeholder");
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
+                parsedStageDirectory,
+                htmlWriter,
+                Required: true));
+        }
 
         var usageCsvPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
@@ -69,120 +75,49 @@ public sealed class AnalysisPipelineTests
     }
 
     [Fact]
-    public void Run_AnalyzesTimeNormalizedStage_WhenPresent()
+    public void AnalyzeStage_SkipsMissingNormalizedColumns_WhenNotRequired()
     {
-        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        var timeNormalizedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
-        this.WritePlaceCsv(
-            this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
-            "Kyiv.csv",
-            CreateRow(WeatherCharacteristics.Clear));
-        this.WritePlaceCsv(
-            this.fileSystem.Path.Combine(
-                timeNormalizedStageDirectory,
-                WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
-            "Kyiv.csv",
-            CreateRow(WeatherCharacteristics.Rain),
-            CreateRow(WeatherCharacteristics.Rain));
-
-        var parsedHtmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-parsed.html");
-        var timeNormalizedHtmlReportPath = this.fileSystem.Path.Combine(
-            timeNormalizedStageDirectory,
-            "result-time-normalized.html");
-        this.WriteMinimalHtmlReport(parsedHtmlReportPath, "Parsing");
-        this.WriteMinimalHtmlReport(timeNormalizedHtmlReportPath, "Time Normalizing");
+        var stageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
+        this.fileSystem.Directory.CreateDirectory(stageDirectory);
+        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result.html");
 
         var pipeline = this.CreatePipeline();
-        pipeline.Run(new AnalysisRunOptions(
-            parsedStageDirectory,
-            parsedHtmlReportPath,
-            timeNormalizedStageDirectory,
-            timeNormalizedHtmlReportPath));
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing"))
+        {
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
+                stageDirectory,
+                htmlWriter,
+                Required: false));
+        }
 
-        var parsedUsage = this.fileSystem.File.ReadAllText(
+        Assert.False(this.fileSystem.File.Exists(
             this.fileSystem.Path.Combine(
-                parsedStageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
-        Assert.Contains("Clear,ясно,1,100.00%", parsedUsage, StringComparison.Ordinal);
-        Assert.Contains("Weather Characteristics Usage", this.fileSystem.File.ReadAllText(parsedHtmlReportPath), StringComparison.Ordinal);
-
-        var timeNormalizedUsage = this.fileSystem.File.ReadAllText(
-            this.fileSystem.Path.Combine(
-                timeNormalizedStageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
-        Assert.Contains("Rain,дождь,2,100.00%", timeNormalizedUsage, StringComparison.Ordinal);
-        Assert.Contains(
+                stageDirectory,
+                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
+        Assert.DoesNotContain(
             "Weather Characteristics Usage",
-            this.fileSystem.File.ReadAllText(timeNormalizedHtmlReportPath),
+            this.fileSystem.File.ReadAllText(htmlReportPath),
             StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Run_SkipsMissingTimeNormalizedNormalizedColumns_WithWarningPath()
-    {
-        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        var timeNormalizedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
-        this.fileSystem.Directory.CreateDirectory(timeNormalizedStageDirectory);
-        this.WritePlaceCsv(
-            this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
-            "Kyiv.csv",
-            CreateRow(WeatherCharacteristics.Clear));
-
-        var parsedHtmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
-        this.WriteMinimalHtmlReport(parsedHtmlReportPath, "Parsing");
-
-        var pipeline = this.CreatePipeline();
-        pipeline.Run(new AnalysisRunOptions(
-            parsedStageDirectory,
-            parsedHtmlReportPath,
-            timeNormalizedStageDirectory,
-            this.fileSystem.Path.Combine(timeNormalizedStageDirectory, "result.html")));
-
-        Assert.True(this.fileSystem.File.Exists(
-            this.fileSystem.Path.Combine(
-                parsedStageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
-        Assert.False(this.fileSystem.File.Exists(
-            this.fileSystem.Path.Combine(
-                timeNormalizedStageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
-    }
-
-    [Fact]
-    public void Run_Throws_WhenParsedNormalizedColumnsMissing()
+    public void AnalyzeStage_Throws_WhenParsedNormalizedColumnsMissingAndRequired()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
+        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
         var pipeline = this.CreatePipeline();
 
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing");
         var exception = Assert.Throws<DirectoryNotFoundException>(() =>
-            pipeline.Run(new AnalysisRunOptions(
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
                 parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, "result.html"),
-                TimeNormalizedStageDirectory: null,
-                TimeNormalizedHtmlReportPath: null)));
+                htmlWriter,
+                Required: true)));
 
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Run_ThrowsArgumentException_WhenTimeNormalizedHtmlReportPathMissing()
-    {
-        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        this.WritePlaceCsv(
-            this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
-            "Kyiv.csv",
-            CreateRow(WeatherCharacteristics.Clear));
-
-        var pipeline = this.CreatePipeline();
-        var exception = Assert.Throws<ArgumentException>(() =>
-            pipeline.Run(new AnalysisRunOptions(
-                parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, "result.html"),
-                TimeNormalizedStageDirectory: InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized"),
-                TimeNormalizedHtmlReportPath: null)));
-
-        Assert.Equal(nameof(AnalysisRunOptions.TimeNormalizedHtmlReportPath), exception.ParamName);
     }
 
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
@@ -203,9 +138,7 @@ public sealed class AnalysisPipelineTests
                 this.fileSystem,
                 new CsvRecordWriter(this.fileSystem)),
             new WeatherCharacteristicUsageReportWriter(
-                NullLogger<WeatherCharacteristicUsageReportWriter>.Instance,
-                this.fileSystem,
-                new HtmlLogFileManager(this.fileSystem)));
+                NullLogger<WeatherCharacteristicUsageReportWriter>.Instance));
     }
 
     private void WritePlaceCsv(string directory, string fileName, params WeatherDataRow[] rows)
@@ -219,22 +152,5 @@ public sealed class AnalysisPipelineTests
             fileName,
             records,
             context => context.RegisterClassMap(weatherDataCsvRecordMap));
-    }
-
-    private void WriteMinimalHtmlReport(string reportPath, string title)
-    {
-        var directory = this.fileSystem.Path.GetDirectoryName(reportPath);
-        if (!string.IsNullOrEmpty(directory))
-        {
-            this.fileSystem.Directory.CreateDirectory(directory);
-        }
-
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, reportPath, title))
-        {
-            htmlWriter.WriteTable(
-                new[] { new { Metric = "Placeholder", Value = "1" } },
-                "Stage Placeholder");
-        }
     }
 }

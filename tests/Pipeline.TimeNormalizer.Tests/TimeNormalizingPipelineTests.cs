@@ -44,13 +44,9 @@ public sealed class TimeNormalizingPipelineTests
     {
         var missingSourceDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result.html");
-        var options = new TimeNormalizingRunOptions(
-            missingSourceDirectory,
-            this.timeNormalizedStageDirectory,
-            htmlReportPath,
-            RunInParallel: false);
 
-        var exception = Assert.Throws<DirectoryNotFoundException>(() => this.timeNormalizingPipeline.Run(options));
+        var exception = Assert.Throws<DirectoryNotFoundException>(() =>
+            this.RunTimeNormalizing(missingSourceDirectory, htmlReportPath, runInParallel: false));
 
         Assert.Contains("Parsed stage directory not found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(missingSourceDirectory, exception.Message, StringComparison.Ordinal);
@@ -60,13 +56,9 @@ public sealed class TimeNormalizingPipelineTests
     public void Run_ThrowsInvalidOperationException_WhenNoDenormalizedPlaceCsvs()
     {
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result.html");
-        var options = new TimeNormalizingRunOptions(
-            this.parsedStageDirectory,
-            this.timeNormalizedStageDirectory,
-            htmlReportPath,
-            RunInParallel: false);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => this.timeNormalizingPipeline.Run(options));
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false));
 
         Assert.Contains("No denormalized place CSVs found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(this.parsedStageDirectory, exception.Message, StringComparison.Ordinal);
@@ -82,11 +74,7 @@ public sealed class TimeNormalizingPipelineTests
             CreateFullDayRows(archiveDate));
 
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result.html");
-        this.timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
-            this.parsedStageDirectory,
-            this.timeNormalizedStageDirectory,
-            htmlReportPath,
-            RunInParallel: false));
+        this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false);
 
         var normalizedPath = this.fileSystem.Path.Combine(
             this.timeNormalizedStageDirectory,
@@ -118,11 +106,7 @@ public sealed class TimeNormalizingPipelineTests
             includePlaceColumn: true);
 
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result-with-place.html");
-        this.timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
-            this.parsedStageDirectory,
-            this.timeNormalizedStageDirectory,
-            htmlReportPath,
-            RunInParallel: false));
+        this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false);
 
         var normalizedDenormalizedPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "Kyiv.csv");
         Assert.True(this.fileSystem.File.Exists(normalizedDenormalizedPath));
@@ -151,7 +135,6 @@ public sealed class TimeNormalizingPipelineTests
         var denormalizedWeatherDataCsvReader = new DenormalizedWeatherDataCsvReader(fileSystem);
         var denormalizedWeatherDataCsvWriter = new DenormalizedWeatherDataCsvWriter(fileSystem, placeCsvFileNameResolver);
         var parsedSourceFilesManifestReader = new ParsedSourceFilesManifestReader(fileSystem);
-        var htmlLogFileManager = new HtmlLogFileManager(fileSystem);
 
         return new TimeNormalizingPipeline(
             NullLogger<TimeNormalizingPipeline>.Instance,
@@ -176,7 +159,17 @@ public sealed class TimeNormalizingPipelineTests
                 new TimeNormalizingPlaceErrorCountsBuilder(),
                 denormalizedWeatherDataCsvReader,
                 placeCsvFileNameResolver,
-                fileSystem),
-            htmlLogFileManager);
+                fileSystem));
+    }
+
+    private void RunTimeNormalizing(string parsedStageDirectory, string htmlReportPath, bool runInParallel)
+    {
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing");
+        this.timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
+            parsedStageDirectory,
+            this.timeNormalizedStageDirectory,
+            htmlWriter,
+            runInParallel));
     }
 }

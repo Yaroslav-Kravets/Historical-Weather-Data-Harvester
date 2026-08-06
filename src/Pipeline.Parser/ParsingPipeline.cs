@@ -12,7 +12,6 @@ namespace Pipeline.Parser;
 using System.Diagnostics;
 using System.IO.Abstractions;
 using Common;
-using HtmlLog;
 using Microsoft.Extensions.Logging;
 using Pipeline.SourceFileSystem;
 
@@ -29,7 +28,6 @@ public sealed class ParsingPipeline
     private readonly ParsedStageManifestCsvWriter parsedStageManifestCsvWriter;
     private readonly ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter;
     private readonly ParsingReportWriter parsingReportWriter;
-    private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly PlaceConverter placeConverter;
 
     public ParsingPipeline(
@@ -44,7 +42,6 @@ public sealed class ParsingPipeline
         ParsedStageManifestCsvWriter parsedStageManifestCsvWriter,
         ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter,
         ParsingReportWriter parsingReportWriter,
-        HtmlLogFileManager htmlLogFileManager,
         PlaceConverter placeConverter)
     {
         Argument.ThrowIfNull(logger);
@@ -58,7 +55,6 @@ public sealed class ParsingPipeline
         Argument.ThrowIfNull(parsedStageManifestCsvWriter);
         Argument.ThrowIfNull(parsedSourceFilesManifestWriter);
         Argument.ThrowIfNull(parsingReportWriter);
-        Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(placeConverter);
 
         this.logger = logger;
@@ -72,13 +68,13 @@ public sealed class ParsingPipeline
         this.parsedStageManifestCsvWriter = parsedStageManifestCsvWriter;
         this.parsedSourceFilesManifestWriter = parsedSourceFilesManifestWriter;
         this.parsingReportWriter = parsingReportWriter;
-        this.htmlLogFileManager = htmlLogFileManager;
         this.placeConverter = placeConverter;
     }
 
     public void Run(ParsingRunOptions options)
     {
         Argument.ThrowIfNull(options);
+        Argument.ThrowIfNull(options.HtmlWriter);
 
         using var source = SourceFileSystemFactory.Open(this.fileSystem, options.SourceDirectory);
         var isSevenZipSource = source is SevenZipSourceFileSystem;
@@ -140,21 +136,18 @@ public sealed class ParsingPipeline
         this.parsedStageManifestCsvWriter.WriteWeatherCharacteristicsManifest(parsedCharacteristics, options.ParsedStageDirectory);
         this.parsedSourceFilesManifestWriter.Write(organizationResult.SourceFileEntries, options.ParsedStageDirectory);
 
-        using (var htmlWriter = new HtmlLogWriter(this.htmlLogFileManager, options.HtmlReportPath, "Historical Weather Data Harvester — Parsing"))
-        {
-            this.parsingReportWriter.WriteReport(
-                htmlWriter,
-                options.SourceDirectory,
-                isSevenZipSource,
-                sourceFileCount,
-                parsingSuccessfulCount,
-                parsingUnsuccessfulCount,
-                totalTime,
-                averageTime,
-                organizationResult.ResultsByPlace,
-                issueCollector,
-                flattenedRawParseResults);
-        }
+        this.parsingReportWriter.WriteReport(
+            options.HtmlWriter,
+            options.SourceDirectory,
+            isSevenZipSource,
+            sourceFileCount,
+            parsingSuccessfulCount,
+            parsingUnsuccessfulCount,
+            totalTime,
+            averageTime,
+            organizationResult.ResultsByPlace,
+            issueCollector,
+            flattenedRawParseResults);
 
         PlacePathSelfCheckLogger.LogRunSummary(this.logger, issueCollector);
         this.logger.LogInformation("Parsing stage complete");

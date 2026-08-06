@@ -125,7 +125,11 @@ public sealed class StageServiceProviderFactoryTests
             services => services.AddParserServices());
 
         var pipeline = stage.ServiceProvider.GetRequiredService<ParsingPipeline>();
-        pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, reportPath, RunInParallel: false));
+        var htmlLogFileManager = stage.ServiceProvider.GetRequiredService<HtmlLogFileManager>();
+        using (var htmlWriter = new HtmlLogWriter(htmlLogFileManager, reportPath, "Parsing"))
+        {
+            pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, htmlWriter, RunInParallel: false));
+        }
 
         var csvPath = fileSystem.Path.Combine(
             stageDirectory,
