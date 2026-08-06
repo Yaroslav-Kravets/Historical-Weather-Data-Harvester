@@ -143,6 +143,36 @@ public sealed class AnalysisPipelineTests
         Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void AnalyzeStage_Skips_WhenNoPlaceCsvsAndNotRequired()
+    {
+        var stageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
+        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+            stageDirectory,
+            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result.html");
+        var pipeline = this.CreatePipeline();
+
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing"))
+        {
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
+                stageDirectory,
+                htmlWriter,
+                Required: false));
+        }
+
+        Assert.False(this.fileSystem.File.Exists(
+            this.fileSystem.Path.Combine(
+                stageDirectory,
+                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
+        Assert.DoesNotContain(
+            "Weather Characteristics Usage",
+            this.fileSystem.File.ReadAllText(htmlReportPath),
+            StringComparison.Ordinal);
+    }
+
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
         new(new DateTime(2003, 1, 1, 0, 0, 0), characteristics, -5, 0, 1.0m, 750, 70);
 
