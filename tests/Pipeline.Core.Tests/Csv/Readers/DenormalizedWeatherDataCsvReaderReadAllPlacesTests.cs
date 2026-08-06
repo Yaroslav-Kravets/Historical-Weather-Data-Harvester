@@ -127,7 +127,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
     }
 
     [Fact]
-    public void ReadAllPlaces_SkipsManifestFilesAtStageRoot()
+    public void ReadAllPlaces_SkipsStageRootSidecarFiles()
     {
         var parsedStageDirectory = this.testContext.EnsureDirectoryUnderRoot(WeatherCsvOutputPaths.ParsedStageDirectoryName);
 

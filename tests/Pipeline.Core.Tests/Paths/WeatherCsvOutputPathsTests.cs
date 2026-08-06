@@ -22,14 +22,14 @@ public sealed class WeatherCsvOutputPathsTests
     }
 
     [Fact]
-    public void ManifestFileNames_AreDistinctAndNonEmpty()
+    public void StageRootSidecarFileNames_AreDistinctAndRecognized()
     {
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.ParsedSourceFilesManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.ParsedPlacesManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
 
-        var manifestFileNames = new[]
+        var sidecarFileNames = new[]
         {
             WeatherCsvOutputPaths.ParsedSourceFilesManifestFileName,
             WeatherCsvOutputPaths.ParsedPlacesManifestFileName,
@@ -37,9 +37,10 @@ public sealed class WeatherCsvOutputPathsTests
             WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName,
         };
 
-        Assert.Equal(manifestFileNames.Length, manifestFileNames.Distinct(StringComparer.Ordinal).Count());
-        Assert.True(
-            WeatherCsvOutputPaths.IsParsedStageManifestFileName(
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
+        Assert.Equal(sidecarFileNames.Length, sidecarFileNames.Distinct(StringComparer.Ordinal).Count());
+        Assert.All(
+            sidecarFileNames,
+            fileName => Assert.True(WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(fileName)));
+        Assert.False(WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName("Kyiv.csv"));
     }
 }

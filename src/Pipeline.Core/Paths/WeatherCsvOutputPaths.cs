@@ -28,7 +28,11 @@ public static class WeatherCsvOutputPaths
 
     public const string WeatherCharacteristicsUsageFileName = "weather-characteristics-usage.csv";
 
-    public static bool IsParsedStageManifestFileName(string fileName) =>
+    /// <summary>
+    /// True when <paramref name="fileName"/> is a non-place CSV at a stage root
+    /// (manifests and analysis sidecars) that place-file enumeration must skip.
+    /// </summary>
+    public static bool IsStageRootSidecarCsvFileName(string fileName) =>
         fileName.Equals(ParsedSourceFilesManifestFileName, StringComparison.OrdinalIgnoreCase)
         || fileName.Equals(ParsedPlacesManifestFileName, StringComparison.OrdinalIgnoreCase)
         || fileName.Equals(WeatherCharacteristicsManifestFileName, StringComparison.OrdinalIgnoreCase)
