@@ -135,8 +135,7 @@ public sealed class PipelineRunner
                     parsedStageDirectory,
                     parsedHtmlReportPath,
                     this.settings.RunTimeNormalization ? timeNormalizedStageDirectory : null,
-                    timeNormalizedHtmlReportPath,
-                    runTimestamp));
+                    timeNormalizedHtmlReportPath));
             }
         }
 

@@ -32,7 +32,6 @@ public sealed class AnalysisPipelineTests
             CreateRow(WeatherCharacteristics.Clear),
             CreateRow(WeatherCharacteristics.Rain));
 
-        var runTimestamp = new DateTime(2026, 8, 6, 8, 0, 0);
         var htmlReportPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
             "result2026-08-06_08-00-00.html");
@@ -43,8 +42,7 @@ public sealed class AnalysisPipelineTests
             parsedStageDirectory,
             htmlReportPath,
             TimeNormalizedStageDirectory: null,
-            TimeNormalizedHtmlReportPath: null,
-            runTimestamp));
+            TimeNormalizedHtmlReportPath: null));
 
         var usageCsvPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
@@ -99,8 +97,7 @@ public sealed class AnalysisPipelineTests
             parsedStageDirectory,
             parsedHtmlReportPath,
             timeNormalizedStageDirectory,
-            timeNormalizedHtmlReportPath,
-            new DateTime(2026, 8, 6, 9, 0, 0)));
+            timeNormalizedHtmlReportPath));
 
         var parsedUsage = this.fileSystem.File.ReadAllText(
             this.fileSystem.Path.Combine(
@@ -139,8 +136,7 @@ public sealed class AnalysisPipelineTests
             parsedStageDirectory,
             parsedHtmlReportPath,
             timeNormalizedStageDirectory,
-            this.fileSystem.Path.Combine(timeNormalizedStageDirectory, "result.html"),
-            new DateTime(2026, 8, 6, 10, 0, 0)));
+            this.fileSystem.Path.Combine(timeNormalizedStageDirectory, "result.html")));
 
         Assert.True(this.fileSystem.File.Exists(
             this.fileSystem.Path.Combine(
@@ -164,8 +160,7 @@ public sealed class AnalysisPipelineTests
                 parsedStageDirectory,
                 this.fileSystem.Path.Combine(parsedStageDirectory, "result.html"),
                 TimeNormalizedStageDirectory: null,
-                TimeNormalizedHtmlReportPath: null,
-                new DateTime(2026, 8, 6, 11, 0, 0))));
+                TimeNormalizedHtmlReportPath: null)));
 
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
     }
@@ -185,8 +180,7 @@ public sealed class AnalysisPipelineTests
                 parsedStageDirectory,
                 this.fileSystem.Path.Combine(parsedStageDirectory, "result.html"),
                 TimeNormalizedStageDirectory: InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized"),
-                TimeNormalizedHtmlReportPath: null,
-                new DateTime(2026, 8, 6, 12, 0, 0))));
+                TimeNormalizedHtmlReportPath: null)));
 
         Assert.Equal(nameof(AnalysisRunOptions.TimeNormalizedHtmlReportPath), exception.ParamName);
     }

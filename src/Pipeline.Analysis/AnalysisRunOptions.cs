@@ -13,5 +13,4 @@ public sealed record AnalysisRunOptions(
     string ParsedStageDirectory,
     string ParsedHtmlReportPath,
     string? TimeNormalizedStageDirectory,
-    string? TimeNormalizedHtmlReportPath,
-    DateTime RunTimestamp);
+    string? TimeNormalizedHtmlReportPath);
