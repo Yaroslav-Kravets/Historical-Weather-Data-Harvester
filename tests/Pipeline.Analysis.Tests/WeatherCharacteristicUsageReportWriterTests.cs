@@ -28,17 +28,40 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         var writer = this.CreateWriter();
         writer.Write(
             [
-                new WeatherCharacteristicUsageRow("Clear", "ясно", 1, "100.00%"),
+                new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
             ],
             reportPath);
 
         var html = this.fileSystem.File.ReadAllText(reportPath);
         Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
+        Assert.Contains("100.00%", html, StringComparison.Ordinal);
         Assert.Contains("Stage Placeholder", html, StringComparison.Ordinal);
+        Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
             html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
-            < html.IndexOf(HtmlLogWriter.FooterStartMarker, StringComparison.Ordinal));
+            < html.IndexOf("End of summary report", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Write_ReplacesExistingUsageTable_WhenCalledTwice()
+    {
+        var reportPath = InMemoryFileSystem.UnderRoot(this.fileSystem, "result.html");
+        this.WriteMinimalHtmlReport(reportPath);
+
+        var writer = this.CreateWriter();
+        writer.Write(
+            [new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0)],
+            reportPath);
+        writer.Write(
+            [new WeatherCharacteristicUsageRow("Rain", "дождь", 2, 50.0)],
+            reportPath);
+
+        var html = this.fileSystem.File.ReadAllText(reportPath);
+        Assert.Equal(1, CountOccurrences(html, "Available Weather Characteristics"));
+        Assert.Contains("дождь", html, StringComparison.Ordinal);
+        Assert.Contains("50.00%", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("ясно", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -50,7 +73,7 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         var writer = this.CreateWriter();
         writer.Write(
             [
-                new WeatherCharacteristicUsageRow("Rain", "дождь", 2, "50.00%"),
+                new WeatherCharacteristicUsageRow("Rain", "дождь", 2, 50.0),
             ],
             reportPath);
 
@@ -58,7 +81,7 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         var html = this.fileSystem.File.ReadAllText(reportPath);
         Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
         Assert.Contains("дождь", html, StringComparison.Ordinal);
-        Assert.Contains(HtmlLogWriter.FooterStartMarker, html, StringComparison.Ordinal);
+        Assert.Contains("End of summary report", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -72,11 +95,24 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             writer.Write(
                 [
-                    new WeatherCharacteristicUsageRow("Clear", "ясно", 1, "100.00%"),
+                    new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
                 ],
                 reportPath));
 
         Assert.Contains("footer marker", exception.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static int CountOccurrences(string haystack, string needle)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = haystack.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += needle.Length;
+        }
+
+        return count;
     }
 
     private WeatherCharacteristicUsageReportWriter CreateWriter() =>

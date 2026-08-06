@@ -15,6 +15,7 @@ using FileSystem.TestSupport;
 using HtmlLog;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -84,6 +85,14 @@ public sealed class StageServiceProviderFactoryTests
         using var stage = CreateStage(services => services.AddTimeNormalizerServices());
 
         Assert.NotNull(stage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>());
+    }
+
+    [Fact]
+    public void Create_ResolvesAnalysisPipelineFromRegisteredServices()
+    {
+        using var stage = CreateStage(services => services.AddAnalysisServices());
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
     }
 
     [Fact]

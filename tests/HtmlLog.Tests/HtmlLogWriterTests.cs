@@ -134,12 +134,83 @@ public sealed class HtmlLogWriterTests
         Assert.Contains("English Name", html, StringComparison.Ordinal);
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.DoesNotContain("<!DOCTYPE html>", html, StringComparison.Ordinal);
-        Assert.DoesNotContain(HtmlLogWriter.FooterStartMarker, html, StringComparison.Ordinal);
+        Assert.DoesNotContain("class=\"footer\"", html, StringComparison.Ordinal);
     }
 
     [Fact]
     public void RenderTableHtml_ReturnsEmpty_WhenItemsEmpty()
     {
         Assert.Equal(string.Empty, HtmlLogWriter.RenderTableHtml(Array.Empty<object>(), "Empty"));
+    }
+
+    [Fact]
+    public void InsertHtmlBeforeFooter_InsertsFragmentAndPreservesBom()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportPath = InMemoryFileSystem.UnderRoot(fileSystem, "result.html");
+        using var fileManager = new HtmlLogFileManager(fileSystem);
+        using (var writer = new HtmlLogWriter(fileManager, reportPath, "Test"))
+        {
+            writer.WriteTable(new[] { new { Name = "a" } }, "Stage");
+        }
+
+        var fragment = HtmlLogWriter.RenderTableHtml(
+            new[] { new { EnglishName = "Clear", RowCount = 1 } },
+            "Available Weather Characteristics");
+        HtmlLogWriter.InsertHtmlBeforeFooter(fileSystem, reportPath, fragment, "Available Weather Characteristics");
+
+        using (var stream = fileSystem.File.OpenRead(reportPath))
+        {
+            Assert.Equal(0xEF, stream.ReadByte());
+            Assert.Equal(0xBB, stream.ReadByte());
+            Assert.Equal(0xBF, stream.ReadByte());
+        }
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Available Weather Characteristics", html, StringComparison.Ordinal);
+        Assert.True(
+            html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
+            < html.IndexOf("End of summary report", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void InsertHtmlBeforeFooter_ReplacesExistingTable_WhenSameTitle()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportPath = InMemoryFileSystem.UnderRoot(fileSystem, "result.html");
+        using var fileManager = new HtmlLogFileManager(fileSystem);
+        using (var writer = new HtmlLogWriter(fileManager, reportPath, "Test"))
+        {
+            writer.WriteTable(new[] { new { Name = "a" } }, "Stage");
+        }
+
+        HtmlLogWriter.InsertHtmlBeforeFooter(
+            fileSystem,
+            reportPath,
+            HtmlLogWriter.RenderTableHtml(new[] { new { Value = "first" } }, "Usage"),
+            "Usage");
+        HtmlLogWriter.InsertHtmlBeforeFooter(
+            fileSystem,
+            reportPath,
+            HtmlLogWriter.RenderTableHtml(new[] { new { Value = "second" } }, "Usage"),
+            "Usage");
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Equal(1, CountOccurrences(html, "table-title\">Usage</div>"));
+        Assert.Contains("second", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("first", html, StringComparison.Ordinal);
+    }
+
+    private static int CountOccurrences(string haystack, string needle)
+    {
+        var count = 0;
+        var index = 0;
+        while ((index = haystack.IndexOf(needle, index, StringComparison.Ordinal)) >= 0)
+        {
+            count++;
+            index += needle.Length;
+        }
+
+        return count;
     }
 }

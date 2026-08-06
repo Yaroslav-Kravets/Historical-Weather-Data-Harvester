@@ -36,11 +36,11 @@ public sealed class WeatherCharacteristicUsageAggregatorTests
         var hail = usageRows.Single(row => row.EnglishName == "Hail");
 
         Assert.Equal(2, clear.RowCount);
-        Assert.Equal("66.67%", clear.PercentOfRows);
+        Assert.Equal(66.67, clear.PercentOfRows, 2);
         Assert.Equal(2, rain.RowCount);
-        Assert.Equal("66.67%", rain.PercentOfRows);
+        Assert.Equal(66.67, rain.PercentOfRows, 2);
         Assert.Equal(0, hail.RowCount);
-        Assert.Equal("0.00%", hail.PercentOfRows);
+        Assert.Equal(0.0, hail.PercentOfRows);
     }
 
     [Fact]
@@ -53,7 +53,7 @@ public sealed class WeatherCharacteristicUsageAggregatorTests
         Assert.All(usageRows, row =>
         {
             Assert.Equal(0, row.RowCount);
-            Assert.Equal("0.00%", row.PercentOfRows);
+            Assert.Equal(0.0, row.PercentOfRows);
         });
     }
 
@@ -91,9 +91,9 @@ public sealed class WeatherCharacteristicUsageAggregatorTests
         var rain = usageRows.Single(row => row.EnglishName == "Rain");
 
         Assert.Equal(2, clear.RowCount);
-        Assert.Equal("66.67%", clear.PercentOfRows);
+        Assert.Equal(66.67, clear.PercentOfRows, 2);
         Assert.Equal(1, rain.RowCount);
-        Assert.Equal("33.33%", rain.PercentOfRows);
+        Assert.Equal(33.33, rain.PercentOfRows, 2);
     }
 
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>

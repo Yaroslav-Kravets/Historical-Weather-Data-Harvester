@@ -13,4 +13,4 @@ public sealed record WeatherCharacteristicUsageRow(
     string EnglishName,
     string NameInHtml,
     int RowCount,
-    string PercentOfRows);
+    double PercentOfRows);

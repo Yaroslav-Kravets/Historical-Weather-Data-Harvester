@@ -96,12 +96,16 @@ public sealed class PipelineRunner
                 parsedStageDirectory,
                 this.settings.RunInParallel));
 
-            if (!this.settings.RunTimeNormalization)
+            if (!this.settings.RunTimeNormalization
+                && !this.settings.RunAnalysis
+                && !this.settings.RunHtmlLogCsvComparison)
             {
                 var logger = denormStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
                 logger.LogInformation("Finish");
             }
         }
+
+        var deferFinish = this.settings.RunAnalysis || this.settings.RunHtmlLogCsvComparison;
 
         if (this.settings.RunTimeNormalization)
         {
@@ -119,8 +123,11 @@ public sealed class PipelineRunner
                     this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"result{logDateTime}.html"),
                     this.settings.RunInParallel));
 
-                var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
+                if (!deferFinish)
+                {
+                    var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
+                    logger.LogInformation("Finish");
+                }
             }
         }
 
@@ -146,6 +153,12 @@ public sealed class PipelineRunner
                     this.settings.RunTimeNormalization ? timeNormalizedStageDirectory : null,
                     timeNormalizedHtmlReportPath,
                     runTimestamp));
+
+                if (!this.settings.RunHtmlLogCsvComparison)
+                {
+                    var logger = analysisStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
+                    logger.LogInformation("Finish");
+                }
             }
         }
 
@@ -178,6 +191,8 @@ public sealed class PipelineRunner
                             "(SUMMARY includes equal, not-equal, and error counts).");
                         break;
                 }
+
+                logger.LogInformation("Finish");
             }
         }
     }

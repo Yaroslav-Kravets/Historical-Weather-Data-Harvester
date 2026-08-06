@@ -62,10 +62,10 @@ public sealed class AnalysisPipelineTests
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("50.00%", html, StringComparison.Ordinal);
-        Assert.Contains(HtmlLogWriter.FooterStartMarker, html, StringComparison.Ordinal);
+        Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
             html.IndexOf("Available Weather Characteristics", StringComparison.Ordinal)
-            < html.IndexOf(HtmlLogWriter.FooterStartMarker, StringComparison.Ordinal));
+            < html.IndexOf("End of summary report", StringComparison.Ordinal));
 
         Assert.Empty(this.fileSystem.Directory.GetFiles(parsedStageDirectory, "weather-characteristics*.html"));
     }
@@ -168,6 +168,27 @@ public sealed class AnalysisPipelineTests
                 new DateTime(2026, 8, 6, 11, 0, 0))));
 
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Run_ThrowsArgumentException_WhenTimeNormalizedHtmlReportPathMissing()
+    {
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
+        this.WritePlaceCsv(
+            this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
+            "Kyiv.csv",
+            CreateRow(WeatherCharacteristics.Clear));
+
+        var pipeline = this.CreatePipeline();
+        var exception = Assert.Throws<ArgumentException>(() =>
+            pipeline.Run(new AnalysisRunOptions(
+                parsedStageDirectory,
+                this.fileSystem.Path.Combine(parsedStageDirectory, "result.html"),
+                TimeNormalizedStageDirectory: InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized"),
+                TimeNormalizedHtmlReportPath: null,
+                new DateTime(2026, 8, 6, 12, 0, 0))));
+
+        Assert.Equal(nameof(AnalysisRunOptions.TimeNormalizedHtmlReportPath), exception.ParamName);
     }
 
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>

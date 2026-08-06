@@ -31,5 +31,6 @@ public static class WeatherCsvOutputPaths
     public static bool IsParsedStageManifestFileName(string fileName) =>
         fileName.Equals(ParsedSourceFilesManifestFileName, StringComparison.OrdinalIgnoreCase)
         || fileName.Equals(ParsedPlacesManifestFileName, StringComparison.OrdinalIgnoreCase)
-        || fileName.Equals(WeatherCharacteristicsManifestFileName, StringComparison.OrdinalIgnoreCase);
+        || fileName.Equals(WeatherCharacteristicsManifestFileName, StringComparison.OrdinalIgnoreCase)
+        || fileName.Equals(WeatherCharacteristicsUsageFileName, StringComparison.OrdinalIgnoreCase);
 }

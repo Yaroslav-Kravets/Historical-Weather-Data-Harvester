@@ -9,7 +9,9 @@
 
 namespace HtmlLog;
 
+using System.IO.Abstractions;
 using System.Reflection;
+using System.Text;
 using Common;
 using ScottPlot;
 
@@ -23,7 +25,9 @@ public sealed class HtmlLogWriter : IDisposable
     /// Exact footer opening markup written by <see cref="HtmlLogFileHandler"/>; used to insert
     /// additional sections into a closed HTML report before the footer.
     /// </summary>
-    public const string FooterStartMarker = "        <div class=\"footer\">";
+    private const string FooterStartMarker = "        <div class=\"footer\">";
+
+    private static readonly Encoding Utf8Bom = new UTF8Encoding(encoderShouldEmitUTF8Identifier: true);
 
     private readonly HtmlLogFileManager fileManager;
     private readonly HtmlLogFileHandler fileHandler;
@@ -148,6 +152,80 @@ public sealed class HtmlLogWriter : IDisposable
         builder.AppendLine("            </table>");
         builder.AppendLine("        </div>");
         return builder.ToString();
+    }
+
+    /// <summary>
+    /// Inserts an HTML fragment into a closed report immediately before the footer.
+    /// When <paramref name="replaceTableTitle"/> is set, any existing table-container with that
+    /// title is removed first so repeated inserts stay idempotent.
+    /// </summary>
+    public static void InsertHtmlBeforeFooter(
+        IFileSystem fileSystem,
+        string htmlReportPath,
+        string htmlFragment,
+        string? replaceTableTitle = null)
+    {
+        Argument.ThrowIfNull(fileSystem);
+        Argument.ThrowIfNull(htmlReportPath);
+        Argument.ThrowIfNull(htmlFragment);
+
+        var existingHtml = fileSystem.File.ReadAllText(htmlReportPath, Utf8Bom);
+        if (!string.IsNullOrEmpty(replaceTableTitle))
+        {
+            existingHtml = RemoveTableContainerByTitle(existingHtml, replaceTableTitle) ?? existingHtml;
+        }
+
+        var footerIndex = existingHtml.IndexOf(FooterStartMarker, StringComparison.Ordinal);
+        if (footerIndex < 0)
+        {
+            throw new InvalidOperationException(
+                $"HTML report '{htmlReportPath}' is missing the expected footer marker; cannot insert content.");
+        }
+
+        var updatedHtml = existingHtml.Insert(footerIndex, htmlFragment);
+        fileSystem.File.WriteAllText(htmlReportPath, updatedHtml, Utf8Bom);
+    }
+
+    private static string? RemoveTableContainerByTitle(string html, string tableTitle)
+    {
+        var titleMarker = $@"<div class=""table-title"">{EscapeHtml(tableTitle)}</div>";
+        var titleIndex = html.IndexOf(titleMarker, StringComparison.Ordinal);
+        if (titleIndex < 0)
+        {
+            return null;
+        }
+
+        const string containerStart = @"        <div class=""table-container"">";
+        var start = html.LastIndexOf(containerStart, titleIndex, StringComparison.Ordinal);
+        if (start < 0)
+        {
+            return null;
+        }
+
+        var tableEnd = html.IndexOf("</table>", titleIndex, StringComparison.Ordinal);
+        if (tableEnd < 0)
+        {
+            return null;
+        }
+
+        var closeDiv = html.IndexOf("</div>", tableEnd, StringComparison.Ordinal);
+        if (closeDiv < 0)
+        {
+            return null;
+        }
+
+        var end = closeDiv + "</div>".Length;
+        if (end < html.Length && html[end] == '\r')
+        {
+            end++;
+        }
+
+        if (end < html.Length && html[end] == '\n')
+        {
+            end++;
+        }
+
+        return html.Remove(start, end - start);
     }
 
     /// <summary>

@@ -9,7 +9,6 @@
 
 namespace Pipeline.Analysis;
 
-using System.Globalization;
 using Common;
 
 public sealed class WeatherCharacteristicUsageAggregator
@@ -59,7 +58,7 @@ public sealed class WeatherCharacteristicUsageAggregator
                     EnumDisplayNameFormatter.ToDisplayName(pair.Flag),
                     pair.NameInHtml,
                     rowCount,
-                    percent.ToString("F2", CultureInfo.InvariantCulture) + "%");
+                    percent);
             })
             .OrderBy(row => row.EnglishName, StringComparer.OrdinalIgnoreCase)
             .ToList();

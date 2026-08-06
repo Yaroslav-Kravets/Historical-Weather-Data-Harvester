@@ -51,6 +51,15 @@ public sealed class AnalysisPipeline
         Argument.ThrowIfNull(options.ParsedStageDirectory);
         Argument.ThrowIfNull(options.ParsedHtmlReportPath);
 
+        if (!string.IsNullOrWhiteSpace(options.TimeNormalizedStageDirectory))
+        {
+            Argument.ThrowIf(
+                options.TimeNormalizedHtmlReportPath,
+                path => string.IsNullOrWhiteSpace(path),
+                "TimeNormalizedHtmlReportPath is required when TimeNormalizedStageDirectory is set.",
+                nameof(options.TimeNormalizedHtmlReportPath));
+        }
+
         this.logger.LogInformation("Weather characteristics analysis stage start");
 
         this.AnalyzeStage(
@@ -60,11 +69,9 @@ public sealed class AnalysisPipeline
 
         if (!string.IsNullOrWhiteSpace(options.TimeNormalizedStageDirectory))
         {
-            var timeNormalizedHtmlReportPath = options.TimeNormalizedHtmlReportPath
-                ?? throw new ArgumentNullException(nameof(options.TimeNormalizedHtmlReportPath));
             this.AnalyzeStage(
-                options.TimeNormalizedStageDirectory,
-                timeNormalizedHtmlReportPath,
+                options.TimeNormalizedStageDirectory!,
+                options.TimeNormalizedHtmlReportPath!,
                 required: false);
         }
 

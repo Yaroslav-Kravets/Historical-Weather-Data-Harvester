@@ -9,6 +9,7 @@
 
 namespace Pipeline.Analysis;
 
+using System.Globalization;
 using System.IO.Abstractions;
 using Common;
 using HtmlLog;
@@ -16,6 +17,8 @@ using Microsoft.Extensions.Logging;
 
 public sealed class WeatherCharacteristicUsageReportWriter
 {
+    private const string UsageTableTitle = "Available Weather Characteristics";
+
     private readonly ILogger<WeatherCharacteristicUsageReportWriter> logger;
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
@@ -51,11 +54,11 @@ public sealed class WeatherCharacteristicUsageReportWriter
                 row.EnglishName,
                 row.NameInHtml,
                 row.RowCount,
-                row.PercentOfRows,
+                PercentOfRows = FormatPercent(row.PercentOfRows),
             })
             .ToList();
 
-        var tableHtml = HtmlLogWriter.RenderTableHtml(tableRows, "Available Weather Characteristics");
+        var tableHtml = HtmlLogWriter.RenderTableHtml(tableRows, UsageTableTitle);
         if (tableHtml.Length == 0)
         {
             return;
@@ -68,7 +71,7 @@ public sealed class WeatherCharacteristicUsageReportWriter
                 htmlReportPath,
                 "Historical Weather Data Harvester — Weather Characteristics"))
             {
-                htmlWriter.WriteTable(tableRows, "Available Weather Characteristics");
+                htmlWriter.WriteTable(tableRows, UsageTableTitle);
             }
 
             this.logger.LogInformation(
@@ -78,20 +81,18 @@ public sealed class WeatherCharacteristicUsageReportWriter
             return;
         }
 
-        var existingHtml = this.fileSystem.File.ReadAllText(htmlReportPath);
-        var footerIndex = existingHtml.IndexOf(HtmlLogWriter.FooterStartMarker, StringComparison.Ordinal);
-        if (footerIndex < 0)
-        {
-            throw new InvalidOperationException(
-                $"HTML report '{htmlReportPath}' is missing the expected footer marker; cannot append usage table.");
-        }
-
-        var updatedHtml = existingHtml.Insert(footerIndex, tableHtml);
-        this.fileSystem.File.WriteAllText(htmlReportPath, updatedHtml);
+        HtmlLogWriter.InsertHtmlBeforeFooter(
+            this.fileSystem,
+            htmlReportPath,
+            tableHtml,
+            replaceTableTitle: UsageTableTitle);
 
         this.logger.LogInformation(
             "Appended weather characteristics table to {ReportPath} ({RowCount} rows)",
             htmlReportPath,
             usageRows.Count);
     }
+
+    private static string FormatPercent(double percentOfRows) =>
+        percentOfRows.ToString("F2", CultureInfo.InvariantCulture) + "%";
 }

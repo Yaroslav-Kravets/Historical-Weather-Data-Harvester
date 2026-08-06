@@ -9,6 +9,7 @@
 
 namespace Pipeline.Analysis;
 
+using System.Globalization;
 using System.IO.Abstractions;
 using Common;
 using Microsoft.Extensions.Logging;
@@ -43,7 +44,7 @@ public sealed class WeatherCharacteristicUsageCsvWriter
                 row.EnglishName,
                 row.NameInHtml,
                 row.RowCount,
-                row.PercentOfRows))
+                row.PercentOfRows.ToString("F2", CultureInfo.InvariantCulture) + "%"))
             .ToList();
 
         var rowCount = this.csvRecordWriter.WriteRecords(

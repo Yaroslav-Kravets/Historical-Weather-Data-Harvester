@@ -34,10 +34,11 @@ public sealed class WeatherCsvOutputPathsTests
             WeatherCsvOutputPaths.ParsedSourceFilesManifestFileName,
             WeatherCsvOutputPaths.ParsedPlacesManifestFileName,
             WeatherCsvOutputPaths.WeatherCharacteristicsManifestFileName,
+            WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName,
         };
 
         Assert.Equal(manifestFileNames.Length, manifestFileNames.Distinct(StringComparer.Ordinal).Count());
-        Assert.False(
+        Assert.True(
             WeatherCsvOutputPaths.IsParsedStageManifestFileName(
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
     }
