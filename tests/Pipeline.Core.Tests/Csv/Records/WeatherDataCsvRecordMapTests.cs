@@ -31,7 +31,7 @@ public sealed class WeatherDataCsvRecordMapTests
     {
         var characteristics = WeatherCharacteristics.FreezingRain | WeatherCharacteristics.LightFog;
         var expectedCell = this.weatherCharacteristicConverter.ToEnglishCsvCell(characteristics);
-        Assert.Equal("Freezing Rain, Light Fog", expectedCell);
+        Assert.Equal("Freezing rain, Light fog", expectedCell);
 
         var record = new WeatherDataCsvRecord(
             WeatherDataRowTestFactory.Create(
@@ -50,7 +50,7 @@ public sealed class WeatherDataCsvRecordMapTests
     {
         var characteristics = WeatherCharacteristics.FreezingRain;
         var englishCell = this.weatherCharacteristicConverter.ToEnglishCsvCell(characteristics);
-        Assert.Equal("Freezing Rain", englishCell);
+        Assert.Equal("Freezing rain", englishCell);
 
         var record = new WeatherDataCsvRecord(
             WeatherDataRowTestFactory.Create(

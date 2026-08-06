@@ -15,11 +15,11 @@ public sealed class PascalCaseNameFormatterTests
 {
     [Theory]
     [InlineData("Clear", "Clear")]
-    [InlineData("BlackIce", "Black Ice")]
-    [InlineData("RainAndHail", "Rain And Hail")]
-    [InlineData("ReducedVisibilityDueToSmoke", "Reduced Visibility Due To Smoke")]
-    [InlineData("ChervonaZirka", "Chervona Zirka")]
-    [InlineData("IvanoFrankivsk", "Ivano Frankivsk")]
+    [InlineData("BlackIce", "Black ice")]
+    [InlineData("RainAndHail", "Rain and hail")]
+    [InlineData("ReducedVisibilityDueToSmoke", "Reduced visibility due to smoke")]
+    [InlineData("ChervonaZirka", "Chervona zirka")]
+    [InlineData("IvanoFrankivsk", "Ivano frankivsk")]
     public void ToDisplayName_FormatsPascalCaseEnumMember(string enumMemberName, string expected)
     {
         Assert.Equal(expected, PascalCaseNameFormatter.ToDisplayName(enumMemberName));
