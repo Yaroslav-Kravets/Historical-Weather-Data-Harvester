@@ -44,7 +44,7 @@ public sealed class WeatherCharacteristicUsageCsvWriter
                 row.EnglishName,
                 row.NameInHtml,
                 row.RowCount,
-                row.PercentOfRows.ToString("F2", CultureInfo.InvariantCulture) + "%"))
+                row.PercentOfRows.ToString("F5", CultureInfo.InvariantCulture) + "%"))
             .ToList();
 
         var rowCount = this.csvRecordWriter.WriteRecords(

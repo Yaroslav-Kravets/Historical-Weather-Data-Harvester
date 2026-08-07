@@ -57,5 +57,5 @@ public sealed class WeatherCharacteristicUsageReportWriter
     }
 
     private static string FormatPercent(double percentOfRows) =>
-        percentOfRows.ToString("F2", CultureInfo.InvariantCulture) + "%";
+        percentOfRows.ToString("F5", CultureInfo.InvariantCulture) + "%";
 }
