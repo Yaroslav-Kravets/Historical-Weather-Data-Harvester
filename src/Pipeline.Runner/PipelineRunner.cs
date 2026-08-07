@@ -11,10 +11,12 @@ namespace Pipeline.Runner;
 
 using System.IO.Abstractions;
 using Common;
+using HtmlLog;
 using HtmlLogCsvComparer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -69,17 +71,45 @@ public sealed class PipelineRunner
             this.fileSystem,
             parsedStageDirectory,
             this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
-            services => services.AddParserServices()))
+            services =>
+            {
+                services.AddParserServices();
+                if (this.settings.RunAnalysis)
+                {
+                    services.AddAnalysisServices();
+                }
+            }))
         {
             var logger = parsedStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
             logger.LogInformation("Start");
 
             var parsingPipeline = parsedStage.ServiceProvider.GetRequiredService<ParsingPipeline>();
-            parsingPipeline.Run(new ParsingRunOptions(
-                this.settings.HistoricalWeatherFilesRoot,
+            var htmlLogFileManager = parsedStage.ServiceProvider.GetRequiredService<HtmlLogFileManager>();
+            var parsedHtmlReportPath = this.fileSystem.Path.Combine(
                 parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, $"result{logDateTime}.html"),
-                this.settings.RunInParallel));
+                $"result{logDateTime}.html");
+
+            using (var htmlWriter = new HtmlLogWriter(
+                htmlLogFileManager,
+                parsedHtmlReportPath,
+                "Historical Weather Data Harvester — Parsing"))
+            {
+                parsingPipeline.Run(new ParsingRunOptions(
+                    this.settings.HistoricalWeatherFilesRoot,
+                    parsedStageDirectory,
+                    htmlWriter,
+                    this.settings.RunInParallel));
+
+                if (this.settings.RunAnalysis)
+                {
+                    parsedStage.ServiceProvider
+                        .GetRequiredService<AnalysisPipeline>()
+                        .AnalyzeStage(new AnalysisRunOptions(
+                            parsedStageDirectory,
+                            htmlWriter,
+                            Required: true));
+                }
+            }
         }
 
         using (var denormStage = StageServiceProviderFactory.Create(
@@ -94,12 +124,6 @@ public sealed class PipelineRunner
                 this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
                 parsedStageDirectory,
                 this.settings.RunInParallel));
-
-            if (!this.settings.RunTimeNormalization)
-            {
-                var logger = denormStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
-            }
         }
 
         if (this.settings.RunTimeNormalization)
@@ -109,17 +133,44 @@ public sealed class PipelineRunner
                 this.fileSystem,
                 timeNormalizedStageDirectory,
                 this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"log{logDateTime}.log"),
-                services => services.AddTimeNormalizerServices()))
+                services =>
+                {
+                    services.AddTimeNormalizerServices();
+                    if (this.settings.RunAnalysis)
+                    {
+                        services.AddAnalysisServices();
+                    }
+                }))
             {
-                var timeNormalizingPipeline = timeNormalizerStage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>();
-                timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
-                    parsedStageDirectory,
+                var timeNormalizingPipeline = timeNormalizerStage.ServiceProvider
+                    .GetRequiredService<TimeNormalizingPipeline>();
+                var htmlLogFileManager = timeNormalizerStage.ServiceProvider
+                    .GetRequiredService<HtmlLogFileManager>();
+                var timeNormalizedHtmlReportPath = this.fileSystem.Path.Combine(
                     timeNormalizedStageDirectory,
-                    this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"result{logDateTime}.html"),
-                    this.settings.RunInParallel));
+                    $"result{logDateTime}.html");
 
-                var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
+                using (var htmlWriter = new HtmlLogWriter(
+                    htmlLogFileManager,
+                    timeNormalizedHtmlReportPath,
+                    "Historical Weather Data Harvester — Time Normalizing"))
+                {
+                    timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
+                        parsedStageDirectory,
+                        timeNormalizedStageDirectory,
+                        htmlWriter,
+                        this.settings.RunInParallel));
+
+                    if (this.settings.RunAnalysis)
+                    {
+                        timeNormalizerStage.ServiceProvider
+                            .GetRequiredService<AnalysisPipeline>()
+                            .AnalyzeStage(new AnalysisRunOptions(
+                                timeNormalizedStageDirectory,
+                                htmlWriter,
+                                Required: false));
+                    }
+                }
             }
         }
 
@@ -153,6 +204,18 @@ public sealed class PipelineRunner
                         break;
                 }
             }
+        }
+
+        using (var finishStage = StageServiceProviderFactory.Create(
+            this.configuration,
+            this.fileSystem,
+            parsedStageDirectory,
+            this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
+            _ => { }))
+        {
+            finishStage.ServiceProvider
+                .GetRequiredService<ILogger<PipelineRunner>>()
+                .LogInformation("Finish");
         }
     }
 }

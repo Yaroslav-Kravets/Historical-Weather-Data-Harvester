@@ -13,7 +13,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO.Abstractions;
 using Common;
-using HtmlLog;
 using Microsoft.Extensions.Logging;
 
 public sealed class TimeNormalizingPipeline
@@ -31,7 +30,6 @@ public sealed class TimeNormalizingPipeline
     private readonly PlaceTimeNormalizer placeTimeNormalizer;
     private readonly NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter;
     private readonly TimeNormalizingReportWriter timeNormalizingReportWriter;
-    private readonly HtmlLogFileManager htmlLogFileManager;
 
     public TimeNormalizingPipeline(
         ILogger<TimeNormalizingPipeline> logger,
@@ -42,8 +40,7 @@ public sealed class TimeNormalizingPipeline
         ParsedSourceFilesManifestReader parsedSourceFilesManifestReader,
         PlaceTimeNormalizer placeTimeNormalizer,
         NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter,
-        TimeNormalizingReportWriter timeNormalizingReportWriter,
-        HtmlLogFileManager htmlLogFileManager)
+        TimeNormalizingReportWriter timeNormalizingReportWriter)
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
@@ -54,7 +51,6 @@ public sealed class TimeNormalizingPipeline
         Argument.ThrowIfNull(placeTimeNormalizer);
         Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvWriter);
         Argument.ThrowIfNull(timeNormalizingReportWriter);
-        Argument.ThrowIfNull(htmlLogFileManager);
 
         this.logger = logger;
         this.fileSystem = fileSystem;
@@ -65,12 +61,12 @@ public sealed class TimeNormalizingPipeline
         this.placeTimeNormalizer = placeTimeNormalizer;
         this.normalizedColumnsWeatherDataCsvWriter = normalizedColumnsWeatherDataCsvWriter;
         this.timeNormalizingReportWriter = timeNormalizingReportWriter;
-        this.htmlLogFileManager = htmlLogFileManager;
     }
 
     public void Run(TimeNormalizingRunOptions options)
     {
         Argument.ThrowIfNull(options);
+        Argument.ThrowIfNull(options.HtmlWriter);
         if (options.RunInParallel)
         {
             this.logger.LogInformation(
@@ -172,22 +168,19 @@ public sealed class TimeNormalizingPipeline
         var totalTime = totalStopwatch.Elapsed.TotalSeconds;
         var averageTime = totalPlaces > 0 ? (totalPlaceProcessingTime / (double)totalPlaces) / 1000.0 : 0;
 
-        using (var htmlWriter = new HtmlLogWriter(this.htmlLogFileManager, options.HtmlReportPath, "Historical Weather Data Harvester — Time Normalizing"))
-        {
-            this.timeNormalizingReportWriter.WriteReport(
-                htmlWriter,
-                totalPlaces,
-                timeNormalizationSuccessfulCount,
-                timeNormalizationUnsuccessfulCount,
-                missingTimeEntriesCount,
-                totalTime,
-                averageTime,
-                normalizedRowsByPlace,
-                normalizedFileCountsByPlace,
-                timeNormalizationCountsByPlace,
-                issueCollector,
-                options.ParsedStageDirectory);
-        }
+        this.timeNormalizingReportWriter.WriteReport(
+            options.HtmlWriter,
+            totalPlaces,
+            timeNormalizationSuccessfulCount,
+            timeNormalizationUnsuccessfulCount,
+            missingTimeEntriesCount,
+            totalTime,
+            averageTime,
+            normalizedRowsByPlace,
+            normalizedFileCountsByPlace,
+            timeNormalizationCountsByPlace,
+            issueCollector,
+            options.ParsedStageDirectory);
 
         this.logger.LogInformation("Time normalizing stage complete");
     }

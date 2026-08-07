@@ -7,12 +7,11 @@
 //   ORCID: https://orcid.org/0000-0003-4357-1826
 // ---------------------------------------------------------------------------
 
-namespace Pipeline.TimeNormalizer;
+namespace Pipeline.Analysis;
 
 using HtmlLog;
 
-public sealed record TimeNormalizingRunOptions(
-    string ParsedStageDirectory,
-    string TimeNormalizedStageDirectory,
+public sealed record AnalysisRunOptions(
+    string StageDirectory,
     HtmlLogWriter HtmlWriter,
-    bool RunInParallel);
+    bool Required);

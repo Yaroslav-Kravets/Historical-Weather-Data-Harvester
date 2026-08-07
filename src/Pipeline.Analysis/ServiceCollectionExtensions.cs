@@ -7,23 +7,26 @@
 //   ORCID: https://orcid.org/0000-0003-4357-1826
 // ---------------------------------------------------------------------------
 
-namespace HtmlLog;
+namespace Pipeline.Analysis;
 
 using Common;
+using HtmlLog;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Pipeline.Core;
 
 public static class ServiceCollectionExtensions
 {
-    /// <summary>
-    /// Registers shared HtmlLog services used by pipeline stages that write HTML reports.
-    /// </summary>
-    /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
-    public static IServiceCollection AddHtmlLogServices(this IServiceCollection services)
+    public static IServiceCollection AddAnalysisServices(this IServiceCollection services)
     {
         Argument.ThrowIfNull(services);
 
-        services.TryAddSingleton<HtmlLogFileManager>();
+        services.AddPipelineCoreServices();
+        services.AddHtmlLogServices();
+        services.TryAddSingleton<WeatherCharacteristicUsageAggregator>();
+        services.TryAddSingleton<WeatherCharacteristicUsageCsvWriter>();
+        services.TryAddSingleton<WeatherCharacteristicUsageReportWriter>();
+        services.TryAddSingleton<AnalysisPipeline>();
 
         return services;
     }

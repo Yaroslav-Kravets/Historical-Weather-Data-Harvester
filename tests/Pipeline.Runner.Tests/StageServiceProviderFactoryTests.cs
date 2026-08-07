@@ -15,6 +15,7 @@ using FileSystem.TestSupport;
 using HtmlLog;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -87,6 +88,14 @@ public sealed class StageServiceProviderFactoryTests
     }
 
     [Fact]
+    public void Create_ResolvesAnalysisPipelineFromRegisteredServices()
+    {
+        using var stage = CreateStage(services => services.AddAnalysisServices());
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
+    }
+
+    [Fact]
     public void Create_RunsMinimalParsingPipelineOnInjectedFileSystem()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -116,7 +125,11 @@ public sealed class StageServiceProviderFactoryTests
             services => services.AddParserServices());
 
         var pipeline = stage.ServiceProvider.GetRequiredService<ParsingPipeline>();
-        pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, reportPath, RunInParallel: false));
+        var htmlLogFileManager = stage.ServiceProvider.GetRequiredService<HtmlLogFileManager>();
+        using (var htmlWriter = new HtmlLogWriter(htmlLogFileManager, reportPath, "Parsing"))
+        {
+            pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, htmlWriter, RunInParallel: false));
+        }
 
         var csvPath = fileSystem.Path.Combine(
             stageDirectory,

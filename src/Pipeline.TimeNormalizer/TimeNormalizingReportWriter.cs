@@ -177,7 +177,7 @@ public sealed class TimeNormalizingReportWriter
         if (this.fileSystem.Directory.Exists(parsedStageDirectory))
         {
             foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, parsedStageDirectory)
-                         .Where(path => !WeatherCsvOutputPaths.IsParsedStageManifestFileName(this.fileSystem.Path.GetFileName(path))))
+                         .Where(path => !WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(this.fileSystem.Path.GetFileName(path))))
             {
                 var place = this.fileSystem.Path.GetFileNameWithoutExtension(csvPath);
                 if (place is null || normalizedRowsByPlace.ContainsKey(place))

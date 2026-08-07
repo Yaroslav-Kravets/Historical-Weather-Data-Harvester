@@ -41,7 +41,7 @@ public sealed class DenormalizedWeatherDataCsvReader
         foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, parsedStageDirectory))
         {
             var fileName = this.fileSystem.Path.GetFileName(csvPath);
-            if (WeatherCsvOutputPaths.IsParsedStageManifestFileName(fileName))
+            if (WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(fileName))
             {
                 continue;
             }
