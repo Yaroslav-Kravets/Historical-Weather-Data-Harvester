@@ -41,7 +41,7 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         var html = this.fileSystem.File.ReadAllText(reportPath);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
-        Assert.Contains("100.00%", html, StringComparison.Ordinal);
+        Assert.Contains("100.00000%", html, StringComparison.Ordinal);
         Assert.Contains("Stage Placeholder", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
