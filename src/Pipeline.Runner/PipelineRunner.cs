@@ -15,6 +15,7 @@ using HtmlLogCsvComparer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -47,112 +48,155 @@ public sealed class PipelineRunner
         var timeNormalizedStageDirectory = this.fileSystem.Path.Combine(
             runDirectory,
             WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
+        var parsedTextLogFilePath = this.StageTextLogPath(parsedStageDirectory, logDateTime);
 
-        if (string.IsNullOrWhiteSpace(this.settings.HistoricalWeatherFilesRoot))
+        using (var parsedServices = this.CreateParsedStageServices(parsedStageDirectory, parsedTextLogFilePath))
         {
-            using (var errorStage = StageServiceProviderFactory.Create(
-                this.configuration,
-                this.fileSystem,
-                parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
-                services => services.AddParserServices()))
+            if (string.IsNullOrWhiteSpace(this.settings.HistoricalWeatherFilesRoot))
             {
-                var logger = errorStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogError("HistoricalWeatherFilesRoot is not configured in appsettings.json");
+                parsedServices.ServiceProvider
+                    .GetRequiredService<ILogger<PipelineRunner>>()
+                    .LogError("HistoricalWeatherFilesRoot is not configured in appsettings.json");
+
+                throw new InvalidOperationException("HistoricalWeatherFilesRoot is not configured in appsettings.json");
             }
 
-            throw new InvalidOperationException("HistoricalWeatherFilesRoot is not configured in appsettings.json");
+            this.RunParsingStage(parsedServices.ServiceProvider, parsedStageDirectory, logDateTime);
+
+            if (this.settings.RunAnalysis)
+            {
+                this.RunAnalysisStage(
+                    parsedServices.ServiceProvider,
+                    parsedStageDirectory,
+                    logDateTime);
+            }
+
+            this.RunDenormalizationStage(parsedServices.ServiceProvider, parsedStageDirectory);
+
+            if (this.settings.RunTimeNormalization)
+            {
+                var timeNormalizedTextLogFilePath = this.StageTextLogPath(
+                    timeNormalizedStageDirectory,
+                    logDateTime);
+                using var timeNormalizedServices = this.CreateTimeNormalizedStageServices(
+                    timeNormalizedStageDirectory,
+                    timeNormalizedTextLogFilePath);
+
+                this.RunTimeNormalizationStage(
+                    timeNormalizedServices.ServiceProvider,
+                    parsedStageDirectory,
+                    timeNormalizedStageDirectory,
+                    logDateTime);
+
+                if (this.settings.RunAnalysis)
+                {
+                    this.RunAnalysisStage(
+                        timeNormalizedServices.ServiceProvider,
+                        timeNormalizedStageDirectory,
+                        logDateTime);
+                }
+            }
+
+            if (this.settings.RunHtmlLogCsvComparison)
+            {
+                this.RunHtmlLogCsvComparisonStage(parsedServices.ServiceProvider);
+            }
         }
+    }
 
-        using (var parsedStage = StageServiceProviderFactory.Create(
-            this.configuration,
-            this.fileSystem,
-            parsedStageDirectory,
-            this.fileSystem.Path.Combine(parsedStageDirectory, $"log{logDateTime}.log"),
-            services => services.AddParserServices()))
-        {
-            var logger = parsedStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-            logger.LogInformation("Start");
-
-            var parsingPipeline = parsedStage.ServiceProvider.GetRequiredService<ParsingPipeline>();
-            parsingPipeline.Run(new ParsingRunOptions(
+    private void RunParsingStage(
+        IServiceProvider serviceProvider,
+        string parsedStageDirectory,
+        string logDateTime) =>
+        serviceProvider
+            .GetRequiredService<ParsingPipeline>()
+            .Run(new ParsingRunOptions(
                 this.settings.HistoricalWeatherFilesRoot,
                 parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, $"result{logDateTime}.html"),
+                this.StageHtmlReportPath(parsedStageDirectory, "result", logDateTime),
                 this.settings.RunInParallel));
-        }
 
-        using (var denormStage = StageServiceProviderFactory.Create(
-            this.configuration,
-            this.fileSystem,
-            parsedStageDirectory,
-            this.fileSystem.Path.Combine(parsedStageDirectory, $"log-denorm{logDateTime}.log"),
-            services => services.AddDenormalizerServices()))
-        {
-            var denormalizingPipeline = denormStage.ServiceProvider.GetRequiredService<DenormalizingPipeline>();
-            denormalizingPipeline.Run(new DenormalizingRunOptions(
+    private void RunAnalysisStage(
+        IServiceProvider serviceProvider,
+        string stageDirectory,
+        string logDateTime) =>
+        serviceProvider
+            .GetRequiredService<AnalysisPipeline>()
+            .AnalyzeStage(new AnalysisRunOptions(
+                stageDirectory,
+                this.StageHtmlReportPath(stageDirectory, "result-analysis", logDateTime)));
+
+    private void RunDenormalizationStage(IServiceProvider serviceProvider, string parsedStageDirectory) =>
+        serviceProvider
+            .GetRequiredService<DenormalizingPipeline>()
+            .Run(new DenormalizingRunOptions(
                 this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
                 parsedStageDirectory,
                 this.settings.RunInParallel));
 
-            if (!this.settings.RunTimeNormalization)
-            {
-                var logger = denormStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
-            }
-        }
-
-        if (this.settings.RunTimeNormalization)
-        {
-            using (var timeNormalizerStage = StageServiceProviderFactory.Create(
-                this.configuration,
-                this.fileSystem,
-                timeNormalizedStageDirectory,
-                this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"log{logDateTime}.log"),
-                services => services.AddTimeNormalizerServices()))
-            {
-                var timeNormalizingPipeline = timeNormalizerStage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>();
-                timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
-                    parsedStageDirectory,
-                    timeNormalizedStageDirectory,
-                    this.fileSystem.Path.Combine(timeNormalizedStageDirectory, $"result{logDateTime}.html"),
-                    this.settings.RunInParallel));
-
-                var logger = timeNormalizerStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                logger.LogInformation("Finish");
-            }
-        }
-
-        if (this.settings.RunHtmlLogCsvComparison)
-        {
-            using (var comparisonStage = StageServiceProviderFactory.Create(
-                this.configuration,
-                this.fileSystem,
+    private void RunTimeNormalizationStage(
+        IServiceProvider serviceProvider,
+        string parsedStageDirectory,
+        string timeNormalizedStageDirectory,
+        string logDateTime) =>
+        serviceProvider
+            .GetRequiredService<TimeNormalizingPipeline>()
+            .Run(new TimeNormalizingRunOptions(
                 parsedStageDirectory,
-                this.fileSystem.Path.Combine(parsedStageDirectory, $"log-compare{logDateTime}.log"),
-                services => services.AddHtmlLogCsvComparerServices()))
-            {
-                var logger = comparisonStage.ServiceProvider.GetRequiredService<ILogger<PipelineRunner>>();
-                var comparer = comparisonStage.ServiceProvider.GetRequiredService<CsvComparisonOutput>();
-                var searchRoot = this.fileSystem.Directory.GetCurrentDirectory();
-                var exitCode = comparer.CompareChain(searchRoot);
+                timeNormalizedStageDirectory,
+                this.StageHtmlReportPath(timeNormalizedStageDirectory, "result", logDateTime),
+                this.settings.RunInParallel));
 
-                switch (exitCode)
+    private void RunHtmlLogCsvComparisonStage(IServiceProvider serviceProvider) =>
+        serviceProvider
+            .GetRequiredService<CsvComparisonOutput>()
+            .CompareChain(this.fileSystem.Directory.GetCurrentDirectory());
+
+    private StageServiceProviderFactory CreateParsedStageServices(
+        string parsedStageDirectory,
+        string textLogFilePath) =>
+        StageServiceProviderFactory.Create(
+            this.configuration,
+            this.fileSystem,
+            parsedStageDirectory,
+            textLogFilePath,
+            services =>
+            {
+                services.AddParserServices();
+                services.AddDenormalizerServices();
+
+                if (this.settings.RunAnalysis)
                 {
-                    case 0:
-                        logger.LogInformation("HtmlLog CSV chain comparison finished; all pairs equal.");
-                        break;
-                    case 1:
-                        logger.LogWarning(
-                            "HtmlLog CSV chain comparison finished; some pairs not equal — see comparison log above.");
-                        break;
-                    default:
-                        logger.LogWarning(
-                            "HtmlLog CSV chain comparison finished with errors — see comparison log/SUMMARY above " +
-                            "(SUMMARY includes equal, not-equal, and error counts).");
-                        break;
+                    services.AddAnalysisServices();
                 }
-            }
-        }
-    }
+
+                if (this.settings.RunHtmlLogCsvComparison)
+                {
+                    services.AddHtmlLogCsvComparerServices();
+                }
+            });
+
+    private StageServiceProviderFactory CreateTimeNormalizedStageServices(
+        string timeNormalizedStageDirectory,
+        string textLogFilePath) =>
+        StageServiceProviderFactory.Create(
+            this.configuration,
+            this.fileSystem,
+            timeNormalizedStageDirectory,
+            textLogFilePath,
+            services =>
+            {
+                services.AddTimeNormalizerServices();
+
+                if (this.settings.RunAnalysis)
+                {
+                    services.AddAnalysisServices();
+                }
+            });
+
+    private string StageTextLogPath(string stageDirectory, string logDateTime) =>
+        this.fileSystem.Path.Combine(stageDirectory, $"log{logDateTime}.log");
+
+    private string StageHtmlReportPath(string stageDirectory, string resultPrefix, string logDateTime) =>
+        this.fileSystem.Path.Combine(stageDirectory, $"{resultPrefix}{logDateTime}.html");
 }

@@ -11,6 +11,7 @@ namespace Pipeline.Core;
 
 using Common;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Pipeline.Core.Converters;
 using Pipeline.Core.Csv;
 using Pipeline.Core.Csv.Readers;
@@ -20,23 +21,23 @@ using Pipeline.Core.Csv.Writers;
 public static class ServiceCollectionExtensions
 {
     /// <summary>
-    /// Registers shared Pipeline.Core CSV and converter services used by Parser, Denormalizer, and TimeNormalizer.
+    /// Registers shared Pipeline.Core CSV and converter services used by Parser, Denormalizer, TimeNormalizer, and Analysis.
     /// </summary>
     /// <returns>The same <paramref name="services"/> instance for chaining.</returns>
     public static IServiceCollection AddPipelineCoreServices(this IServiceCollection services)
     {
         Argument.ThrowIfNull(services);
 
-        services.AddSingleton<CsvRecordWriter>();
-        services.AddSingleton<PlaceCsvFileNameResolver>();
-        services.AddSingleton<PlaceConverter>();
-        services.AddSingleton<WeatherCharacteristicConverter>();
-        services.AddSingleton<WeatherCharacteristicsEnglishCsvConverter>();
-        services.AddSingleton<WeatherDataCsvRecordMap>();
-        services.AddSingleton<NormalizedColumnsWeatherDataCsvWriter>();
-        services.AddSingleton<NormalizedColumnsWeatherDataCsvReader>();
-        services.AddSingleton<DenormalizedWeatherDataCsvWriter>();
-        services.AddSingleton<DenormalizedWeatherDataCsvReader>();
+        services.TryAddSingleton<CsvRecordWriter>();
+        services.TryAddSingleton<PlaceCsvFileNameResolver>();
+        services.TryAddSingleton<PlaceConverter>();
+        services.TryAddSingleton<WeatherCharacteristicConverter>();
+        services.TryAddSingleton<WeatherCharacteristicsEnglishCsvConverter>();
+        services.TryAddSingleton<WeatherDataCsvRecordMap>();
+        services.TryAddSingleton<NormalizedColumnsWeatherDataCsvWriter>();
+        services.TryAddSingleton<NormalizedColumnsWeatherDataCsvReader>();
+        services.TryAddSingleton<DenormalizedWeatherDataCsvWriter>();
+        services.TryAddSingleton<DenormalizedWeatherDataCsvReader>();
 
         return services;
     }

@@ -34,10 +34,12 @@ public static class PascalCaseNameFormatter
     public static string ToDisplayName(string enumMemberName)
     {
         var parts = SplitPascalCase(enumMemberName);
-        return string.Join(" ", parts.Select(NormalizePart));
+        return string.Join(
+            " ",
+            parts.Select((part, index) => index == 0 ? NormalizeFirstPart(part) : part.ToLowerInvariant()));
     }
 
-    private static string NormalizePart(string part)
+    private static string NormalizeFirstPart(string part)
     {
         if (part.Length == 0)
         {

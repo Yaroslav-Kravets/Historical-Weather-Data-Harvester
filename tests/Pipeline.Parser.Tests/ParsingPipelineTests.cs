@@ -43,9 +43,9 @@ public sealed class ParsingPipelineTests
     {
         var missingRoot = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(missingRoot, this.outputDirectory, htmlReportPath, RunInParallel: false);
 
-        var exception = Assert.Throws<DirectoryNotFoundException>(() => this.parsingPipeline.Run(options));
+        var exception = Assert.Throws<DirectoryNotFoundException>(() =>
+            this.RunParsing(missingRoot, htmlReportPath, runInParallel: false));
 
         Assert.Contains("Input directory not found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(missingRoot, exception.Message, StringComparison.Ordinal);
@@ -57,9 +57,9 @@ public sealed class ParsingPipelineTests
         var archivePath = InMemoryFileSystem.UnderRoot(this.fileSystem, "weather.7z");
         WriteSevenZipArchive(this.fileSystem, archivePath, ("Kyiv/2003-01-01.html", BuildMinimalArchiveHtml("Киеве")));
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(archivePath, this.outputDirectory, htmlReportPath, RunInParallel: true);
 
-        var exception = Assert.Throws<InvalidOperationException>(() => this.parsingPipeline.Run(options));
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            this.RunParsing(archivePath, htmlReportPath, runInParallel: true));
 
         Assert.Contains("do not support parallel parsing", exception.Message, StringComparison.Ordinal);
     }
@@ -79,9 +79,8 @@ public sealed class ParsingPipelineTests
             BuildMinimalArchiveHtml("Киеве", day: 2, rowCount: 3),
             Encoding.GetEncoding(1251));
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(sourceRoot, this.outputDirectory, htmlReportPath, RunInParallel: true);
 
-        this.parsingPipeline.Run(options);
+        this.RunParsing(sourceRoot, htmlReportPath, runInParallel: true);
 
         var csvPath = this.fileSystem.Path.Combine(
             this.outputDirectory,
@@ -95,9 +94,9 @@ public sealed class ParsingPipelineTests
     {
         var missingArchive = InMemoryFileSystem.UnderRoot(this.fileSystem, "missing.7z");
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(missingArchive, this.outputDirectory, htmlReportPath, RunInParallel: false);
 
-        var exception = Assert.Throws<FileNotFoundException>(() => this.parsingPipeline.Run(options));
+        var exception = Assert.Throws<FileNotFoundException>(() =>
+            this.RunParsing(missingArchive, htmlReportPath, runInParallel: false));
 
         Assert.Contains("Input 7z archive not found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(missingArchive, exception.Message, StringComparison.Ordinal);
@@ -110,9 +109,8 @@ public sealed class ParsingPipelineTests
         this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(archivePath)!);
         this.fileSystem.File.WriteAllBytes(archivePath, [0x00, 0x01, 0x02, 0x03]);
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(archivePath, this.outputDirectory, htmlReportPath, RunInParallel: false);
 
-        Assert.ThrowsAny<Exception>(() => this.parsingPipeline.Run(options));
+        Assert.ThrowsAny<Exception>(() => this.RunParsing(archivePath, htmlReportPath, runInParallel: false));
     }
 
     [Theory]
@@ -127,9 +125,8 @@ public sealed class ParsingPipelineTests
             ("Kyiv/2003-01-01.html", BuildMinimalArchiveHtml("Киеве", day: 1, rowCount: 1)),
             ("Kyiv/2003-01-02.html", BuildMinimalArchiveHtml("Киеве", day: 2, rowCount: 3)));
         var htmlReportPath = this.fileSystem.Path.Combine(this.outputDirectory, "result.html");
-        var options = new ParsingRunOptions(archivePath, this.outputDirectory, htmlReportPath, RunInParallel: false);
 
-        this.parsingPipeline.Run(options);
+        this.RunParsing(archivePath, htmlReportPath, runInParallel: false);
 
         var csvPath = this.fileSystem.Path.Combine(
             this.outputDirectory,
@@ -157,7 +154,6 @@ public sealed class ParsingPipelineTests
     {
         var csvRecordWriter = new CsvRecordWriter(fileSystem);
         var placeCsvFileNameResolver = new PlaceCsvFileNameResolver(fileSystem);
-        var htmlLogFileManager = new HtmlLogFileManager(fileSystem);
         var placeConverter = new PlaceConverter();
         var weatherCharacteristicConverter = new WeatherCharacteristicConverter();
         var weatherDataCsvRecordMap = new WeatherDataCsvRecordMap(
@@ -165,6 +161,7 @@ public sealed class ParsingPipelineTests
         return new ParsingPipeline(
             NullLogger<ParsingPipeline>.Instance,
             fileSystem,
+            new HtmlLogFileManager(fileSystem),
             new RealWeatherHtmlParser(
                 fileSystem,
                 NullLogger<RealWeatherHtmlParser>.Instance,
@@ -192,7 +189,6 @@ public sealed class ParsingPipelineTests
                 new ParsingPlaceErrorCountsBuilder(),
                 fileSystem,
                 weatherCharacteristicConverter),
-            htmlLogFileManager,
             placeConverter);
     }
 
@@ -247,5 +243,14 @@ public sealed class ParsingPipelineTests
         </body>
         </html>
         """;
+    }
+
+    private void RunParsing(string sourceDirectory, string htmlReportPath, bool runInParallel)
+    {
+        this.parsingPipeline.Run(new ParsingRunOptions(
+            sourceDirectory,
+            this.outputDirectory,
+            htmlReportPath,
+            runInParallel));
     }
 }

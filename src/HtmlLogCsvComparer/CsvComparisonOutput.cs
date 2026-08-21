@@ -90,6 +90,8 @@ public sealed class CsvComparisonOutput
     {
         Argument.ThrowIfNull(root);
 
+        this.logger.LogInformation("Start");
+
         IReadOnlyList<string> dirs;
         try
         {
@@ -98,12 +100,14 @@ public sealed class CsvComparisonOutput
         catch (HtmlLogDiscoveryException exc)
         {
             this.logger.LogError("error: {Message}", exc.Message);
+            this.logger.LogInformation("Finish");
             return 2;
         }
 
         if (dirs.Count < 2)
         {
             this.logger.LogError("Need at least 2 HtmlLog folders or ZIP files; found {Count}.", dirs.Count);
+            this.logger.LogInformation("Finish");
             return 2;
         }
 
@@ -182,6 +186,8 @@ public sealed class CsvComparisonOutput
                     passed,
                     partlyEqual,
                     notEqual);
+                this.logger.LogWarning(
+                    "HtmlLog CSV chain comparison finished; some pairs not equal — see comparison log above.");
             }
             else
             {
@@ -191,8 +197,10 @@ public sealed class CsvComparisonOutput
                     passed,
                     partlyEqual,
                     notEqual);
+                this.logger.LogInformation("HtmlLog CSV chain comparison finished; all pairs equal.");
             }
 
+            this.logger.LogInformation("Finish");
             return failures == 0 ? 0 : 1;
         }
         catch (Exception exc) when (exc is IOException
@@ -202,6 +210,10 @@ public sealed class CsvComparisonOutput
             or CsvHelper.CsvHelperException)
         {
             this.logger.LogError(exc, "error: {Message}", exc.Message);
+            this.logger.LogWarning(
+                "HtmlLog CSV chain comparison finished with errors — no SUMMARY was produced; " +
+                "see the preceding error.");
+            this.logger.LogInformation("Finish");
             return 2;
         }
     }

@@ -24,6 +24,7 @@ public sealed class TimeNormalizingPipeline
 
     private readonly ILogger<TimeNormalizingPipeline> logger;
     private readonly IFileSystem fileSystem;
+    private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
     private readonly DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader;
     private readonly DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter;
@@ -31,22 +32,22 @@ public sealed class TimeNormalizingPipeline
     private readonly PlaceTimeNormalizer placeTimeNormalizer;
     private readonly NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter;
     private readonly TimeNormalizingReportWriter timeNormalizingReportWriter;
-    private readonly HtmlLogFileManager htmlLogFileManager;
 
     public TimeNormalizingPipeline(
         ILogger<TimeNormalizingPipeline> logger,
         IFileSystem fileSystem,
+        HtmlLogFileManager htmlLogFileManager,
         PlaceCsvFileNameResolver placeCsvFileNameResolver,
         DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader,
         DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter,
         ParsedSourceFilesManifestReader parsedSourceFilesManifestReader,
         PlaceTimeNormalizer placeTimeNormalizer,
         NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter,
-        TimeNormalizingReportWriter timeNormalizingReportWriter,
-        HtmlLogFileManager htmlLogFileManager)
+        TimeNormalizingReportWriter timeNormalizingReportWriter)
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
+        Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(placeCsvFileNameResolver);
         Argument.ThrowIfNull(denormalizedWeatherDataCsvReader);
         Argument.ThrowIfNull(denormalizedWeatherDataCsvWriter);
@@ -54,10 +55,10 @@ public sealed class TimeNormalizingPipeline
         Argument.ThrowIfNull(placeTimeNormalizer);
         Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvWriter);
         Argument.ThrowIfNull(timeNormalizingReportWriter);
-        Argument.ThrowIfNull(htmlLogFileManager);
 
         this.logger = logger;
         this.fileSystem = fileSystem;
+        this.htmlLogFileManager = htmlLogFileManager;
         this.placeCsvFileNameResolver = placeCsvFileNameResolver;
         this.denormalizedWeatherDataCsvReader = denormalizedWeatherDataCsvReader;
         this.denormalizedWeatherDataCsvWriter = denormalizedWeatherDataCsvWriter;
@@ -65,21 +66,24 @@ public sealed class TimeNormalizingPipeline
         this.placeTimeNormalizer = placeTimeNormalizer;
         this.normalizedColumnsWeatherDataCsvWriter = normalizedColumnsWeatherDataCsvWriter;
         this.timeNormalizingReportWriter = timeNormalizingReportWriter;
-        this.htmlLogFileManager = htmlLogFileManager;
     }
 
     public void Run(TimeNormalizingRunOptions options)
     {
         Argument.ThrowIfNull(options);
+        Argument.ThrowIfNull(options.HtmlReportPath);
+
+        this.logger.LogInformation("Start");
+
         if (options.RunInParallel)
         {
             this.logger.LogInformation(
-                "Time normalizing stage start (parallel, max degree: {MaxDegree})",
+                "Time normalizing mode: parallel (max degree: {MaxDegree})",
                 Environment.ProcessorCount);
         }
         else
         {
-            this.logger.LogInformation("Time normalizing stage start (sequential)");
+            this.logger.LogInformation("Time normalizing mode: sequential");
         }
 
         if (!this.fileSystem.Directory.Exists(options.ParsedStageDirectory))
@@ -172,24 +176,22 @@ public sealed class TimeNormalizingPipeline
         var totalTime = totalStopwatch.Elapsed.TotalSeconds;
         var averageTime = totalPlaces > 0 ? (totalPlaceProcessingTime / (double)totalPlaces) / 1000.0 : 0;
 
-        using (var htmlWriter = new HtmlLogWriter(this.htmlLogFileManager, options.HtmlReportPath, "Historical Weather Data Harvester — Time Normalizing"))
-        {
-            this.timeNormalizingReportWriter.WriteReport(
-                htmlWriter,
-                totalPlaces,
-                timeNormalizationSuccessfulCount,
-                timeNormalizationUnsuccessfulCount,
-                missingTimeEntriesCount,
-                totalTime,
-                averageTime,
-                normalizedRowsByPlace,
-                normalizedFileCountsByPlace,
-                timeNormalizationCountsByPlace,
-                issueCollector,
-                options.ParsedStageDirectory);
-        }
+        this.timeNormalizingReportWriter.WriteReport(
+            this.htmlLogFileManager,
+            options.HtmlReportPath,
+            totalPlaces,
+            timeNormalizationSuccessfulCount,
+            timeNormalizationUnsuccessfulCount,
+            missingTimeEntriesCount,
+            totalTime,
+            averageTime,
+            normalizedRowsByPlace,
+            normalizedFileCountsByPlace,
+            timeNormalizationCountsByPlace,
+            issueCollector,
+            options.ParsedStageDirectory);
 
-        this.logger.LogInformation("Time normalizing stage complete");
+        this.logger.LogInformation("Finish");
     }
 
     private static SortedDictionary<DateTime, List<WeatherDataRow>> ToMutableDateEntries(

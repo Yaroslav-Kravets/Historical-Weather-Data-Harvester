@@ -17,6 +17,8 @@ using Microsoft.Extensions.Logging;
 
 public sealed class ParsingReportWriter
 {
+    private const string HtmlReportTitle = "Historical Weather Data Harvester — Parsing";
+
     private readonly ILogger<ParsingReportWriter> logger;
     private readonly ParsingPlaceErrorCountsBuilder errorCountsBuilder;
     private readonly IFileSystem fileSystem;
@@ -40,7 +42,8 @@ public sealed class ParsingReportWriter
     }
 
     public void WriteReport(
-        HtmlLogWriter writer,
+        HtmlLogFileManager htmlLogFileManager,
+        string htmlReportPath,
         string sourcePath,
         bool isSevenZipSource,
         int totalFiles,
@@ -52,11 +55,14 @@ public sealed class ParsingReportWriter
         ParsingIssueCollector issueCollector,
         IReadOnlyList<ParsedFileInfo> flattenedParseResults)
     {
-        Argument.ThrowIfNull(writer);
+        Argument.ThrowIfNull(htmlLogFileManager);
+        Argument.ThrowIfNull(htmlReportPath);
         Argument.ThrowIfNull(sourcePath);
         Argument.ThrowIfNull(resultsByPlace);
         Argument.ThrowIfNull(issueCollector);
         Argument.ThrowIfNull(flattenedParseResults);
+
+        using var writer = new HtmlLogWriter(htmlLogFileManager, htmlReportPath, HtmlReportTitle);
         WriteParsingStatisticsTable(
             writer,
             totalFiles,

@@ -124,20 +124,18 @@ public sealed class ParsingReportWriterTests
             new WeatherCharacteristicConverter());
 
         using var fileManager = new HtmlLogFileManager(fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, reportPath, "Encoding Test"))
-        {
-            reportWriter.WriteReport(
-                htmlWriter,
-                sourcePath,
-                isSevenZipSource,
-                totalFiles: 1,
-                parsingSuccessfulCount: 1,
-                parsingUnsuccessfulCount: 0,
-                totalTimeSeconds: 1,
-                averageTimePerFileSeconds: 1,
-                resultsByPlace: new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase),
-                issueCollector: new ParsingIssueCollector(new PlaceConverter()),
-                flattenedParseResults: flattened);
-        }
+        reportWriter.WriteReport(
+            fileManager,
+            reportPath,
+            sourcePath,
+            isSevenZipSource,
+            totalFiles: 1,
+            parsingSuccessfulCount: 1,
+            parsingUnsuccessfulCount: 0,
+            totalTimeSeconds: 1,
+            averageTimePerFileSeconds: 1,
+            resultsByPlace: new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase),
+            issueCollector: new ParsingIssueCollector(new PlaceConverter()),
+            flattenedParseResults: flattened);
     }
 }

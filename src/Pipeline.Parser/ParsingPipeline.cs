@@ -20,6 +20,7 @@ public sealed class ParsingPipeline
 {
     private readonly ILogger<ParsingPipeline> logger;
     private readonly IFileSystem fileSystem;
+    private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly RealWeatherHtmlParser htmlParser;
     private readonly HtmlFileParser htmlFileParser;
     private readonly ParseResultOrganizer parseResultOrganizer;
@@ -29,12 +30,12 @@ public sealed class ParsingPipeline
     private readonly ParsedStageManifestCsvWriter parsedStageManifestCsvWriter;
     private readonly ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter;
     private readonly ParsingReportWriter parsingReportWriter;
-    private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly PlaceConverter placeConverter;
 
     public ParsingPipeline(
         ILogger<ParsingPipeline> logger,
         IFileSystem fileSystem,
+        HtmlLogFileManager htmlLogFileManager,
         RealWeatherHtmlParser htmlParser,
         HtmlFileParser htmlFileParser,
         ParseResultOrganizer parseResultOrganizer,
@@ -44,11 +45,11 @@ public sealed class ParsingPipeline
         ParsedStageManifestCsvWriter parsedStageManifestCsvWriter,
         ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter,
         ParsingReportWriter parsingReportWriter,
-        HtmlLogFileManager htmlLogFileManager,
         PlaceConverter placeConverter)
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
+        Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(htmlParser);
         Argument.ThrowIfNull(htmlFileParser);
         Argument.ThrowIfNull(parseResultOrganizer);
@@ -58,11 +59,11 @@ public sealed class ParsingPipeline
         Argument.ThrowIfNull(parsedStageManifestCsvWriter);
         Argument.ThrowIfNull(parsedSourceFilesManifestWriter);
         Argument.ThrowIfNull(parsingReportWriter);
-        Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(placeConverter);
 
         this.logger = logger;
         this.fileSystem = fileSystem;
+        this.htmlLogFileManager = htmlLogFileManager;
         this.htmlParser = htmlParser;
         this.htmlFileParser = htmlFileParser;
         this.parseResultOrganizer = parseResultOrganizer;
@@ -72,13 +73,15 @@ public sealed class ParsingPipeline
         this.parsedStageManifestCsvWriter = parsedStageManifestCsvWriter;
         this.parsedSourceFilesManifestWriter = parsedSourceFilesManifestWriter;
         this.parsingReportWriter = parsingReportWriter;
-        this.htmlLogFileManager = htmlLogFileManager;
         this.placeConverter = placeConverter;
     }
 
     public void Run(ParsingRunOptions options)
     {
         Argument.ThrowIfNull(options);
+        Argument.ThrowIfNull(options.HtmlReportPath);
+
+        this.logger.LogInformation("Start");
 
         using var source = SourceFileSystemFactory.Open(this.fileSystem, options.SourceDirectory);
         var isSevenZipSource = source is SevenZipSourceFileSystem;
@@ -91,16 +94,16 @@ public sealed class ParsingPipeline
         if (options.RunInParallel)
         {
             this.logger.LogInformation(
-                "Parsing stage start (parallel, max degree: {MaxDegree})",
+                "Parsing mode: parallel (max degree: {MaxDegree})",
                 Environment.ProcessorCount);
         }
         else if (isSevenZipSource)
         {
-            this.logger.LogInformation("Parsing stage start (sequential 7z archive)");
+            this.logger.LogInformation("Parsing mode: sequential 7z archive");
         }
         else
         {
-            this.logger.LogInformation("Parsing stage start (sequential)");
+            this.logger.LogInformation("Parsing mode: sequential");
         }
 
         var issueCollector = new ParsingIssueCollector(this.placeConverter);
@@ -140,24 +143,22 @@ public sealed class ParsingPipeline
         this.parsedStageManifestCsvWriter.WriteWeatherCharacteristicsManifest(parsedCharacteristics, options.ParsedStageDirectory);
         this.parsedSourceFilesManifestWriter.Write(organizationResult.SourceFileEntries, options.ParsedStageDirectory);
 
-        using (var htmlWriter = new HtmlLogWriter(this.htmlLogFileManager, options.HtmlReportPath, "Historical Weather Data Harvester — Parsing"))
-        {
-            this.parsingReportWriter.WriteReport(
-                htmlWriter,
-                options.SourceDirectory,
-                isSevenZipSource,
-                sourceFileCount,
-                parsingSuccessfulCount,
-                parsingUnsuccessfulCount,
-                totalTime,
-                averageTime,
-                organizationResult.ResultsByPlace,
-                issueCollector,
-                flattenedRawParseResults);
-        }
+        this.parsingReportWriter.WriteReport(
+            this.htmlLogFileManager,
+            options.HtmlReportPath,
+            options.SourceDirectory,
+            isSevenZipSource,
+            sourceFileCount,
+            parsingSuccessfulCount,
+            parsingUnsuccessfulCount,
+            totalTime,
+            averageTime,
+            organizationResult.ResultsByPlace,
+            issueCollector,
+            flattenedRawParseResults);
 
         PlacePathSelfCheckLogger.LogRunSummary(this.logger, issueCollector);
-        this.logger.LogInformation("Parsing stage complete");
+        this.logger.LogInformation("Finish");
     }
 
     private static IEnumerable<WeatherDataRow> ProjectRows(SortedDictionary<DateTime, ParsedDateEntry> resultsByDate)
