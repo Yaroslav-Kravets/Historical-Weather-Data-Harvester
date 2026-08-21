@@ -65,6 +65,29 @@ public sealed class RunnerSettingsTests
         Assert.True(settings.RunTimeNormalization);
     }
 
+    [Fact]
+    public void Load_DefaultsRunAnalysisTrue_WhenKeyAbsent()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>());
+
+        var settings = RunnerSettings.Load(configuration);
+
+        Assert.True(settings.RunAnalysis);
+    }
+
+    [Fact]
+    public void Load_UsesRunAnalysis_WhenKeyPresent()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["RunAnalysis"] = "false",
+        });
+
+        var settings = RunnerSettings.Load(configuration);
+
+        Assert.False(settings.RunAnalysis);
+    }
+
     private static IConfiguration BuildConfiguration(IReadOnlyDictionary<string, string?> values)
     {
         return new ConfigurationBuilder()

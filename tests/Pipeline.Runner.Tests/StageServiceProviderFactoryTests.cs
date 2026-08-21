@@ -13,8 +13,10 @@ using System.IO.Abstractions;
 using System.Text;
 using FileSystem.TestSupport;
 using HtmlLog;
+using HtmlLogCsvComparer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Pipeline.Analysis;
 using Pipeline.Denormalizer;
 using Pipeline.Parser;
 using Pipeline.Runner.Logging;
@@ -84,6 +86,44 @@ public sealed class StageServiceProviderFactoryTests
         using var stage = CreateStage(services => services.AddTimeNormalizerServices());
 
         Assert.NotNull(stage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>());
+    }
+
+    [Fact]
+    public void Create_ResolvesAnalysisPipelineFromRegisteredServices()
+    {
+        using var stage = CreateStage(services => services.AddAnalysisServices());
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
+    }
+
+    [Fact]
+    public void Create_ResolvesParsedStageServicesTogether()
+    {
+        using var stage = CreateStage(services =>
+        {
+            services.AddParserServices();
+            services.AddDenormalizerServices();
+            services.AddAnalysisServices();
+            services.AddHtmlLogCsvComparerServices();
+        });
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<ParsingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<DenormalizingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<CsvComparisonOutput>());
+    }
+
+    [Fact]
+    public void Create_ResolvesTimeNormalizedStageServicesTogether()
+    {
+        using var stage = CreateStage(services =>
+        {
+            services.AddTimeNormalizerServices();
+            services.AddAnalysisServices();
+        });
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
     }
 
     [Fact]

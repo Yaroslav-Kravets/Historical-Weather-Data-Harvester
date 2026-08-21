@@ -318,6 +318,7 @@ public sealed class CsvComparisonOutputTests
     public void CompareChain_Returns0ForEqualMixedFolderAndZipSources()
     {
         var fileSystem = InMemoryFileSystem.Create();
+        var logger = new CollectingLogger<CsvComparisonOutput>();
         var root = InMemoryFileSystem.UnderRoot(fileSystem, "runs");
         var firstName = HtmlLogRunDirectory.FormatDirectoryName(new DateTime(2026, 1, 2, 3, 4, 5));
         var secondName = HtmlLogRunDirectory.FormatDirectoryName(new DateTime(2026, 1, 2, 3, 4, 6));
@@ -331,9 +332,13 @@ public sealed class CsvComparisonOutputTests
         fileSystem.File.WriteAllText(fileSystem.Path.Combine(third, "parsed", "Kyiv.csv"), IdenticalCsv);
         CreateZip(fileSystem, secondZip, ($"{secondName}/parsed/Kyiv.csv", IdenticalCsv));
 
-        var exitCode = CreateOutput(fileSystem).CompareChain(root);
+        var exitCode = CreateOutput(fileSystem, logger).CompareChain(root);
 
         Assert.Equal(0, exitCode);
+        AssertStartedAndFinished(logger);
+        Assert.Contains(
+            logger.Messages,
+            message => message.Contains("finished; all pairs equal", StringComparison.Ordinal));
     }
 
     [Fact]
@@ -394,6 +399,12 @@ public sealed class CsvComparisonOutputTests
         Assert.Equal(2, exitCode);
         Assert.Contains(logger.Messages, message => message.Contains("error:", StringComparison.Ordinal));
         Assert.DoesNotContain(logger.Messages, message => message.Contains("SUMMARY:", StringComparison.Ordinal));
+        Assert.Contains(
+            logger.Messages,
+            message => message.Contains(
+                "finished with errors — no SUMMARY was produced; see the preceding error.",
+                StringComparison.Ordinal));
+        AssertStartedAndFinished(logger);
     }
 
     [Fact]
@@ -508,6 +519,10 @@ public sealed class CsvComparisonOutputTests
         Assert.DoesNotContain("byte_identical=", notEqual, StringComparison.Ordinal);
         Assert.DoesNotContain("left_only=", notEqual, StringComparison.Ordinal);
         Assert.DoesNotContain("\"files\"", notEqual, StringComparison.Ordinal);
+        Assert.Contains(
+            logger.Messages,
+            message => message.Contains("finished; some pairs not equal", StringComparison.Ordinal));
+        AssertStartedAndFinished(logger);
     }
 
     [Fact]
@@ -875,6 +890,7 @@ public sealed class CsvComparisonOutputTests
     public void CompareChain_Returns2WhenDirectoryAndZipShareRunName()
     {
         var fileSystem = InMemoryFileSystem.Create();
+        var logger = new CollectingLogger<CsvComparisonOutput>();
         var root = InMemoryFileSystem.UnderRoot(fileSystem, "runs");
         var runName = HtmlLogRunDirectory.FormatDirectoryName(new DateTime(2026, 1, 2, 3, 4, 5));
         var directory = fileSystem.Path.Combine(root, runName);
@@ -882,9 +898,34 @@ public sealed class CsvComparisonOutputTests
         fileSystem.Directory.CreateDirectory(directory);
         fileSystem.File.WriteAllBytes(zip, []);
 
-        var exitCode = CreateOutput(fileSystem).CompareChain(root);
+        var exitCode = CreateOutput(fileSystem, logger).CompareChain(root);
 
         Assert.Equal(2, exitCode);
+        AssertStartedAndFinished(logger);
+    }
+
+    [Fact]
+    public void CompareChain_Returns2AndFinishesWhenFewerThanTwoSourcesExist()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var logger = new CollectingLogger<CsvComparisonOutput>();
+        var root = InMemoryFileSystem.UnderRoot(fileSystem, "runs");
+        var runName = HtmlLogRunDirectory.FormatDirectoryName(new DateTime(2026, 1, 2, 3, 4, 5));
+        fileSystem.Directory.CreateDirectory(fileSystem.Path.Combine(root, runName));
+
+        var exitCode = CreateOutput(fileSystem, logger).CompareChain(root);
+
+        Assert.Equal(2, exitCode);
+        Assert.Contains(
+            logger.Messages,
+            message => message.Contains("Need at least 2 HtmlLog folders or ZIP files; found 1.", StringComparison.Ordinal));
+        AssertStartedAndFinished(logger);
+    }
+
+    private static void AssertStartedAndFinished(CollectingLogger<CsvComparisonOutput> logger)
+    {
+        Assert.Equal("Start", logger.Messages[0]);
+        Assert.Equal("Finish", logger.Messages[^1]);
     }
 
     private static int CountOccurrences(string haystack, string needle)

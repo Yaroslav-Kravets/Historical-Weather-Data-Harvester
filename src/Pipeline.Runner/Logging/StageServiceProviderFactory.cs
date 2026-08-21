@@ -76,10 +76,15 @@ public sealed class StageServiceProviderFactory : IDisposable
     /// <inheritdoc/>
     public void Dispose()
     {
-        this.serviceProvider.Dispose();
-
-        // Paired with AddSerilog(..., dispose: false) above.
-        (this.stageLogger as IDisposable)?.Dispose();
+        try
+        {
+            this.serviceProvider.Dispose();
+        }
+        finally
+        {
+            // Paired with AddSerilog(..., dispose: false) above.
+            (this.stageLogger as IDisposable)?.Dispose();
+        }
     }
 
     private static LogEventLevel ParseLevel(string? level) =>

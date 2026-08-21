@@ -43,24 +43,18 @@ public sealed class HtmlLogWriter : IDisposable
     }
 
     /// <summary>
-    /// Writes a table from a collection of flat class objects.
-    /// Uses property/field names as column headers and values as row data.
+    /// Renders a table as an HTML fragment (table-container div) without document chrome.
     /// </summary>
     /// <typeparam name="T">The type of objects in the collection.</typeparam>
-    /// <param name="items">The collection of objects to write as a table.</param>
-    /// <param name="tableTitle">Optional title for the table. If not provided, uses the type name.</param>
-    public void WriteTable<T>(IEnumerable<T> items, string? tableTitle = null)
+    /// <returns>The table HTML fragment, or empty when <paramref name="items"/> is empty.</returns>
+    public static string RenderTableHtml<T>(IEnumerable<T> items, string? tableTitle = null)
     {
         Argument.ThrowIfNull(items);
-        if (this.isDisposed)
-        {
-            return;
-        }
 
         var itemsList = items.ToList();
         if (itemsList.Count == 0)
         {
-            return;
+            return string.Empty;
         }
 
         var type = typeof(T);
@@ -78,25 +72,25 @@ public sealed class HtmlLogWriter : IDisposable
             throw new InvalidOperationException($"Type {type.Name} has no public readable properties or fields.");
         }
 
-        // Write table container
+        var builder = new System.Text.StringBuilder();
         var title = tableTitle ?? type.Name;
-        this.fileHandler.WriteLine($@"        <div class=""table-container"">
+        builder.AppendLine($@"        <div class=""table-container"">
             <div class=""table-title"">{EscapeHtml(title)}</div>
             <table>");
 
         // Write table header
-        this.fileHandler.WriteLine("                <thead>");
-        this.fileHandler.Write("                    <tr>");
+        builder.AppendLine("                <thead>");
+        builder.Append("                    <tr>");
 
         // Always write row number column first
-        this.fileHandler.Write("<th class=\"numeric\">#</th>");
+        builder.Append("<th class=\"numeric\">#</th>");
 
         foreach (var prop in properties)
         {
             var displayName = SplitPascalCase(prop.Name);
             var isNumeric = IsNumericType(prop.PropertyType);
             var classAttr = isNumeric ? " class=\"numeric\"" : string.Empty;
-            this.fileHandler.Write($"<th{classAttr}>{EscapeHtml(displayName)}</th>");
+            builder.Append($"<th{classAttr}>{EscapeHtml(displayName)}</th>");
         }
 
         foreach (var field in fields)
@@ -104,22 +98,22 @@ public sealed class HtmlLogWriter : IDisposable
             var displayName = SplitPascalCase(field.Name);
             var isNumeric = IsNumericType(field.FieldType);
             var classAttr = isNumeric ? " class=\"numeric\"" : string.Empty;
-            this.fileHandler.Write($"<th{classAttr}>{EscapeHtml(displayName)}</th>");
+            builder.Append($"<th{classAttr}>{EscapeHtml(displayName)}</th>");
         }
 
-        this.fileHandler.WriteLine("</tr>");
-        this.fileHandler.WriteLine("                </thead>");
+        builder.AppendLine("</tr>");
+        builder.AppendLine("                </thead>");
 
         // Write table body
-        this.fileHandler.WriteLine("                <tbody>");
+        builder.AppendLine("                <tbody>");
 
         for (int rowIndex = 0; rowIndex < itemsList.Count; rowIndex++)
         {
             var item = itemsList[rowIndex];
-            this.fileHandler.Write("                    <tr>");
+            builder.Append("                    <tr>");
 
             // Always write row number column first (1-based index)
-            this.fileHandler.Write($"<td class=\"numeric\">{rowIndex + 1}</td>");
+            builder.Append($"<td class=\"numeric\">{rowIndex + 1}</td>");
 
             foreach (var prop in properties)
             {
@@ -128,7 +122,7 @@ public sealed class HtmlLogWriter : IDisposable
                 var cellContent = IsTrustedAnchorHtml(formattedValue) ? formattedValue : EscapeHtml(formattedValue);
                 var isNumeric = IsNumericType(prop.PropertyType);
                 var classAttr = isNumeric ? " class=\"numeric\"" : string.Empty;
-                this.fileHandler.Write($"<td{classAttr}>{cellContent}</td>");
+                builder.Append($"<td{classAttr}>{cellContent}</td>");
             }
 
             foreach (var field in fields)
@@ -138,15 +132,40 @@ public sealed class HtmlLogWriter : IDisposable
                 var cellContent = IsTrustedAnchorHtml(formattedValue) ? formattedValue : EscapeHtml(formattedValue);
                 var isNumeric = IsNumericType(field.FieldType);
                 var classAttr = isNumeric ? " class=\"numeric\"" : string.Empty;
-                this.fileHandler.Write($"<td{classAttr}>{cellContent}</td>");
+                builder.Append($"<td{classAttr}>{cellContent}</td>");
             }
 
-            this.fileHandler.WriteLine("</tr>");
+            builder.AppendLine("</tr>");
         }
 
-        this.fileHandler.WriteLine("                </tbody>");
-        this.fileHandler.WriteLine("            </table>");
-        this.fileHandler.WriteLine("        </div>");
+        builder.AppendLine("                </tbody>");
+        builder.AppendLine("            </table>");
+        builder.AppendLine("        </div>");
+        return builder.ToString();
+    }
+
+    /// <summary>
+    /// Writes a table from a collection of flat class objects.
+    /// Uses property/field names as column headers and values as row data.
+    /// </summary>
+    /// <typeparam name="T">The type of objects in the collection.</typeparam>
+    /// <param name="items">The collection of objects to write as a table.</param>
+    /// <param name="tableTitle">Optional title for the table. If not provided, uses the type name.</param>
+    public void WriteTable<T>(IEnumerable<T> items, string? tableTitle = null)
+    {
+        Argument.ThrowIfNull(items);
+        if (this.isDisposed)
+        {
+            return;
+        }
+
+        var tableHtml = RenderTableHtml(items, tableTitle);
+        if (tableHtml.Length == 0)
+        {
+            return;
+        }
+
+        this.fileHandler.Write(tableHtml);
     }
 
     /// <summary>

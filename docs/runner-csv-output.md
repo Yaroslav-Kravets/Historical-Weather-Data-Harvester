@@ -6,7 +6,7 @@ How **Pipeline.Runner** writes CSV files after a run.
 
 ## Overview
 
-Pipeline Runner orchestrates parsing, denormalization, and optional time normalization: historical weather HTML files are parsed, grouped by place, and written as CSV output under `HtmlLog_<timestamp>/parsed/`. Wide-format denormalized CSVs are written at the `parsed/` stage root when at least one place has data rows. When `RunTimeNormalization` is enabled (default), observation-time normalization runs and writes under `HtmlLog_<timestamp>/time-normalized/`. Each place gets its own file. Weather conditions are stored as English labels in a single column in narrow CSVs. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair.
+Pipeline Runner orchestrates parsing, denormalization, optional time normalization, and optional analysis: historical weather HTML files are parsed, grouped by place, and written as CSV output under `HtmlLog_<timestamp>/parsed/`. Wide-format denormalized CSVs are written at the `parsed/` stage root when at least one place has data rows. When `RunTimeNormalization` is enabled (default), observation-time normalization runs and writes under `HtmlLog_<timestamp>/time-normalized/`. Each place gets its own file. Weather conditions are stored as English labels in a single column in narrow CSVs. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. Each stage directory has one text log (`parsed/log{timestamp}.log`; `time-normalized/log{timestamp}.log` when that stage runs). Parsing, time normalization, and each enabled analysis write separate HTML reports.
 
 ---
 
@@ -17,9 +17,13 @@ Each run creates a timestamped folder `HtmlLog_<yyyy-MM-dd_HH-mm-ss>/` with sepa
 ```
 HtmlLog_<timestamp>/
   parsed/
+    log<timestamp>.log             # text log for parse, denorm, parsed analysis, compare
+    result<timestamp>.html         # parsing report
+    result-analysis<timestamp>.html # parsed-stage analysis report
     parsed-source-files.csv        # (place, date) → winning source HTML path
     parsed-places.csv              # places seen in this run
     weather-characteristics.csv    # weather flags seen in this run
+    weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
     Kyiv.csv                       # wide format; see Denormalized weather characteristics
     Kharkiv.csv
     ...
@@ -28,6 +32,10 @@ HtmlLog_<timestamp>/
       Kharkiv.csv
       ...
   time-normalized/               # only when RunTimeNormalization is true
+    log<timestamp>.log           # text log for time-norm + time-norm analysis
+    result<timestamp>.html       # time-normalization report
+    result-analysis<timestamp>.html # time-normalized analysis report
+    weather-characteristics-usage.csv  # same analysis over time-normalized rows
     Kyiv.csv                     # wide format
     Kharkiv.csv
     ...
@@ -37,8 +45,9 @@ HtmlLog_<timestamp>/
       ...
 ```
 
-- **`parsed/`** — parsing stage logs, manifests, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root.
-- **`time-normalized/`** — time normalization stage logs, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root. Created only when `RunTimeNormalization` is `true`.
+- **`parsed/`** — stage text log, parsing and analysis HTML reports, manifests, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root.
+- **`time-normalized/`** — stage text log, time-normalization and analysis HTML reports, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root. Created only when `RunTimeNormalization` is `true`.
+- **`weather-characteristics-usage.csv`** — written by weather-characteristics analysis (default on via `RunAnalysis`) under each analyzed stage root. One row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/normalized-columns/*.csv` rows). Analysis writes `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
 
 Both `normalized-columns/` trees use the same narrow CSV shape (`CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs at both stage roots (`parsed/` and `time-normalized/`) include a leading `Place` column.
 
@@ -46,11 +55,11 @@ Both `normalized-columns/` trees use the same narrow CSV shape (`CoreColumns`) a
 
 ## Denormalized weather characteristics
 
-Pipeline.Runner always runs [`Pipeline.Denormalizer`](src/Pipeline.Denormalizer/DenormalizingPipeline.cs) **immediately after** parsing:
+Pipeline.Runner always runs [`Pipeline.Denormalizer`](../src/Pipeline.Denormalizer/DenormalizingPipeline.cs) **immediately after** parsing:
 
 - Reads `parsed/normalized-columns/*.csv`, writes `parsed/*.csv` (stage root)
 
-When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
+When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](../src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
 
 - `time-normalized/normalized-columns/*.csv` (narrow format)
 - `time-normalized/*.csv` (wide format, stage root)
@@ -177,6 +186,21 @@ Lists every weather characteristic **that actually occurred** in the parsed data
 
 Use it to see which original NameInHtml terms were seen and how they are labeled in English output.
 
+### `weather-characteristics-usage.csv`
+
+Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, a missing or empty `{stage}/normalized-columns/` **aborts the run** (same hard-fail policy for parsed and time-normalized).
+
+Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags with occurrence counts over all `{stage}/normalized-columns/*.csv` data rows:
+
+| Column | Description |
+|--------|-------------|
+| `EnglishName` | English display name |
+| `NameInHtml` | Original HTML string |
+| `RowCount` | Number of data rows where the flag bit is set |
+| `PercentOfRows` | `RowCount / totalDataRows * 100`, formatted to five decimal places with `%` |
+
+Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages may sum above 100% when rows carry multiple flags. Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` in that stage directory.
+
 ---
 
 ## Place names
@@ -237,6 +261,7 @@ See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, m
 | `DenormalizedWeatherDataCsvReader` | Pipeline.Core | Reads wide-format CSVs from the `parsed/` stage root for normalization |
 | `DenormalizedWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format denormalized per-place CSVs |
 | `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/normalized-columns/`, writes wide CSVs at `parsed/` root |
+| `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/normalized-columns/`, writes usage CSV + `result-analysis{timestamp}.html` |
 | `WeatherCsvColumns` | Pipeline.Core | Canonical column header names |
 
-Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, and `tests/Pipeline.TimeNormalizer.Tests`.
+Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.

@@ -37,6 +37,7 @@
     <ProjectReference Include="..\Pipeline.TimeNormalizer\Pipeline.TimeNormalizer.csproj" />
     <ProjectReference Include="..\Pipeline.Denormalizer\Pipeline.Denormalizer.csproj" />
     <ProjectReference Include="..\HtmlLogCsvComparer\HtmlLogCsvComparer.csproj" />
+    <ProjectReference Include="..\Pipeline.Analysis\Pipeline.Analysis.csproj" />
   </ItemGroup>
 
 </Project>

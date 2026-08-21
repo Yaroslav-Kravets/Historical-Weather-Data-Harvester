@@ -46,10 +46,13 @@ public sealed class DenormalizingPipeline
     public void Run(DenormalizingRunOptions options)
     {
         Argument.ThrowIfNull(options);
+
+        this.logger.LogInformation("Start");
+
         if (options.RunInParallel)
         {
             this.logger.LogInformation(
-                "Denormalizing stage start (parallel, max degree: {MaxDegree}) from {SourceDir} to {OutputDir}",
+                "Denormalizing mode: parallel (max degree: {MaxDegree}) from {SourceDir} to {OutputDir}",
                 Environment.ProcessorCount,
                 options.NormalizedColumnsDirectory,
                 options.StageDirectory);
@@ -57,7 +60,7 @@ public sealed class DenormalizingPipeline
         else
         {
             this.logger.LogInformation(
-                "Denormalizing stage start (sequential) from {SourceDir} to {OutputDir}",
+                "Denormalizing mode: sequential from {SourceDir} to {OutputDir}",
                 options.NormalizedColumnsDirectory,
                 options.StageDirectory);
         }
@@ -107,11 +110,12 @@ public sealed class DenormalizingPipeline
 
         totalStopwatch.Stop();
         this.logger.LogInformation(
-            "Denormalizing complete from {SourceDir} to {OutputDir} ({PlaceCount} places, {TotalRows} rows, {ElapsedSeconds:F2}s)",
+            "Denormalized from {SourceDir} to {OutputDir} ({PlaceCount} places, {TotalRows} rows, {ElapsedSeconds:F2}s)",
             options.NormalizedColumnsDirectory,
             options.StageDirectory,
             writtenRowCounts.Count,
             writtenRowCounts.Values.Sum(),
             totalStopwatch.Elapsed.TotalSeconds);
+        this.logger.LogInformation("Finish");
     }
 }
