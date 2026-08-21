@@ -32,6 +32,9 @@ public static class WeatherCsvOutputPaths
     /// True when <paramref name="fileName"/> is a non-place CSV at a stage root
     /// (manifests and analysis sidecars) that place-file enumeration must skip.
     /// </summary>
+    /// <returns>
+    /// <see langword="true"/> when <paramref name="fileName"/> is a stage-root sidecar CSV; otherwise <see langword="false"/>.
+    /// </returns>
     public static bool IsStageRootSidecarCsvFileName(string fileName) =>
         fileName.Equals(ParsedSourceFilesManifestFileName, StringComparison.OrdinalIgnoreCase)
         || fileName.Equals(ParsedPlacesManifestFileName, StringComparison.OrdinalIgnoreCase)

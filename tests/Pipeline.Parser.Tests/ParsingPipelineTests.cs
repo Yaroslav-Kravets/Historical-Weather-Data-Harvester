@@ -150,15 +150,6 @@ public sealed class ParsingPipelineTests
         Assert.DoesNotContain(bogusEntryUri, reportHtml, StringComparison.Ordinal);
     }
 
-    private void RunParsing(string sourceDirectory, string htmlReportPath, bool runInParallel)
-    {
-        this.parsingPipeline.Run(new ParsingRunOptions(
-            sourceDirectory,
-            this.outputDirectory,
-            htmlReportPath,
-            runInParallel));
-    }
-
     private static ParsingPipeline CreatePipeline(IFileSystem fileSystem)
     {
         var csvRecordWriter = new CsvRecordWriter(fileSystem);
@@ -252,5 +243,14 @@ public sealed class ParsingPipelineTests
         </body>
         </html>
         """;
+    }
+
+    private void RunParsing(string sourceDirectory, string htmlReportPath, bool runInParallel)
+    {
+        this.parsingPipeline.Run(new ParsingRunOptions(
+            sourceDirectory,
+            this.outputDirectory,
+            htmlReportPath,
+            runInParallel));
     }
 }
