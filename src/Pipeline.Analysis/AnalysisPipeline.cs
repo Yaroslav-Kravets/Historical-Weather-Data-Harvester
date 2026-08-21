@@ -75,6 +75,12 @@ public sealed class AnalysisPipeline
                 $"No place CSV files found in {normalizedColumnsDirectory}");
         }
 
+        if (rowsByPlace.Values.Sum(rows => rows.Count) == 0)
+        {
+            throw new InvalidOperationException(
+                $"No weather data rows found in {normalizedColumnsDirectory}");
+        }
+
         this.logger.LogInformation(
             "Analyzing weather characteristics for {StageDirectory} ({PlaceCount} places)",
             options.StageDirectory,

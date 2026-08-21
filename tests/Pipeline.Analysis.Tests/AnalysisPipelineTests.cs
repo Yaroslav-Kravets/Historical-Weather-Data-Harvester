@@ -103,6 +103,27 @@ public sealed class AnalysisPipelineTests
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
+    [Fact]
+    public void AnalyzeStage_Throws_WhenPlaceCsvsHaveNoDataRows()
+    {
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
+        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        this.WritePlaceCsv(normalizedColumnsDirectory, "Kyiv.csv");
+        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-analysis.html");
+        var pipeline = this.CreatePipeline();
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            pipeline.AnalyzeStage(new AnalysisRunOptions(
+                parsedStageDirectory,
+                htmlReportPath)));
+
+        Assert.Contains("No weather data rows found", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
+    }
+
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
         new(new DateTime(2003, 1, 1, 0, 0, 0), characteristics, -5, 0, 1.0m, 750, 70);
 

@@ -55,11 +55,11 @@ Both `normalized-columns/` trees use the same narrow CSV shape (`CoreColumns`) a
 
 ## Denormalized weather characteristics
 
-Pipeline.Runner always runs [`Pipeline.Denormalizer`](src/Pipeline.Denormalizer/DenormalizingPipeline.cs) **immediately after** parsing:
+Pipeline.Runner always runs [`Pipeline.Denormalizer`](../src/Pipeline.Denormalizer/DenormalizingPipeline.cs) **immediately after** parsing:
 
 - Reads `parsed/normalized-columns/*.csv`, writes `parsed/*.csv` (stage root)
 
-When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
+When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](../src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
 
 - `time-normalized/normalized-columns/*.csv` (narrow format)
 - `time-normalized/*.csv` (wide format, stage root)
@@ -188,7 +188,7 @@ Use it to see which original NameInHtml terms were seen and how they are labeled
 
 ### `weather-characteristics-usage.csv`
 
-Written by [`Pipeline.Analysis`](src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, a missing or empty `{stage}/normalized-columns/` **aborts the run** (same hard-fail policy for parsed and time-normalized).
+Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, a missing or empty `{stage}/normalized-columns/` **aborts the run** (same hard-fail policy for parsed and time-normalized).
 
 Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags with occurrence counts over all `{stage}/normalized-columns/*.csv` data rows:
 

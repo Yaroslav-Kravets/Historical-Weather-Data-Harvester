@@ -55,7 +55,7 @@ public sealed class WeatherCharacteristicUsageCsvWriter
             stageDirectory,
             WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName);
         this.logger.LogInformation(
-            "Wrote weather characteristics usage to {CsvPath} ({RowCount} data rows)",
+            "Wrote weather characteristics usage to {CsvPath} ({RowCount} records)",
             csvPath,
             rowCount);
     }
