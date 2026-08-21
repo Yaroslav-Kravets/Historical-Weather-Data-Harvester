@@ -68,8 +68,7 @@ public sealed class PipelineRunner
                 this.RunAnalysisStage(
                     parsedServices.ServiceProvider,
                     parsedStageDirectory,
-                    logDateTime,
-                    required: true);
+                    logDateTime);
             }
 
             this.RunDenormalizationStage(parsedServices.ServiceProvider, parsedStageDirectory);
@@ -94,8 +93,7 @@ public sealed class PipelineRunner
                     this.RunAnalysisStage(
                         timeNormalizedServices.ServiceProvider,
                         timeNormalizedStageDirectory,
-                        logDateTime,
-                        required: false);
+                        logDateTime);
                 }
             }
 
@@ -121,14 +119,12 @@ public sealed class PipelineRunner
     private void RunAnalysisStage(
         IServiceProvider serviceProvider,
         string stageDirectory,
-        string logDateTime,
-        bool required) =>
+        string logDateTime) =>
         serviceProvider
             .GetRequiredService<AnalysisPipeline>()
             .AnalyzeStage(new AnalysisRunOptions(
                 stageDirectory,
-                this.StageHtmlReportPath(stageDirectory, "result-analysis", logDateTime),
-                required));
+                this.StageHtmlReportPath(stageDirectory, "result-analysis", logDateTime)));
 
     private void RunDenormalizationStage(IServiceProvider serviceProvider, string parsedStageDirectory) =>
         serviceProvider

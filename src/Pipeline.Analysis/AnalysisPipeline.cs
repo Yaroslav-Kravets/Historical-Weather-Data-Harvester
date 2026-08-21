@@ -66,37 +66,15 @@ public sealed class AnalysisPipeline
 
         if (!this.fileSystem.Directory.Exists(normalizedColumnsDirectory))
         {
-            if (options.Required)
-            {
-                throw new DirectoryNotFoundException(
-                    $"Weather CSV directory not found: {normalizedColumnsDirectory}");
-            }
-
-            this.logger.LogWarning(
-                "Skipping weather characteristics analysis for {StageDirectory}; " +
-                "normalized-columns directory not found: {NormalizedColumnsDirectory}",
-                options.StageDirectory,
-                normalizedColumnsDirectory);
-            this.logger.LogInformation("Finish");
-            return;
+            throw new DirectoryNotFoundException(
+                $"Weather CSV directory not found: {normalizedColumnsDirectory}");
         }
 
         var rowsByPlace = this.normalizedColumnsWeatherDataCsvReader.ReadAllPlaces(normalizedColumnsDirectory);
         if (rowsByPlace.Count == 0)
         {
-            if (options.Required)
-            {
-                throw new InvalidOperationException(
-                    $"No place CSV files found in {normalizedColumnsDirectory}");
-            }
-
-            this.logger.LogWarning(
-                "Skipping weather characteristics analysis for {StageDirectory}; " +
-                "no place CSV files in {NormalizedColumnsDirectory}",
-                options.StageDirectory,
-                normalizedColumnsDirectory);
-            this.logger.LogInformation("Finish");
-            return;
+            throw new InvalidOperationException(
+                $"No place CSV files found in {normalizedColumnsDirectory}");
         }
 
         this.logger.LogInformation(

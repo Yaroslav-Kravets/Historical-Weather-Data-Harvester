@@ -11,5 +11,4 @@ namespace Pipeline.Analysis;
 
 public sealed record AnalysisRunOptions(
     string StageDirectory,
-    string HtmlReportPath,
-    bool Required);
+    string HtmlReportPath);

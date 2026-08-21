@@ -40,8 +40,7 @@ public sealed class AnalysisPipelineTests
         var pipeline = this.CreatePipeline();
         pipeline.AnalyzeStage(new AnalysisRunOptions(
             parsedStageDirectory,
-            htmlReportPath,
-            Required: true));
+            htmlReportPath));
 
         var usageCsvPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
@@ -67,27 +66,7 @@ public sealed class AnalysisPipelineTests
     }
 
     [Fact]
-    public void AnalyzeStage_SkipsMissingNormalizedColumns_WhenNotRequired()
-    {
-        var stageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
-        this.fileSystem.Directory.CreateDirectory(stageDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result-analysis.html");
-
-        var pipeline = this.CreatePipeline();
-        pipeline.AnalyzeStage(new AnalysisRunOptions(
-            stageDirectory,
-            htmlReportPath,
-            Required: false));
-
-        Assert.False(this.fileSystem.File.Exists(
-            this.fileSystem.Path.Combine(
-                stageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
-        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
-    }
-
-    [Fact]
-    public void AnalyzeStage_Throws_WhenParsedNormalizedColumnsMissingAndRequired()
+    public void AnalyzeStage_Throws_WhenNormalizedColumnsMissing()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
@@ -97,15 +76,14 @@ public sealed class AnalysisPipelineTests
         var exception = Assert.Throws<DirectoryNotFoundException>(() =>
             pipeline.AnalyzeStage(new AnalysisRunOptions(
                 parsedStageDirectory,
-                htmlReportPath,
-                Required: true)));
+                htmlReportPath)));
 
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
     [Fact]
-    public void AnalyzeStage_Throws_WhenNoPlaceCsvsAndRequired()
+    public void AnalyzeStage_Throws_WhenNoPlaceCsvs()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
@@ -118,34 +96,10 @@ public sealed class AnalysisPipelineTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             pipeline.AnalyzeStage(new AnalysisRunOptions(
                 parsedStageDirectory,
-                htmlReportPath,
-                Required: true)));
+                htmlReportPath)));
 
         Assert.Contains("No place CSV files found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
-        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
-    }
-
-    [Fact]
-    public void AnalyzeStage_Skips_WhenNoPlaceCsvsAndNotRequired()
-    {
-        var stageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
-            stageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result-analysis.html");
-        var pipeline = this.CreatePipeline();
-
-        pipeline.AnalyzeStage(new AnalysisRunOptions(
-            stageDirectory,
-            htmlReportPath,
-            Required: false));
-
-        Assert.False(this.fileSystem.File.Exists(
-            this.fileSystem.Path.Combine(
-                stageDirectory,
-                WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
