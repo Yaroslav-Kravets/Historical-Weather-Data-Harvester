@@ -9,9 +9,7 @@
 
 namespace Pipeline.Analysis;
 
-using HtmlLog;
-
 public sealed record AnalysisRunOptions(
     string StageDirectory,
-    HtmlLogWriter HtmlWriter,
+    string HtmlReportPath,
     bool Required);

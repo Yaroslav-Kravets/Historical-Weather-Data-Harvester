@@ -34,21 +34,14 @@ public sealed class AnalysisPipelineTests
 
         var htmlReportPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
-            "result2026-08-06_08-00-00.html");
+            "result-analysis2026-08-06_08-00-00.html");
         this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
 
         var pipeline = this.CreatePipeline();
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing"))
-        {
-            htmlWriter.WriteTable(
-                new[] { new { Metric = "Placeholder", Value = "1" } },
-                "Stage Placeholder");
-            pipeline.AnalyzeStage(new AnalysisRunOptions(
-                parsedStageDirectory,
-                htmlWriter,
-                Required: true));
-        }
+        pipeline.AnalyzeStage(new AnalysisRunOptions(
+            parsedStageDirectory,
+            htmlReportPath,
+            Required: true));
 
         var usageCsvPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
@@ -57,21 +50,20 @@ public sealed class AnalysisPipelineTests
 
         var usageCsv = this.fileSystem.File.ReadAllText(usageCsvPath);
         Assert.Contains("EnglishName,NameInHtml,RowCount,PercentOfRows", usageCsv, StringComparison.Ordinal);
-        Assert.Contains("Clear,ясно,1,50.00%", usageCsv, StringComparison.Ordinal);
-        Assert.Contains("Rain,дождь,1,50.00%", usageCsv, StringComparison.Ordinal);
+        Assert.Contains("Clear,ясно,1,50.00000%", usageCsv, StringComparison.Ordinal);
+        Assert.Contains("Rain,дождь,1,50.00000%", usageCsv, StringComparison.Ordinal);
 
+        Assert.True(this.fileSystem.File.Exists(htmlReportPath));
         var html = this.fileSystem.File.ReadAllText(htmlReportPath);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("English Name", html, StringComparison.Ordinal);
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
-        Assert.Contains("50.00%", html, StringComparison.Ordinal);
+        Assert.Contains("50.00000%", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
             html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
-
-        Assert.Empty(this.fileSystem.Directory.GetFiles(parsedStageDirectory, "weather-characteristics*.html"));
     }
 
     [Fact]
@@ -79,26 +71,19 @@ public sealed class AnalysisPipelineTests
     {
         var stageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "time-normalized");
         this.fileSystem.Directory.CreateDirectory(stageDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result.html");
+        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result-analysis.html");
 
         var pipeline = this.CreatePipeline();
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing"))
-        {
-            pipeline.AnalyzeStage(new AnalysisRunOptions(
-                stageDirectory,
-                htmlWriter,
-                Required: false));
-        }
+        pipeline.AnalyzeStage(new AnalysisRunOptions(
+            stageDirectory,
+            htmlReportPath,
+            Required: false));
 
         Assert.False(this.fileSystem.File.Exists(
             this.fileSystem.Path.Combine(
                 stageDirectory,
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
-        Assert.DoesNotContain(
-            "Weather Characteristics Usage",
-            this.fileSystem.File.ReadAllText(htmlReportPath),
-            StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
     [Fact]
@@ -106,18 +91,17 @@ public sealed class AnalysisPipelineTests
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
+        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-analysis.html");
         var pipeline = this.CreatePipeline();
 
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing");
         var exception = Assert.Throws<DirectoryNotFoundException>(() =>
             pipeline.AnalyzeStage(new AnalysisRunOptions(
                 parsedStageDirectory,
-                htmlWriter,
+                htmlReportPath,
                 Required: true)));
 
         Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
     [Fact]
@@ -128,19 +112,18 @@ public sealed class AnalysisPipelineTests
             parsedStageDirectory,
             WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
         this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
+        var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-analysis.html");
         var pipeline = this.CreatePipeline();
 
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing");
         var exception = Assert.Throws<InvalidOperationException>(() =>
             pipeline.AnalyzeStage(new AnalysisRunOptions(
                 parsedStageDirectory,
-                htmlWriter,
+                htmlReportPath,
                 Required: true)));
 
         Assert.Contains("No place CSV files found", exception.Message, StringComparison.Ordinal);
         Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
     [Fact]
@@ -151,26 +134,19 @@ public sealed class AnalysisPipelineTests
             stageDirectory,
             WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
         this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
-        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result.html");
+        var htmlReportPath = this.fileSystem.Path.Combine(stageDirectory, "result-analysis.html");
         var pipeline = this.CreatePipeline();
 
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing"))
-        {
-            pipeline.AnalyzeStage(new AnalysisRunOptions(
-                stageDirectory,
-                htmlWriter,
-                Required: false));
-        }
+        pipeline.AnalyzeStage(new AnalysisRunOptions(
+            stageDirectory,
+            htmlReportPath,
+            Required: false));
 
         Assert.False(this.fileSystem.File.Exists(
             this.fileSystem.Path.Combine(
                 stageDirectory,
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName)));
-        Assert.DoesNotContain(
-            "Weather Characteristics Usage",
-            this.fileSystem.File.ReadAllText(htmlReportPath),
-            StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
     private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
@@ -184,6 +160,7 @@ public sealed class AnalysisPipelineTests
         return new AnalysisPipeline(
             NullLogger<AnalysisPipeline>.Instance,
             this.fileSystem,
+            new HtmlLogFileManager(this.fileSystem),
             new NormalizedColumnsWeatherDataCsvReader(this.fileSystem, weatherDataCsvRecordMap),
             new WeatherCharacteristicUsageAggregator(weatherCharacteristicConverter),
             new WeatherCharacteristicUsageCsvWriter(

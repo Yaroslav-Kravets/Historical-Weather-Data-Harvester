@@ -16,8 +16,11 @@ using Microsoft.Extensions.Logging;
 
 public sealed class AnalysisPipeline
 {
+    private const string HtmlReportTitle = "Historical Weather Data Harvester — Weather Characteristics Usage";
+
     private readonly ILogger<AnalysisPipeline> logger;
     private readonly IFileSystem fileSystem;
+    private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly NormalizedColumnsWeatherDataCsvReader normalizedColumnsWeatherDataCsvReader;
     private readonly WeatherCharacteristicUsageAggregator usageAggregator;
     private readonly WeatherCharacteristicUsageCsvWriter usageCsvWriter;
@@ -26,6 +29,7 @@ public sealed class AnalysisPipeline
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IFileSystem fileSystem,
+        HtmlLogFileManager htmlLogFileManager,
         NormalizedColumnsWeatherDataCsvReader normalizedColumnsWeatherDataCsvReader,
         WeatherCharacteristicUsageAggregator usageAggregator,
         WeatherCharacteristicUsageCsvWriter usageCsvWriter,
@@ -33,6 +37,7 @@ public sealed class AnalysisPipeline
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
+        Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvReader);
         Argument.ThrowIfNull(usageAggregator);
         Argument.ThrowIfNull(usageCsvWriter);
@@ -40,6 +45,7 @@ public sealed class AnalysisPipeline
 
         this.logger = logger;
         this.fileSystem = fileSystem;
+        this.htmlLogFileManager = htmlLogFileManager;
         this.normalizedColumnsWeatherDataCsvReader = normalizedColumnsWeatherDataCsvReader;
         this.usageAggregator = usageAggregator;
         this.usageCsvWriter = usageCsvWriter;
@@ -50,7 +56,9 @@ public sealed class AnalysisPipeline
     {
         Argument.ThrowIfNull(options);
         Argument.ThrowIfNull(options.StageDirectory);
-        Argument.ThrowIfNull(options.HtmlWriter);
+        Argument.ThrowIfNull(options.HtmlReportPath);
+
+        this.logger.LogInformation("Start");
 
         var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
             options.StageDirectory,
@@ -69,6 +77,7 @@ public sealed class AnalysisPipeline
                 "normalized-columns directory not found: {NormalizedColumnsDirectory}",
                 options.StageDirectory,
                 normalizedColumnsDirectory);
+            this.logger.LogInformation("Finish");
             return;
         }
 
@@ -86,6 +95,7 @@ public sealed class AnalysisPipeline
                 "no place CSV files in {NormalizedColumnsDirectory}",
                 options.StageDirectory,
                 normalizedColumnsDirectory);
+            this.logger.LogInformation("Finish");
             return;
         }
 
@@ -96,6 +106,13 @@ public sealed class AnalysisPipeline
 
         var usageRows = this.usageAggregator.Aggregate(rowsByPlace);
         this.usageCsvWriter.Write(usageRows, options.StageDirectory);
-        this.usageReportWriter.Write(usageRows, options.HtmlWriter);
+
+        using var htmlWriter = new HtmlLogWriter(
+            this.htmlLogFileManager,
+            options.HtmlReportPath,
+            HtmlReportTitle);
+        this.usageReportWriter.Write(usageRows, htmlWriter);
+
+        this.logger.LogInformation("Finish");
     }
 }

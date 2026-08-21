@@ -152,12 +152,10 @@ public sealed class ParsingPipelineTests
 
     private void RunParsing(string sourceDirectory, string htmlReportPath, bool runInParallel)
     {
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Parsing");
         this.parsingPipeline.Run(new ParsingRunOptions(
             sourceDirectory,
             this.outputDirectory,
-            htmlWriter,
+            htmlReportPath,
             runInParallel));
     }
 
@@ -172,6 +170,7 @@ public sealed class ParsingPipelineTests
         return new ParsingPipeline(
             NullLogger<ParsingPipeline>.Instance,
             fileSystem,
+            new HtmlLogFileManager(fileSystem),
             new RealWeatherHtmlParser(
                 fileSystem,
                 NullLogger<RealWeatherHtmlParser>.Instance,

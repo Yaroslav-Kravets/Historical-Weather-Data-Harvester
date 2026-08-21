@@ -139,6 +139,7 @@ public sealed class TimeNormalizingPipelineTests
         return new TimeNormalizingPipeline(
             NullLogger<TimeNormalizingPipeline>.Instance,
             fileSystem,
+            new HtmlLogFileManager(fileSystem),
             placeCsvFileNameResolver,
             denormalizedWeatherDataCsvReader,
             denormalizedWeatherDataCsvWriter,
@@ -164,12 +165,10 @@ public sealed class TimeNormalizingPipelineTests
 
     private void RunTimeNormalizing(string parsedStageDirectory, string htmlReportPath, bool runInParallel)
     {
-        using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using var htmlWriter = new HtmlLogWriter(fileManager, htmlReportPath, "Time Normalizing");
         this.timeNormalizingPipeline.Run(new TimeNormalizingRunOptions(
             parsedStageDirectory,
             this.timeNormalizedStageDirectory,
-            htmlWriter,
+            htmlReportPath,
             runInParallel));
     }
 }

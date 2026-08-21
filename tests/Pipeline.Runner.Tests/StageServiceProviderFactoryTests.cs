@@ -13,6 +13,7 @@ using System.IO.Abstractions;
 using System.Text;
 using FileSystem.TestSupport;
 using HtmlLog;
+using HtmlLogCsvComparer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Pipeline.Analysis;
@@ -96,6 +97,36 @@ public sealed class StageServiceProviderFactoryTests
     }
 
     [Fact]
+    public void Create_ResolvesParsedStageServicesTogether()
+    {
+        using var stage = CreateStage(services =>
+        {
+            services.AddParserServices();
+            services.AddDenormalizerServices();
+            services.AddAnalysisServices();
+            services.AddHtmlLogCsvComparerServices();
+        });
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<ParsingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<DenormalizingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<CsvComparisonOutput>());
+    }
+
+    [Fact]
+    public void Create_ResolvesTimeNormalizedStageServicesTogether()
+    {
+        using var stage = CreateStage(services =>
+        {
+            services.AddTimeNormalizerServices();
+            services.AddAnalysisServices();
+        });
+
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<TimeNormalizingPipeline>());
+        Assert.NotNull(stage.ServiceProvider.GetRequiredService<AnalysisPipeline>());
+    }
+
+    [Fact]
     public void Create_RunsMinimalParsingPipelineOnInjectedFileSystem()
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -125,11 +156,7 @@ public sealed class StageServiceProviderFactoryTests
             services => services.AddParserServices());
 
         var pipeline = stage.ServiceProvider.GetRequiredService<ParsingPipeline>();
-        var htmlLogFileManager = stage.ServiceProvider.GetRequiredService<HtmlLogFileManager>();
-        using (var htmlWriter = new HtmlLogWriter(htmlLogFileManager, reportPath, "Parsing"))
-        {
-            pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, htmlWriter, RunInParallel: false));
-        }
+        pipeline.Run(new ParsingRunOptions(sourceRoot, stageDirectory, reportPath, RunInParallel: false));
 
         var csvPath = fileSystem.Path.Combine(
             stageDirectory,

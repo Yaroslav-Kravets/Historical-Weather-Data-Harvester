@@ -9,10 +9,8 @@
 
 namespace Pipeline.Parser;
 
-using HtmlLog;
-
 public sealed record ParsingRunOptions(
     string SourceDirectory,
     string ParsedStageDirectory,
-    HtmlLogWriter HtmlWriter,
+    string HtmlReportPath,
     bool RunInParallel);
