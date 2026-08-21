@@ -22,11 +22,29 @@ Fewer than 2 sources, or duplicate run names (e.g. both `HtmlLog_<ts>` and `Html
 
 ## Matching and comparison rules
 
-The tool walks all `*.csv` files under each source (typically under `parsed/` and `time-normalized/`), pairs files by same relative path (case-insensitive) first, then by SHA-256 hash of parsed CSV content (BOM-stripped headers, parsed row fields, and row count) when that hash is unique on both sides, then by file name, CSV header columns, and data-row count for any leftovers. Duplicate shared hashes or signatures are an error. Every compared CSV must have at least one data row; a header-only or empty CSV aborts the comparison (exit 2).
+### Pairing order
+
+The tool walks all `*.csv` files under each source (typically under `parsed/` and `time-normalized/`), then pairs files in this order:
+
+1. Same relative path (case-insensitive)
+2. SHA-256 hash of parsed CSV content (BOM-stripped headers, parsed row fields, and row count) when that hash is unique on both sides
+3. File name, CSV header columns, and data-row count for any leftovers
+
+Duplicate shared hashes or signatures are an error. Every compared CSV must have at least one data row; a header-only or empty CSV aborts the comparison (exit 2).
+
+### ZIP layout
 
 A ZIP may contain the folder contents at its root or under one top-level folder matching the ZIP base name (without the `.zip` extension). ZIP entry names must be archive-relative; Unix-rooted, UNC, drive-qualified, and `..` segment keys are rejected (same idea as `.7z` pipeline sources). Leading `./` segments are stripped.
 
-Matched pairs are compared by parsed-field equality, not raw bytes — CSVs that differ only in quoting or line endings can still be content-identical. Unequal results are PARTLY EQUAL when column sets differ but all rows match on the intersecting columns (positional `Rows[i]` checks, not keyed — an insert or delete near the top can shift later rows and drop the pair out of PARTLY EQUAL), otherwise NOT EQUAL. The overall logged `STATUS` is PARTLY EQUAL only when there is at least one partly-equal pair, no unmatched paths, and no NOT EQUAL pairs (EQUAL pairs may still be present); otherwise the run is NOT EQUAL even if some pairs are partly equal.
+### Equality and PARTLY EQUAL
+
+Matched pairs are compared by parsed-field equality, not raw bytes — CSVs that differ only in quoting or line endings can still be content-identical.
+
+Unequal results are **PARTLY EQUAL** when column sets differ but all rows match on the intersecting columns (positional `Rows[i]` checks, not keyed — an insert or delete near the top can shift later rows and drop the pair out of PARTLY EQUAL). Otherwise the pair is **NOT EQUAL**.
+
+### Overall STATUS
+
+The overall logged `STATUS` is PARTLY EQUAL only when there is at least one partly-equal pair, no unmatched paths, and no NOT EQUAL pairs (EQUAL pairs may still be present). Otherwise the run is NOT EQUAL even if some pairs are partly equal.
 
 ## Logging output
 
@@ -65,4 +83,4 @@ These exit codes apply to the standalone CLI. When Pipeline Runner runs chain co
 ## Related docs
 
 - [Pipeline Runner CSV output](runner-csv-output.md) — output layout, column contracts, manifests, place resolution
-- Pipeline Runner can run chain comparison after a pipeline finish via `RunHtmlLogCsvComparison` (see the repository [README](../README.md#pipeline-runner))
+- [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison) — `RunHtmlLogCsvComparison` after a pipeline finish

@@ -1,14 +1,16 @@
 # Pipeline Runner CSV output
 
-How **Pipeline.Runner** writes CSV files after a run.
+How **Pipeline.Runner** writes CSV files after a run. For configuration, stage flags, and how to run the pipeline, see [Pipeline Runner](pipeline-runner.md).
+
+**Contents:** [Overview](#overview) · [Output layout](#output-layout) · [Per-place weather CSVs](#per-place-weather-csvs) · [Denormalized weather characteristics](#denormalized-weather-characteristics) · [Weather characteristics column](#weather-characteristics-column) · [Manifest files](#manifest-files) · [Place names](#place-names) · [Encoding and write behavior](#encoding-and-write-behavior) · [HtmlLog CSV comparison](#htmllog-csv-comparison) · [Related code](#related-code)
 
 ---
 
 ## Overview
 
-Pipeline Runner orchestrates parsing, denormalization, optional time normalization, and optional analysis. Historical weather HTML files are parsed, grouped by place, and written under `HtmlLog_<timestamp>/parsed/`. Denormalization always runs next and writes wide-format CSVs at the `parsed/` stage root; if it produces no place files, the run fails with an error. When `RunTimeNormalization` is enabled (default), observation-time normalization writes under `HtmlLog_<timestamp>/time-normalized/`.
+Historical weather HTML files are parsed, grouped by place, and written under `HtmlLog_<timestamp>/parsed/`. Denormalization always runs next and writes wide-format CSVs at the `parsed/` stage root; if it produces no place files, the run fails with an error. When `RunTimeNormalization` is enabled (default), observation-time normalization writes under `HtmlLog_<timestamp>/time-normalized/`.
 
-Each place gets its own CSV file. Narrow CSVs store weather conditions as English labels in a single column. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html`. Each stage directory has one text log (`parsed/log{timestamp}.log`; `time-normalized/log{timestamp}.log` when that stage runs). Parsing, time normalization, and each enabled analysis write separate HTML reports.
+Each place gets its own CSV file. Narrow CSVs store weather conditions as English labels in a single column. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html`. Stage text logs and HTML reports are described in [Pipeline Runner](pipeline-runner.md#stages-and-flags).
 
 The run folder `HtmlLog_<yyyy-MM-dd_HH-mm-ss>/` is created under the **process current working directory** (not under `HistoricalWeatherFilesRoot`).
 
@@ -131,7 +133,7 @@ When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](../
 - `time-normalized/normalized-columns/*.csv` (narrow format)
 - `time-normalized/*.csv` (wide format, stage root)
 
-Set `RunTimeNormalization` to `false` in `appsettings.json` to skip the time normalization stage entirely.
+Set `RunTimeNormalization` to `false` to skip the time normalization stage entirely (see [Pipeline Runner](pipeline-runner.md#stages-and-flags)).
 
 Each denormalized file keeps the six scalar columns (`DateTime`, `Temperature` (°C), `WindDirection` (°), `WindSpeed` (m/s), `AtmosphericPressure` (mmHg), `Humidity` (%)) and replaces the single `"Weather Characteristics"` column with **one column per possible weather flag** (English display name, sorted alphabetically, case-insensitive). Cell values are `1` when that flag is set on the row, otherwise `0`.
 
@@ -262,7 +264,7 @@ To support a new location, add a `Place` enum member with the appropriate `NameI
 
 ## HtmlLog CSV comparison
 
-See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior.
+See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior. Pipeline integration via `RunHtmlLogCsvComparison` is covered in [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison).
 
 ---
 

@@ -31,3 +31,8 @@ dotnet run --project src/HtmlScrapper/HtmlScrapper.csproj
 Or run the built executable from `src/HtmlScrapper/bin/Release/net8.0/HtmlScrapper`.
 
 Press Enter to stop the harvester.
+
+## See also
+
+- [Repository README](../../README.md) — publication stubs and documentation index
+- [Pipeline Runner](../../docs/pipeline-runner.md) — process scraped HTML into CSV stages
