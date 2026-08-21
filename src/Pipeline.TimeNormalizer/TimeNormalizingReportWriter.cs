@@ -16,6 +16,8 @@ using HtmlLog;
 
 public sealed class TimeNormalizingReportWriter
 {
+    private const string HtmlReportTitle = "Historical Weather Data Harvester — Time Normalizing";
+
     private readonly TimeNormalizingPlaceErrorCountsBuilder errorCountsBuilder;
     private readonly DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
@@ -39,7 +41,8 @@ public sealed class TimeNormalizingReportWriter
     }
 
     public void WriteReport(
-        HtmlLogWriter writer,
+        HtmlLogFileManager htmlLogFileManager,
+        string htmlReportPath,
         int totalPlaces,
         int timeNormalizationSuccessfulCount,
         int timeNormalizationUnsuccessfulCount,
@@ -52,12 +55,21 @@ public sealed class TimeNormalizingReportWriter
         TimeNormalizationIssueCollector issueCollector,
         string parsedStageDirectory)
     {
-        Argument.ThrowIfNull(writer);
+        Argument.ThrowIfNull(htmlLogFileManager);
+        Argument.ThrowIfNull(htmlReportPath);
         Argument.ThrowIfNull(normalizedRowsByPlace);
         Argument.ThrowIfNull(normalizedFileCountsByPlace);
         Argument.ThrowIfNull(timeNormalizationCountsByPlace);
         Argument.ThrowIfNull(issueCollector);
         Argument.ThrowIfNull(parsedStageDirectory);
+
+        var errorCountsByPlace = this.errorCountsBuilder.Build(
+            normalizedRowsByPlace.Keys,
+            issueCollector,
+            timeNormalizationCountsByPlace);
+        var rowCountComparisons = this.BuildRowCountComparisons(parsedStageDirectory, normalizedRowsByPlace);
+
+        using var writer = new HtmlLogWriter(htmlLogFileManager, htmlReportPath, HtmlReportTitle);
         WriteTimeNormalizationStatisticsTable(
             writer,
             totalPlaces,
@@ -66,18 +78,13 @@ public sealed class TimeNormalizingReportWriter
             missingTimeEntriesCount,
             totalTimeSeconds,
             averageTimePerPlaceSeconds);
-        WriteErrorsPerPlaceTable(
-            writer,
-            this.errorCountsBuilder.Build(
-                normalizedRowsByPlace.Keys,
-                issueCollector,
-                timeNormalizationCountsByPlace));
+        WriteErrorsPerPlaceTable(writer, errorCountsByPlace);
         this.WriteNormalizedDataByPlaceTable(
             writer,
             normalizedRowsByPlace,
             normalizedFileCountsByPlace,
             timeNormalizationCountsByPlace);
-        WriteRowCountComparisonTable(writer, this.BuildRowCountComparisons(parsedStageDirectory, normalizedRowsByPlace));
+        WriteRowCountComparisonTable(writer, rowCountComparisons);
     }
 
     private static void WriteTimeNormalizationStatisticsTable(

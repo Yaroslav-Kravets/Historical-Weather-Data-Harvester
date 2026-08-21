@@ -26,23 +26,17 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(reportPath)!);
 
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, reportPath, "Test"))
-        {
-            htmlWriter.WriteTable(
-                new[] { new { Metric = "Placeholder", Value = "1" } },
-                "Stage Placeholder");
-            this.CreateWriter().Write(
-                [
-                    new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
-                ],
-                htmlWriter);
-        }
+        this.CreateWriter().Write(
+            [
+                new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
+            ],
+            fileManager,
+            reportPath);
 
         var html = this.fileSystem.File.ReadAllText(reportPath);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("100.00000%", html, StringComparison.Ordinal);
-        Assert.Contains("Stage Placeholder", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
         Assert.True(
             html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
@@ -50,20 +44,15 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
     }
 
     [Fact]
-    public void Write_DoesNothing_WhenNoRows()
+    public void Write_DoesNotCreateReport_WhenNoRows()
     {
         var reportPath = InMemoryFileSystem.UnderRoot(this.fileSystem, "empty.html");
         this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(reportPath)!);
 
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        using (var htmlWriter = new HtmlLogWriter(fileManager, reportPath, "Test"))
-        {
-            this.CreateWriter().Write([], htmlWriter);
-        }
+        this.CreateWriter().Write([], fileManager, reportPath);
 
-        var html = this.fileSystem.File.ReadAllText(reportPath);
-        Assert.DoesNotContain("Weather Characteristics Usage", html, StringComparison.Ordinal);
-        Assert.Contains("End of summary report", html, StringComparison.Ordinal);
+        Assert.False(this.fileSystem.File.Exists(reportPath));
     }
 
     private WeatherCharacteristicUsageReportWriter CreateWriter() =>

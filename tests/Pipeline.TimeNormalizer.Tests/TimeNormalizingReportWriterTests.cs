@@ -77,30 +77,28 @@ public sealed class TimeNormalizingReportWriterTests
             ["Kyiv"] = inputRows,
         };
 
-        using (var htmlWriter = new HtmlLogWriter(this.htmlLogFileManager, this.htmlReportPath, "Test Report"))
-        {
-            this.reportWriter.WriteReport(
-                htmlWriter,
-                totalPlaces: 1,
-                timeNormalizationSuccessfulCount: 2,
-                timeNormalizationUnsuccessfulCount: 0,
-                missingTimeEntriesCount: 0,
-                totalTimeSeconds: 1.0,
-                averageTimePerPlaceSeconds: 1.0,
-                normalizedRowsByPlace,
-                normalizedFileCountsByPlace: new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["Kyiv"] = 1 },
-                timeNormalizationCountsByPlace: new Dictionary<string, PlaceTimeNormalizationCounts>(StringComparer.OrdinalIgnoreCase)
+        this.reportWriter.WriteReport(
+            this.htmlLogFileManager,
+            this.htmlReportPath,
+            totalPlaces: 1,
+            timeNormalizationSuccessfulCount: 2,
+            timeNormalizationUnsuccessfulCount: 0,
+            missingTimeEntriesCount: 0,
+            totalTimeSeconds: 1.0,
+            averageTimePerPlaceSeconds: 1.0,
+            normalizedRowsByPlace,
+            normalizedFileCountsByPlace: new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { ["Kyiv"] = 1 },
+            timeNormalizationCountsByPlace: new Dictionary<string, PlaceTimeNormalizationCounts>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["Kyiv"] = new PlaceTimeNormalizationCounts
                 {
-                    ["Kyiv"] = new PlaceTimeNormalizationCounts
-                    {
-                        Successful = 2,
-                        Unsuccessful = 0,
-                        MissingTimeEntries = 0,
-                    },
+                    Successful = 2,
+                    Unsuccessful = 0,
+                    MissingTimeEntries = 0,
                 },
-                issueCollector: new TimeNormalizationIssueCollector(),
-                parsedStageDirectory: this.parsedStageDirectory);
-        }
+            },
+            issueCollector: new TimeNormalizationIssueCollector(),
+            parsedStageDirectory: this.parsedStageDirectory);
 
         var html = this.fileSystem.File.ReadAllText(this.htmlReportPath);
         Assert.Contains("Row Count Comparison by Place", html, StringComparison.Ordinal);

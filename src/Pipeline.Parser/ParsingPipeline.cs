@@ -18,8 +18,6 @@ using Pipeline.SourceFileSystem;
 
 public sealed class ParsingPipeline
 {
-    private const string HtmlReportTitle = "Historical Weather Data Harvester — Parsing";
-
     private readonly ILogger<ParsingPipeline> logger;
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
@@ -145,24 +143,19 @@ public sealed class ParsingPipeline
         this.parsedStageManifestCsvWriter.WriteWeatherCharacteristicsManifest(parsedCharacteristics, options.ParsedStageDirectory);
         this.parsedSourceFilesManifestWriter.Write(organizationResult.SourceFileEntries, options.ParsedStageDirectory);
 
-        using (var htmlWriter = new HtmlLogWriter(
+        this.parsingReportWriter.WriteReport(
             this.htmlLogFileManager,
             options.HtmlReportPath,
-            HtmlReportTitle))
-        {
-            this.parsingReportWriter.WriteReport(
-                htmlWriter,
-                options.SourceDirectory,
-                isSevenZipSource,
-                sourceFileCount,
-                parsingSuccessfulCount,
-                parsingUnsuccessfulCount,
-                totalTime,
-                averageTime,
-                organizationResult.ResultsByPlace,
-                issueCollector,
-                flattenedRawParseResults);
-        }
+            options.SourceDirectory,
+            isSevenZipSource,
+            sourceFileCount,
+            parsingSuccessfulCount,
+            parsingUnsuccessfulCount,
+            totalTime,
+            averageTime,
+            organizationResult.ResultsByPlace,
+            issueCollector,
+            flattenedRawParseResults);
 
         PlacePathSelfCheckLogger.LogRunSummary(this.logger, issueCollector);
         this.logger.LogInformation("Finish");

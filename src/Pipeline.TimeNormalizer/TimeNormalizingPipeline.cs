@@ -18,8 +18,6 @@ using Microsoft.Extensions.Logging;
 
 public sealed class TimeNormalizingPipeline
 {
-    private const string HtmlReportTitle = "Historical Weather Data Harvester — Time Normalizing";
-
     private static readonly IReadOnlyList<TimeSpan> ExpectedObservationTimes = Enumerable.Range(0, 8)
         .Select(i => TimeSpan.FromHours(i * 3))
         .ToList();
@@ -178,25 +176,20 @@ public sealed class TimeNormalizingPipeline
         var totalTime = totalStopwatch.Elapsed.TotalSeconds;
         var averageTime = totalPlaces > 0 ? (totalPlaceProcessingTime / (double)totalPlaces) / 1000.0 : 0;
 
-        using (var htmlWriter = new HtmlLogWriter(
+        this.timeNormalizingReportWriter.WriteReport(
             this.htmlLogFileManager,
             options.HtmlReportPath,
-            HtmlReportTitle))
-        {
-            this.timeNormalizingReportWriter.WriteReport(
-                htmlWriter,
-                totalPlaces,
-                timeNormalizationSuccessfulCount,
-                timeNormalizationUnsuccessfulCount,
-                missingTimeEntriesCount,
-                totalTime,
-                averageTime,
-                normalizedRowsByPlace,
-                normalizedFileCountsByPlace,
-                timeNormalizationCountsByPlace,
-                issueCollector,
-                options.ParsedStageDirectory);
-        }
+            totalPlaces,
+            timeNormalizationSuccessfulCount,
+            timeNormalizationUnsuccessfulCount,
+            missingTimeEntriesCount,
+            totalTime,
+            averageTime,
+            normalizedRowsByPlace,
+            normalizedFileCountsByPlace,
+            timeNormalizationCountsByPlace,
+            issueCollector,
+            options.ParsedStageDirectory);
 
         this.logger.LogInformation("Finish");
     }

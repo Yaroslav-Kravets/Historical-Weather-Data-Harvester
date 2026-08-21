@@ -16,6 +16,7 @@ using Microsoft.Extensions.Logging;
 
 public sealed class WeatherCharacteristicUsageReportWriter
 {
+    private const string HtmlReportTitle = "Historical Weather Data Harvester — Weather Characteristics Usage";
     private const string UsageTableTitle = "Weather Characteristics Usage";
 
     private readonly ILogger<WeatherCharacteristicUsageReportWriter> logger;
@@ -28,10 +29,14 @@ public sealed class WeatherCharacteristicUsageReportWriter
         this.logger = logger;
     }
 
-    public void Write(IReadOnlyList<WeatherCharacteristicUsageRow> usageRows, HtmlLogWriter htmlWriter)
+    public void Write(
+        IReadOnlyList<WeatherCharacteristicUsageRow> usageRows,
+        HtmlLogFileManager htmlLogFileManager,
+        string htmlReportPath)
     {
         Argument.ThrowIfNull(usageRows);
-        Argument.ThrowIfNull(htmlWriter);
+        Argument.ThrowIfNull(htmlLogFileManager);
+        Argument.ThrowIfNull(htmlReportPath);
 
         if (usageRows.Count == 0)
         {
@@ -49,6 +54,7 @@ public sealed class WeatherCharacteristicUsageReportWriter
             })
             .ToList();
 
+        using var htmlWriter = new HtmlLogWriter(htmlLogFileManager, htmlReportPath, HtmlReportTitle);
         htmlWriter.WriteTable(tableRows, UsageTableTitle);
 
         this.logger.LogInformation(

@@ -16,8 +16,6 @@ using Microsoft.Extensions.Logging;
 
 public sealed class AnalysisPipeline
 {
-    private const string HtmlReportTitle = "Historical Weather Data Harvester — Weather Characteristics Usage";
-
     private readonly ILogger<AnalysisPipeline> logger;
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
@@ -85,11 +83,10 @@ public sealed class AnalysisPipeline
         var usageRows = this.usageAggregator.Aggregate(rowsByPlace);
         this.usageCsvWriter.Write(usageRows, options.StageDirectory);
 
-        using var htmlWriter = new HtmlLogWriter(
+        this.usageReportWriter.Write(
+            usageRows,
             this.htmlLogFileManager,
-            options.HtmlReportPath,
-            HtmlReportTitle);
-        this.usageReportWriter.Write(usageRows, htmlWriter);
+            options.HtmlReportPath);
 
         this.logger.LogInformation("Finish");
     }
