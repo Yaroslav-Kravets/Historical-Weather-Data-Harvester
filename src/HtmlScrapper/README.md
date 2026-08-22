@@ -4,7 +4,7 @@ Console application that downloads historical weather HTML pages from meteo.ua.
 
 ## Prerequisites
 
-- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) (no Mono required)
+- [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
 
 ## Configuration
 

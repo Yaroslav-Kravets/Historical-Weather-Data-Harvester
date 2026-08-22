@@ -1,6 +1,6 @@
-# Historical-Weather-Data-Harvester
+# Historical Weather Data Harvester
 
-Projects to collect HTML web pages with historical weather and to process them into a Ukrainian Historical Weather Dataset.
+A System to collect HTML web pages with historical weather and to process them into a Ukrainian Historical Weather Dataset.
 
 **Prerequisites:** [.NET 8 SDK](https://dotnet.microsoft.com/download/dotnet/8.0).
 
