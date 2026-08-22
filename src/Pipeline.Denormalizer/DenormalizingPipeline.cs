@@ -105,7 +105,7 @@ public sealed class DenormalizingPipeline
         if (writtenRowCounts.Count == 0)
         {
             throw new InvalidOperationException(
-                $"Denormalization produced no output files in '{options.WideFormatDirectory}'.");
+                $"Wide-format output produced no place files in '{options.WideFormatDirectory}'.");
         }
 
         totalStopwatch.Stop();

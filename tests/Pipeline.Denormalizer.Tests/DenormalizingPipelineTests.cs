@@ -95,7 +95,7 @@ public sealed class DenormalizingPipelineTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false)));
 
-        Assert.Contains("Denormalization produced no output files", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Wide-format output produced no place files", exception.Message, StringComparison.Ordinal);
         Assert.Contains(wideFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
@@ -109,7 +109,7 @@ public sealed class DenormalizingPipelineTests
         var exception = Assert.Throws<InvalidOperationException>(() =>
             this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false)));
 
-        Assert.Contains("Denormalization produced no output files", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Wide-format output produced no place files", exception.Message, StringComparison.Ordinal);
         Assert.Contains(wideFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
