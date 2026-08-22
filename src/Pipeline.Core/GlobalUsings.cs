@@ -14,4 +14,3 @@ global using Pipeline.Core.Enums;
 global using Pipeline.Core.Enums.Attributes;
 global using Pipeline.Core.Enums.Formatting;
 global using Pipeline.Core.Models;
-global using Pipeline.Core.Paths;
