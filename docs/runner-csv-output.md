@@ -1,45 +1,76 @@
 # Pipeline Runner CSV output
 
-How **Pipeline.Runner** writes CSV files after a run.
+How **Pipeline.Runner** writes CSV files after a run. For configuration, stage flags, and how to run the pipeline, see [Pipeline Runner](pipeline-runner.md).
+
+## Contents
+
+- [Overview](#overview)
+- [Output layout](#output-layout)
+- [Per-place weather CSVs](#per-place-weather-csvs)
+  - [Filenames](#filenames)
+  - [Narrow format (`normalized-columns/`)](#narrow-format-normalized-columns)
+  - [Wide format (stage root)](#wide-format-stage-root)
+- [Denormalized weather characteristics](#denormalized-weather-characteristics)
+- [Weather characteristics column](#weather-characteristics-column)
+- [Manifest files](#manifest-files)
+  - [`parsed-source-files.csv`](#parsed-source-filescsv)
+  - [`parsed-places.csv`](#parsed-placescsv)
+  - [`weather-characteristics.csv`](#weather-characteristicscsv)
+  - [`weather-characteristics-usage.csv`](#weather-characteristics-usagecsv)
+- [Place names](#place-names)
+  - [How a place is resolved](#how-a-place-is-resolved)
+  - [Folder path self-check and aliases](#folder-path-self-check-and-aliases)
+  - [Unknown or unmapped places](#unknown-or-unmapped-places)
+  - [Parse failures vs place failures](#parse-failures-vs-place-failures)
+- [Encoding and write behavior](#encoding-and-write-behavior)
+- [HtmlLog CSV comparison](#htmllog-csv-comparison)
+- [Reference catalogs](#reference-catalogs)
+  - [Supported places](#supported-places)
+  - [Supported weather characteristics](#supported-weather-characteristics)
+- [Related code](#related-code)
 
 ---
 
 ## Overview
 
-Pipeline Runner orchestrates parsing, denormalization, optional time normalization, and optional analysis: historical weather HTML files are parsed, grouped by place, and written as CSV output under `HtmlLog_<timestamp>/parsed/`. Wide-format denormalized CSVs are written at the `parsed/` stage root when at least one place has data rows. When `RunTimeNormalization` is enabled (default), observation-time normalization runs and writes under `HtmlLog_<timestamp>/time-normalized/`. Each place gets its own file. Weather conditions are stored as English labels in a single column in narrow CSVs. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. Each stage directory has one text log (`parsed/log{timestamp}.log`; `time-normalized/log{timestamp}.log` when that stage runs). Parsing, time normalization, and each enabled analysis write separate HTML reports.
+Historical weather HTML files are parsed, grouped by place, and written under `HtmlLog_<timestamp>/parsed/`. After optional parsed-stage analysis, denormalization writes wide-format CSVs at the `parsed/` stage root; if it produces no place files, the run fails with an error. When `RunTimeNormalization` is enabled (default), observation-time normalization writes under `HtmlLog_<timestamp>/time-normalized/`.
+
+Each place gets its own CSV file. Narrow CSVs store weather conditions as English labels in a single column. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html`. Stage text logs and HTML reports are described in [Pipeline Runner](pipeline-runner.md#stages-and-flags).
+
+The run folder `HtmlLog_<yyyy-MM-dd_HH-mm-ss>/` is created under the **process current working directory** (not under `HistoricalWeatherFilesRoot`).
+
+**Terminology:** `normalized-columns/` means the **narrow** CSV column shape (single `Weather Characteristics` cell). It is unrelated to the `time-normalized/` stage name. Both stages can contain their own `normalized-columns/` tree.
 
 ---
 
 ## Output layout
 
-Each run creates a timestamped folder `HtmlLog_<yyyy-MM-dd_HH-mm-ss>/` with separate stage directories:
-
 ```
-HtmlLog_<timestamp>/
+HtmlLog_<timestamp>/                 # under process CWD
   parsed/
-    log<timestamp>.log             # text log for parse, denorm, parsed analysis, compare
-    result<timestamp>.html         # parsing report
-    result-analysis<timestamp>.html # parsed-stage analysis report
-    parsed-source-files.csv        # (place, date) → winning source HTML path
-    parsed-places.csv              # places seen in this run
-    weather-characteristics.csv    # weather flags seen in this run
+    log<timestamp>.log               # text log for parse, denorm, parsed analysis, compare
+    result<timestamp>.html           # parsing HTML report
+    result-analysis<timestamp>.html  # parsed-stage analysis report
+    parsed-source-files.csv          # (place, date) → winning source HTML path
+    parsed-places.csv                # places seen in this run
+    weather-characteristics.csv      # weather flags seen in this run
     weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
-    Kyiv.csv                       # wide format; see Denormalized weather characteristics
+    Kyiv.csv                         # wide format; see Per-place weather CSVs
     Kharkiv.csv
     ...
-    normalized-columns/
+    normalized-columns/              # narrow format
       Kyiv.csv
       Kharkiv.csv
       ...
-  time-normalized/               # only when RunTimeNormalization is true
-    log<timestamp>.log           # text log for time-norm + time-norm analysis
-    result<timestamp>.html       # time-normalization report
-    result-analysis<timestamp>.html # time-normalized analysis report
+  time-normalized/                   # only when RunTimeNormalization is true
+    log<timestamp>.log               # text log for time-norm + time-norm analysis
+    result<timestamp>.html           # time-normalization HTML report
+    result-analysis<timestamp>.html  # time-normalized analysis report
     weather-characteristics-usage.csv  # same analysis over time-normalized rows
-    Kyiv.csv                     # wide format
+    Kyiv.csv                         # wide format
     Kharkiv.csv
     ...
-    normalized-columns/
+    normalized-columns/              # narrow format
       Kyiv.csv
       Kharkiv.csv
       ...
@@ -49,28 +80,7 @@ HtmlLog_<timestamp>/
 - **`time-normalized/`** — stage text log, time-normalization and analysis HTML reports, narrow per-place CSVs in `normalized-columns/`, and wide-format denormalized CSVs at the stage root. Created only when `RunTimeNormalization` is `true`.
 - **`weather-characteristics-usage.csv`** — written by weather-characteristics analysis (default on via `RunAnalysis`) under each analyzed stage root. One row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/normalized-columns/*.csv` rows). Analysis writes `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
 
-Both `normalized-columns/` trees use the same narrow CSV shape (`CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs at both stage roots (`parsed/` and `time-normalized/`) include a leading `Place` column.
-
----
-
-## Denormalized weather characteristics
-
-Pipeline.Runner always runs [`Pipeline.Denormalizer`](../src/Pipeline.Denormalizer/DenormalizingPipeline.cs) **immediately after** parsing:
-
-- Reads `parsed/normalized-columns/*.csv`, writes `parsed/*.csv` (stage root)
-
-When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](../src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
-
-- `time-normalized/normalized-columns/*.csv` (narrow format)
-- `time-normalized/*.csv` (wide format, stage root)
-
-Set `RunTimeNormalization` to `false` in `appsettings.json` to skip the time normalization stage entirely.
-
-Each denormalized file keeps the six scalar columns (`DateTime`, `Temperature` (°C), `WindDirection` (°), `WindSpeed` (m/s), `AtmosphericPressure` (mmHg), `Humidity` (%)) and replaces the single `"Weather Characteristics"` column with **one column per possible weather flag** (English display name, sorted alphabetically). Cell values are `1` when that flag is set on the row, otherwise `0`.
-
-**Wide** CSVs at both the `parsed/` and `time-normalized/` stage roots include a leading `Place` column (English display name from the filename, repeated on every row; not the original NameInHtml).
-
-Neither `parsed/normalized-columns/` nor `time-normalized/normalized-columns/` include `Place`.
+Both `normalized-columns/` trees use the same narrow CSV shape (`NormalizedWeatherCsvColumns.CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs at both stage roots include a leading `Place` column.
 
 ---
 
@@ -78,12 +88,7 @@ Neither `parsed/normalized-columns/` nor `time-normalized/normalized-columns/` i
 
 ### Filenames
 
-One file per place. The filename is the **English display name** plus `.csv`:
-
-- `Kyiv.csv`
-- `Kharkiv.csv`
-- `Chervona Zirka.csv`
-- `Ivano-Frankivsk.csv`
+One file per place. The filename is the **English display name** plus `.csv`. Full list: [Supported places](#supported-places).
 
 Invalid filesystem characters in the name are replaced with `_`.
 
@@ -99,7 +104,7 @@ Files under both `parsed/normalized-columns/` and `time-normalized/normalized-co
 | `WindSpeed` | Decimal, m/s |
 | `AtmosphericPressure` | Integer, mmHg |
 | `Humidity` | Integer, % |
-| `Weather Characteristics` | Active conditions as English labels; see below |
+| `Weather Characteristics` | Active conditions as English labels; see [Weather characteristics column](#weather-characteristics-column) |
 
 Example — file: `parsed/normalized-columns/Kyiv.csv` or `time-normalized/normalized-columns/Kyiv.csv`
 
@@ -131,7 +136,32 @@ Place,DateTime,Temperature,WindDirection,WindSpeed,AtmosphericPressure,Humidity,
 Kyiv,2003-01-01 00:00,-12,315,2.0,750,70,1,...
 ```
 
-Rows are ordered by `DateTime` within each source file. When several HTML archives contribute to the same place, their rows are written in archive-date order.
+Rows from multiple source HTML files for the same place are merged into one stream and sorted by `DateTime` only (not by source file or archive date).
+
+---
+
+## Denormalized weather characteristics
+
+After optional parsed-stage analysis, Pipeline.Runner always runs [`Pipeline.Denormalizer`](../src/Pipeline.Denormalizer/DenormalizingPipeline.cs):
+
+- Reads `parsed/normalized-columns/*.csv`, writes `parsed/*.csv` (stage root)
+
+If denormalization writes **zero** place files, it throws and the run fails.
+
+When `RunTimeNormalization` is `true` (default), [`Pipeline.TimeNormalizer`](../src/Pipeline.TimeNormalizer/TimeNormalizingPipeline.cs) reads wide CSVs from the `parsed/` stage root, applies observation-time normalization, and writes:
+
+- `time-normalized/normalized-columns/*.csv` (narrow format)
+- `time-normalized/*.csv` (wide format, stage root)
+
+Set `RunTimeNormalization` to `false` to skip the time normalization stage entirely (see [Pipeline Runner](pipeline-runner.md#stages-and-flags)).
+
+Each denormalized file keeps the six scalar columns (`DateTime`, `Temperature` (°C), `WindDirection` (°), `WindSpeed` (m/s), `AtmosphericPressure` (mmHg), `Humidity` (%)) and replaces the single `"Weather Characteristics"` column with **one column per possible weather flag** (English display name, sorted alphabetically, case-insensitive). Cell values are `1` when that flag is set on the row, otherwise `0`.
+
+Wide headers always include the **full** [Supported weather characteristics](#supported-weather-characteristics) catalog (see also [`WeatherCharacteristicsColumns`](../src/Pipeline.Core/Csv/Metadata/WeatherCharacteristicsColumns.cs)) — not only flags observed in the run. By contrast, `weather-characteristics.csv` lists only flags that actually occurred in that run.
+
+**Wide** CSVs at both the `parsed/` and `time-normalized/` stage roots include a leading `Place` column (English display name from the filename, repeated on every row; not the original NameInHtml).
+
+Neither `parsed/normalized-columns/` nor `time-normalized/normalized-columns/` include `Place`.
 
 ---
 
@@ -147,7 +177,7 @@ Examples:
 | Clear and Rain | `Clear, Rain` |
 | None | *(empty cell)* |
 
-Labels come from the `WeatherCharacteristics` enum via `EnumDisplayNameFormatter` (PascalCase splitting). The NameInHtml strings in the HTML are converted to these flags first; the CSV always shows the English form.
+Labels come from the `WeatherCharacteristics` enum via `EnumDisplayNameFormatter` (PascalCase splitting). The NameInHtml strings in the HTML are converted to these flags first; the CSV always shows the English form. Full catalog: [Supported weather characteristics](#supported-weather-characteristics). Narrow cells list comma-separated **EnglishName** values from that table; composite HTML strings (e.g. `дождь с грозой`) map to a single flag, not multiple source terms.
 
 ---
 
@@ -182,7 +212,7 @@ Use it to look up which HTML wording maps to which English filename.
 
 ### `weather-characteristics.csv`
 
-Lists every weather characteristic **that actually occurred** in the parsed data for this run — not the full catalog of possible values. One row per observed flag, sorted by `EnglishName`.
+Lists every weather characteristic **that actually occurred** in the parsed data for this run — not the full catalog of possible values. One row per observed flag, sorted by `EnglishName`. For the complete static catalog, see [Supported weather characteristics](#supported-weather-characteristics).
 
 Use it to see which original NameInHtml terms were seen and how they are labeled in English output.
 
@@ -190,7 +220,7 @@ Use it to see which original NameInHtml terms were seen and how they are labeled
 
 Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, a missing or empty `{stage}/normalized-columns/` **aborts the run** (same hard-fail policy for parsed and time-normalized).
 
-Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags with occurrence counts over all `{stage}/normalized-columns/*.csv` data rows:
+Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags (all entries in [Supported weather characteristics](#supported-weather-characteristics), even when `RowCount` is 0) with occurrence counts over all `{stage}/normalized-columns/*.csv` data rows:
 
 | Column | Description |
 |--------|-------------|
@@ -208,7 +238,7 @@ Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages m
 ### How a place is resolved
 
 1. The HTML parser reads the city name from the page title (Cyrillic, prepositional form — e.g. `Киеве`, `Червоной`).
-2. `PlaceConverter` maps that string to a `Place` enum value (19 known locations).
+2. `PlaceConverter` maps that string to a `Place` enum value (see [Supported places](#supported-places)).
 3. `PlaceConverter` / `EnumDisplayNameFormatter` turn the enum into the English display name used for grouping and filenames (e.g. `Киеве` → `Kyiv`).
 
 All rows for the same place are grouped under one English name, regardless of how many HTML files contributed.
@@ -240,9 +270,115 @@ To support a new location, add a `Place` enum member with the appropriate `NameI
 
 ---
 
+## Encoding and write behavior
+
+| Behavior | Detail |
+|----------|--------|
+| Encoding | UTF-8 with BOM |
+| Delimiter | Comma (CsvHelper defaults; fields quoted when needed) |
+| Culture | `InvariantCulture` for numbers and datetimes |
+| DateTime format | `yyyy-MM-dd HH:mm` |
+| Overwrite | Existing files at the same path are replaced (`FileMode.Create`) |
+
+---
+
 ## HtmlLog CSV comparison
 
-See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior.
+See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior. Pipeline integration via `RunHtmlLogCsvComparison` is covered in [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison).
+
+---
+
+## Reference catalogs
+
+Both tables mirror the fixed `Place` and `WeatherCharacteristics` enums in Pipeline.Core. Manifest `EnglishName` values, narrow CSV cells, and wide CSV column headers use these English labels. `WeatherCharacteristics.None` is not a column; an empty narrow cell means no flags are set.
+
+When adding a new enum member, update the matching table here (same discipline as `PlaceTestData` and weather-characteristic converter tests).
+
+### Supported places
+
+All `Place` enum members (19 locations). **Folder aliases** are path segments accepted by `PlaceConverter.TryFromFilePath` (enum member name, English display name when it differs, and `AlternateName` values).
+
+| EnglishName | Example filename | Folder aliases |
+|-------------|------------------|----------------|
+| Chervona Zirka | `Chervona Zirka.csv` | `ChervonaZirka`, `Chervona Zirka`, `Chervonaya-Zirka` |
+| Donetsk | `Donetsk.csv` | `Donetsk` |
+| Hoverla | `Hoverla.csv` | `Hoverla`, `Goverla` |
+| Hremiach | `Hremiach.csv` | `Hremiach`, `Gremyach`, `Hremyach` |
+| Ivano-Frankivsk | `Ivano-Frankivsk.csv` | `IvanoFrankivsk`, `Ivano-Frankivsk`, `Ivano-Frankovsk` |
+| Kharkiv | `Kharkiv.csv` | `Kharkiv`, `Harkov` |
+| Kuyalnyk | `Kuyalnyk.csv` | `Kuyalnyk`, `Kuyalnik` |
+| Kyiv | `Kyiv.csv` | `Kyiv`, `Kiev` |
+| Luhansk | `Luhansk.csv` | `Luhansk`, `Lugansk` |
+| Lviv | `Lviv.csv` | `Lviv`, `Lvov` |
+| Mariupol | `Mariupol.csv` | `Mariupol` |
+| Odesa | `Odesa.csv` | `Odesa`, `Odessa` |
+| Sevastopol | `Sevastopol.csv` | `Sevastopol` |
+| Simferopol | `Simferopol.csv` | `Simferopol` |
+| Sloviansk | `Sloviansk.csv` | `Sloviansk`, `Slavyansk` |
+| Solomonove | `Solomonove.csv` | `Solomonove`, `Solomonovo` |
+| Ternopil | `Ternopil.csv` | `Ternopil`, `Ternopol` |
+| Uzhhorod | `Uzhhorod.csv` | `Uzhhorod`, `Ujgorod` |
+| Zhytomyr | `Zhytomyr.csv` | `Zhytomyr`, `Jitomir` |
+
+### Supported weather characteristics
+
+All `WeatherCharacteristics` enum members except `None` (53 flags). Sorted A–Z by English display name — the same labels used in narrow CSV cells, manifest `EnglishName` values, and wide CSV flag columns.
+
+| EnglishName |
+|-------------|
+| Black ice |
+| Clear |
+| Drizzle |
+| Dust |
+| Dust storm |
+| Few clouds |
+| Fog |
+| Freezing rain |
+| Ground blizzard |
+| Hail |
+| Haze |
+| Heavy blizzard |
+| Heavy hail |
+| Heavy rain |
+| Heavy rain with snow |
+| Heavy shower rain |
+| Heavy shower rain with snow |
+| Heavy snow |
+| Heavy snow pellets |
+| Light blizzard |
+| Light drizzle |
+| Light dust storm |
+| Light fog |
+| Light ground blizzard |
+| Light hail |
+| Light rain |
+| Light rain with snow |
+| Light rain with thunderstorm |
+| Light shower rain |
+| Light shower rain with snow |
+| Light snow |
+| Light snow pellets |
+| Mist |
+| Mostly clear |
+| Mostly cloudy |
+| Overcast |
+| Partly cloudy |
+| Patchy fog |
+| Precipitation |
+| Rain |
+| Rain and hail |
+| Rain and snow |
+| Rain and thunderstorm |
+| Rain thunderstorm and hail |
+| Reduced visibility due to smoke |
+| Sandstorm |
+| Severe thunderstorm |
+| Shower rain |
+| Shower rain with snow |
+| Snow |
+| Squall |
+| Thunderstorm |
+| Variable cloudiness |
 
 ---
 
@@ -253,6 +389,10 @@ See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, m
 | `PlaceConverter` | Pipeline.Core | Cyrillic HTML name → `Place` enum |
 | `EnumDisplayNameFormatter` | Pipeline.Core | `Place` / `WeatherCharacteristics` → English display label |
 | `WeatherCharacteristicConverter` | Pipeline.Core | NameInHtml strings ↔ flags; builds the English CSV cell |
+| `WeatherScalarCsvColumns` | Pipeline.Core | Scalar column header names and DateTime format |
+| `NormalizedWeatherCsvColumns` | Pipeline.Core | Narrow `CoreColumns` including `Weather Characteristics` |
+| `WeatherCharacteristicsColumns` | Pipeline.Core | Wide one-hot flag column names (full catalog except `None`) |
+| `WeatherCsvColumns` | Pipeline.Core | Facade re-exporting the column constants above |
 | `NormalizedColumnsWeatherDataCsvWriter` | Pipeline.Core | Writes narrow per-place CSVs under `normalized-columns/` (parsed and time-normalized stages) |
 | `ParsedStageManifestCsvWriter` | Pipeline.Parser | Writes `parsed-places.csv` and `weather-characteristics.csv` |
 | `ParsedSourceFilesManifestWriter` | Pipeline.Parser | Writes `parsed-source-files.csv` |
@@ -262,6 +402,5 @@ See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, m
 | `DenormalizedWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format denormalized per-place CSVs |
 | `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/normalized-columns/`, writes wide CSVs at `parsed/` root |
 | `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/normalized-columns/`, writes usage CSV + `result-analysis{timestamp}.html` |
-| `WeatherCsvColumns` | Pipeline.Core | Canonical column header names |
 
 Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.
