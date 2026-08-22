@@ -24,10 +24,10 @@ How **Pipeline.Runner** writes CSV files after a run. For configuration, stage f
   - [Parse failures vs place failures](#parse-failures-vs-place-failures)
 - [Encoding and write behavior](#encoding-and-write-behavior)
 - [HtmlLog CSV comparison](#htmllog-csv-comparison)
-- [Related code](#related-code)
 - [Reference catalogs](#reference-catalogs)
   - [Supported places](#supported-places)
   - [Supported weather characteristics](#supported-weather-characteristics)
+- [Related code](#related-code)
 
 ---
 
@@ -288,31 +288,6 @@ See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, m
 
 ---
 
-## Related code
-
-| Piece | Project | Role |
-|-------|---------|------|
-| `PlaceConverter` | Pipeline.Core | Cyrillic HTML name → `Place` enum |
-| `EnumDisplayNameFormatter` | Pipeline.Core | `Place` / `WeatherCharacteristics` → English display label |
-| `WeatherCharacteristicConverter` | Pipeline.Core | NameInHtml strings ↔ flags; builds the English CSV cell |
-| `WeatherScalarCsvColumns` | Pipeline.Core | Scalar column header names and DateTime format |
-| `NormalizedWeatherCsvColumns` | Pipeline.Core | Narrow `CoreColumns` including `Weather Characteristics` |
-| `WeatherCharacteristicsColumns` | Pipeline.Core | Wide one-hot flag column names (full catalog except `None`) |
-| `WeatherCsvColumns` | Pipeline.Core | Facade re-exporting the column constants above |
-| `NormalizedColumnsWeatherDataCsvWriter` | Pipeline.Core | Writes narrow per-place CSVs under `normalized-columns/` (parsed and time-normalized stages) |
-| `ParsedStageManifestCsvWriter` | Pipeline.Parser | Writes `parsed-places.csv` and `weather-characteristics.csv` |
-| `ParsedSourceFilesManifestWriter` | Pipeline.Parser | Writes `parsed-source-files.csv` |
-| `ParsedSourceFilesManifestReader` | Pipeline.TimeNormalizer | Reads `parsed-source-files.csv` for normalization context |
-| `NormalizedColumnsWeatherDataCsvReader` | Pipeline.Core | Reads narrow-format CSVs from a `normalized-columns/` directory |
-| `DenormalizedWeatherDataCsvReader` | Pipeline.Core | Reads wide-format CSVs from the `parsed/` stage root for normalization |
-| `DenormalizedWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format denormalized per-place CSVs |
-| `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/normalized-columns/`, writes wide CSVs at `parsed/` root |
-| `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/normalized-columns/`, writes usage CSV + `result-analysis{timestamp}.html` |
-
-Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.
-
----
-
 ## Reference catalogs
 
 Both tables mirror the fixed `Place` and `WeatherCharacteristics` enums in Pipeline.Core. Manifest `EnglishName` values, narrow CSV cells, and wide CSV column headers use these English labels. `WeatherCharacteristics.None` is not a column; an empty narrow cell means no flags are set.
@@ -404,3 +379,28 @@ All `WeatherCharacteristics` enum members except `None` (53 flags). Sorted A–Z
 | Squall |
 | Thunderstorm |
 | Variable cloudiness |
+
+---
+
+## Related code
+
+| Piece | Project | Role |
+|-------|---------|------|
+| `PlaceConverter` | Pipeline.Core | Cyrillic HTML name → `Place` enum |
+| `EnumDisplayNameFormatter` | Pipeline.Core | `Place` / `WeatherCharacteristics` → English display label |
+| `WeatherCharacteristicConverter` | Pipeline.Core | NameInHtml strings ↔ flags; builds the English CSV cell |
+| `WeatherScalarCsvColumns` | Pipeline.Core | Scalar column header names and DateTime format |
+| `NormalizedWeatherCsvColumns` | Pipeline.Core | Narrow `CoreColumns` including `Weather Characteristics` |
+| `WeatherCharacteristicsColumns` | Pipeline.Core | Wide one-hot flag column names (full catalog except `None`) |
+| `WeatherCsvColumns` | Pipeline.Core | Facade re-exporting the column constants above |
+| `NormalizedColumnsWeatherDataCsvWriter` | Pipeline.Core | Writes narrow per-place CSVs under `normalized-columns/` (parsed and time-normalized stages) |
+| `ParsedStageManifestCsvWriter` | Pipeline.Parser | Writes `parsed-places.csv` and `weather-characteristics.csv` |
+| `ParsedSourceFilesManifestWriter` | Pipeline.Parser | Writes `parsed-source-files.csv` |
+| `ParsedSourceFilesManifestReader` | Pipeline.TimeNormalizer | Reads `parsed-source-files.csv` for normalization context |
+| `NormalizedColumnsWeatherDataCsvReader` | Pipeline.Core | Reads narrow-format CSVs from a `normalized-columns/` directory |
+| `DenormalizedWeatherDataCsvReader` | Pipeline.Core | Reads wide-format CSVs from the `parsed/` stage root for normalization |
+| `DenormalizedWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format denormalized per-place CSVs |
+| `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/normalized-columns/`, writes wide CSVs at `parsed/` root |
+| `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/normalized-columns/`, writes usage CSV + `result-analysis{timestamp}.html` |
+
+Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.
