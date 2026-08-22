@@ -1,0 +1,18 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+      - name: Code style
+        run: dotnet build Historical-Weather-Data-Harvester.sln --configuration Release -p:TreatWarningsAsErrors=true
+      - name: Test
+        run: dotnet test Historical-Weather-Data-Harvester.sln --configuration Release --no-build
