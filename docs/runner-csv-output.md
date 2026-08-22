@@ -136,7 +136,7 @@ Place,DateTime,Temperature,WindDirection,WindSpeed,AtmosphericPressure,Humidity,
 Kyiv,2003-01-01 00:00,-12,315,2.0,750,70,1,...
 ```
 
-Rows are ordered by `DateTime` within each place file.
+Rows from multiple source HTML files for the same place are merged into one stream and sorted by `DateTime` only (not by source file or archive date).
 
 ---
 
