@@ -14,22 +14,31 @@ using Common;
 
 public sealed class PlaceDateCoverageAggregator
 {
+    private readonly IDateRangeClusterFormatter dateRangeClusterFormatter;
+
+    public PlaceDateCoverageAggregator(IDateRangeClusterFormatter dateRangeClusterFormatter)
+    {
+        Argument.ThrowIfNull(dateRangeClusterFormatter);
+
+        this.dateRangeClusterFormatter = dateRangeClusterFormatter;
+    }
+
     public IReadOnlyList<PlaceDateCoverageRow> Aggregate(
         IReadOnlyDictionary<string, IReadOnlyList<WeatherDataRow>> rowsByPlace)
     {
         Argument.ThrowIfNull(rowsByPlace);
 
         return rowsByPlace
-            .Select(pair => BuildRow(pair.Key, pair.Value))
+            .Select(pair => this.BuildRow(pair.Key, pair.Value))
             .OrderBy(row => row.Place, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 
-    private static PlaceDateCoverageRow BuildRow(string place, IReadOnlyList<WeatherDataRow> rows)
+    private PlaceDateCoverageRow BuildRow(string place, IReadOnlyList<WeatherDataRow> rows)
     {
         if (rows.Count == 0)
         {
-            return new PlaceDateCoverageRow(place, null, null, 0);
+            return new PlaceDateCoverageRow(place, null, null, 0, string.Empty);
         }
 
         var dates = rows
@@ -40,13 +49,22 @@ public sealed class PlaceDateCoverageAggregator
 
         var firstDate = dates[0];
         var lastDate = dates[^1];
-        var spanDays = (lastDate - firstDate).Days + 1;
-        var skippedDays = spanDays - dates.Count;
+        var observedDates = dates.ToHashSet();
+        var missingDates = new List<DateTime>();
+
+        for (var day = firstDate; day <= lastDate; day = day.AddDays(1))
+        {
+            if (!observedDates.Contains(day))
+            {
+                missingDates.Add(day);
+            }
+        }
 
         return new PlaceDateCoverageRow(
             place,
             firstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             lastDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            skippedDays);
+            missingDates.Count,
+            this.dateRangeClusterFormatter.Format(missingDates));
     }
 }

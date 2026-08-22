@@ -21,12 +21,14 @@ public sealed class PlaceDateCoverageCsvRecord
         string place,
         string? firstDate,
         string? lastDate,
-        int skippedDays)
+        int skippedDays,
+        string skippedDates)
     {
         this.Place = place;
         this.FirstDate = firstDate ?? string.Empty;
         this.LastDate = lastDate ?? string.Empty;
         this.SkippedDays = skippedDays;
+        this.SkippedDates = skippedDates;
     }
 
     [Name("Place")]
@@ -40,4 +42,7 @@ public sealed class PlaceDateCoverageCsvRecord
 
     [Name("SkippedDays")]
     public int SkippedDays { get; init; }
+
+    [Name("SkippedDates")]
+    public string SkippedDates { get; init; } = string.Empty;
 }

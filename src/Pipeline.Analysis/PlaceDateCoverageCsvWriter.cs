@@ -43,7 +43,8 @@ public sealed class PlaceDateCoverageCsvWriter
                 row.Place,
                 row.FirstDate,
                 row.LastDate,
-                row.SkippedDays))
+                row.SkippedDays,
+                row.SkippedDates))
             .ToList();
 
         var rowCount = this.csvRecordWriter.WriteRecords(

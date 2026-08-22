@@ -57,6 +57,7 @@ public sealed class AnalysisReportWriter
                     row.FirstDate,
                     row.LastDate,
                     row.SkippedDays,
+                    row.SkippedDates,
                 })
                 .ToList();
 

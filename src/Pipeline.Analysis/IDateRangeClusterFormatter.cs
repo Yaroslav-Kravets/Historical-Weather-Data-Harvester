@@ -9,9 +9,7 @@
 
 namespace Pipeline.Analysis;
 
-public sealed record PlaceDateCoverageRow(
-    string Place,
-    string? FirstDate,
-    string? LastDate,
-    int SkippedDays,
-    string SkippedDates);
+public interface IDateRangeClusterFormatter
+{
+    string Format(IEnumerable<DateTime> dates);
+}

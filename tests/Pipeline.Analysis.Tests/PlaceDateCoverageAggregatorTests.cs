@@ -13,7 +13,8 @@ using Xunit;
 
 public sealed class PlaceDateCoverageAggregatorTests
 {
-    private readonly PlaceDateCoverageAggregator aggregator = new();
+    private readonly PlaceDateCoverageAggregator aggregator =
+        new(new DateRangeClusterFormatter());
 
     [Fact]
     public void Aggregate_ContiguousRange_HasZeroSkippedDays()
@@ -35,10 +36,11 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-03", kyiv.LastDate);
         Assert.Equal(0, kyiv.SkippedDays);
+        Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
 
     [Fact]
-    public void Aggregate_GapInRange_CountsSkippedDays()
+    public void Aggregate_GapInRange_CountsSkippedDaysAndListsDates()
     {
         var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
         {
@@ -55,6 +57,46 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-03", kyiv.LastDate);
         Assert.Equal(1, kyiv.SkippedDays);
+        Assert.Equal("2003-01-02", kyiv.SkippedDates);
+    }
+
+    [Fact]
+    public void Aggregate_ConsecutiveGaps_ClustersSkippedDates()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] =
+            [
+                CreateRow(new DateTime(2003, 1, 1)),
+                CreateRow(new DateTime(2003, 1, 5)),
+            ],
+        };
+
+        var coverageRows = this.aggregator.Aggregate(rowsByPlace);
+
+        var kyiv = Assert.Single(coverageRows);
+        Assert.Equal(3, kyiv.SkippedDays);
+        Assert.Equal("2003-01-02..2003-01-04", kyiv.SkippedDates);
+    }
+
+    [Fact]
+    public void Aggregate_MultipleGaps_ClustersEachRun()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] =
+            [
+                CreateRow(new DateTime(2003, 1, 1)),
+                CreateRow(new DateTime(2003, 1, 3)),
+                CreateRow(new DateTime(2003, 1, 6)),
+            ],
+        };
+
+        var coverageRows = this.aggregator.Aggregate(rowsByPlace);
+
+        var kyiv = Assert.Single(coverageRows);
+        Assert.Equal(3, kyiv.SkippedDays);
+        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", kyiv.SkippedDates);
     }
 
     [Fact]
@@ -76,6 +118,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-02", kyiv.LastDate);
         Assert.Equal(0, kyiv.SkippedDays);
+        Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
 
     [Fact]
@@ -93,6 +136,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Null(kyiv.FirstDate);
         Assert.Null(kyiv.LastDate);
         Assert.Equal(0, kyiv.SkippedDays);
+        Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
 
     [Fact]

@@ -56,7 +56,7 @@ HtmlLog_<timestamp>/                 # under process CWD
     parsed-places.csv                # places seen in this run
     weather-characteristics.csv      # weather flags seen in this run
     weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
-    place-date-coverage.csv          # per-place first/last date and skipped days (when analysis enabled)
+    place-date-coverage.csv          # per-place first/last date, skipped day count, and clustered skipped dates (when analysis enabled)
     narrow-format/                   # narrow format
       Kyiv.csv
       Kharkiv.csv
@@ -82,7 +82,7 @@ HtmlLog_<timestamp>/                 # under process CWD
 
 - **`parsed/`** — stage text log, parsing and analysis HTML reports, manifests, narrow per-place CSVs in `narrow-format/`, and wide-format CSVs in `wide-format/`.
 - **`time-normalized/`** — stage text log, time-normalization and analysis HTML reports, narrow per-place CSVs in `narrow-format/`, and wide-format CSVs in `wide-format/`. Created only when `RunTimeNormalization` is `true`.
-- **`weather-characteristics-usage.csv`** and **`place-date-coverage.csv`** — written by analysis (default on via `RunAnalysis`) under each analyzed stage root. Usage CSV has one row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/narrow-format/*.csv` rows). Coverage CSV has one row per place with `FirstDate`, `LastDate`, and `SkippedDays` (calendar days in the inclusive date range without any observations). Analysis writes both tables to `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
+- **`weather-characteristics-usage.csv`** and **`place-date-coverage.csv`** — written by analysis (default on via `RunAnalysis`) under each analyzed stage root. Usage CSV has one row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/narrow-format/*.csv` rows). Coverage CSV has one row per place with `FirstDate`, `LastDate`, `SkippedDays`, and `SkippedDates` (calendar days in the inclusive date range without any observations; consecutive missing days are clustered into ranges). Analysis writes both tables to `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
 
 Both `narrow-format/` trees use the same narrow CSV shape (`NarrowFormatWeatherCsvColumns.CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs under both `wide-format/` directories include a leading `Place` column.
 
@@ -245,6 +245,7 @@ Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` i
 | `FirstDate` | Earliest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
 | `LastDate` | Latest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
 | `SkippedDays` | Calendar days in the inclusive `[FirstDate, LastDate]` range without any observations: `(LastDate - FirstDate + 1) - uniqueDates` |
+| `SkippedDates` | Those missing calendar days as a comma-separated list; consecutive days are clustered into `start..end` ranges (e.g. `2003-01-02,2003-01-04..2003-01-05`). Empty when there are no gaps |
 
 Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table).
 

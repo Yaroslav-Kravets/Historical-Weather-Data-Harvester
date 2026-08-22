@@ -48,7 +48,7 @@ public sealed class AnalysisPipelineTests
         Assert.True(this.fileSystem.File.Exists(coverageCsvPath));
 
         var coverageCsv = this.fileSystem.File.ReadAllText(coverageCsvPath);
-        Assert.Contains("Place,FirstDate,LastDate,SkippedDays", coverageCsv, StringComparison.Ordinal);
+        Assert.Contains("Place,FirstDate,LastDate,SkippedDays,SkippedDates", coverageCsv, StringComparison.Ordinal);
         Assert.Contains("Kyiv,2003-01-01,2003-01-01,0", coverageCsv, StringComparison.Ordinal);
 
         var usageCsvPath = this.fileSystem.Path.Combine(
@@ -150,7 +150,7 @@ public sealed class AnalysisPipelineTests
             this.fileSystem,
             new HtmlLogFileManager(this.fileSystem),
             new NarrowFormatWeatherDataCsvReader(this.fileSystem, weatherDataCsvRecordMap),
-            new PlaceDateCoverageAggregator(),
+            new PlaceDateCoverageAggregator(new DateRangeClusterFormatter()),
             new WeatherCharacteristicUsageAggregator(weatherCharacteristicConverter),
             new PlaceDateCoverageCsvWriter(
                 NullLogger<PlaceDateCoverageCsvWriter>.Instance,
