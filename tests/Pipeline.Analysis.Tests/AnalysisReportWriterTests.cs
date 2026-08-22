@@ -28,7 +28,7 @@ public sealed class AnalysisReportWriterTests
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
         this.CreateWriter().Write(
             [
-                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-03", 1, "2003-01-02"),
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-03", 2, 1, "2003-01-02"),
             ],
             [
                 new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),

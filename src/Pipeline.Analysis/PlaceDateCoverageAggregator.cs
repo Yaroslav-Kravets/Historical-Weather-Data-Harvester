@@ -38,7 +38,7 @@ public sealed class PlaceDateCoverageAggregator
     {
         if (rows.Count == 0)
         {
-            return new PlaceDateCoverageRow(place, null, null, 0, string.Empty);
+            return new PlaceDateCoverageRow(place, null, null, 0, 0, string.Empty);
         }
 
         var dates = rows
@@ -64,6 +64,7 @@ public sealed class PlaceDateCoverageAggregator
             place,
             firstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
             lastDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            dates.Count,
             missingDates.Count,
             this.dateRangeClusterFormatter.Format(missingDates));
     }

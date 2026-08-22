@@ -13,5 +13,6 @@ public sealed record PlaceDateCoverageRow(
     string Place,
     string? FirstDate,
     string? LastDate,
+    int SuccessfulDays,
     int SkippedDays,
     string SkippedDates);
