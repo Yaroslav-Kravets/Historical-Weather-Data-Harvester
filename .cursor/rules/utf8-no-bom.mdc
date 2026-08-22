@@ -1,0 +1,20 @@
+---
+description: Save all text files as UTF-8 without BOM and LF line endings
+alwaysApply: true
+---
+
+# UTF-8 without BOM
+
+When creating or rewriting text files in this repo, **omit the UTF-8 BOM**.
+
+## Required
+
+- Encoding: UTF-8 **without** BOM (`charset = utf-8` in [`.editorconfig`](.editorconfig))
+- Line endings: LF (`end_of_line = lf`)
+- Prefer editor/settings that save as `utf8` (not `utf8bom`) — matches [`.vscode/settings.json`](.vscode/settings.json)
+- Applies to **all** text files, including `*.sln` (tabs only; no BOM)
+
+## Do not
+
+- Write a leading `EF BB BF` on any text file (`.cs`, `.csproj`, `.sln`, `.json`, `.md`, `.mdc`, manifests, etc.)
+- Reintroduce CRLF when editing sources that were normalized to LF
