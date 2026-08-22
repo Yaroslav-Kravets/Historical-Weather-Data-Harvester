@@ -4,13 +4,13 @@ How to configure and run **Pipeline.Runner**, which parses historical weather HT
 
 ## Configuration
 
-Copy [`src/Pipeline.Runner/appsettings.example.json`](../src/Pipeline.Runner/appsettings.example.json) to `appsettings.json` next to the runner (or override via the usual .NET config hosts) and set `HistoricalWeatherFilesRoot` to your local weather HTML root directory, or to a `.7z` archive of that tree.
+Edit [`src/Pipeline.Runner/appsettings.json`](../src/Pipeline.Runner/appsettings.json) and set `HistoricalWeatherFilesRoot` to your local weather HTML root directory, or to a `.7z` archive of that tree.
 
 The committed `appsettings.json` keeps an empty root so clones do not inherit machine-specific paths.
 
-| Key | Default (example) | Role |
-|-----|-------------------|------|
-| `HistoricalWeatherFilesRoot` | *(path)* | Directory of HTML, or a `.7z` of that tree |
+| Key | Default | Role |
+|-----|---------|------|
+| `HistoricalWeatherFilesRoot` | `""` | Directory of HTML, or a `.7z` of that tree |
 | `RunInParallel` | `false` | Parallel parse; must be `false` for archive mode |
 | `RunTimeNormalization` | `true` | Write `time-normalized/` after denormalization |
 | `RunAnalysis` | `true` | Weather-characteristic usage stats per analyzed stage |
