@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: "8.0.x"
-      - name: Code style
+      - name: Build (warnings as errors)
         run: dotnet build Historical-Weather-Data-Harvester.sln --configuration Release -p:TreatWarningsAsErrors=true
       - name: Test
         run: dotnet test Historical-Weather-Data-Harvester.sln --configuration Release --no-build

@@ -41,7 +41,6 @@ dotnet_style_qualification_for_property = true:warning
 dotnet_style_qualification_for_method = true:warning
 dotnet_style_qualification_for_event = true:warning
 csharp_prefer_braces = true:warning
-dotnet_diagnostic.IDE0011.severity = warning
 csharp_style_allow_multiple_blank_lines_experimental = false:warning
 
 # StyleCop.Analyzers: all rule categories enabled as warnings, with specific opt-outs below
