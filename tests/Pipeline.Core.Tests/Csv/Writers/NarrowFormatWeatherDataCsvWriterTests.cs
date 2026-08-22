@@ -16,13 +16,13 @@ using FileSystem.TestSupport;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-public sealed class NormalizedColumnsWeatherDataCsvWriterTests
+public sealed class NarrowFormatWeatherDataCsvWriterTests
 {
     private readonly IFileSystem fileSystem;
     private readonly string outputDirectory;
-    private readonly NormalizedColumnsWeatherDataCsvWriter writer;
+    private readonly NarrowFormatWeatherDataCsvWriter writer;
 
-    public NormalizedColumnsWeatherDataCsvWriterTests()
+    public NarrowFormatWeatherDataCsvWriterTests()
     {
         this.fileSystem = InMemoryFileSystem.Create();
         this.outputDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
@@ -31,8 +31,8 @@ public sealed class NormalizedColumnsWeatherDataCsvWriterTests
         var placeCsvFileNameResolver = new PlaceCsvFileNameResolver(this.fileSystem);
         var weatherDataCsvRecordMap = new WeatherDataCsvRecordMap(
             new WeatherCharacteristicsEnglishCsvConverter(new WeatherCharacteristicConverter()));
-        this.writer = new NormalizedColumnsWeatherDataCsvWriter(
-            NullLogger<NormalizedColumnsWeatherDataCsvWriter>.Instance,
+        this.writer = new NarrowFormatWeatherDataCsvWriter(
+            NullLogger<NarrowFormatWeatherDataCsvWriter>.Instance,
             this.fileSystem,
             csvRecordWriter,
             placeCsvFileNameResolver,
@@ -91,7 +91,7 @@ public sealed class NormalizedColumnsWeatherDataCsvWriterTests
     [Fact]
     public void WritePlaceRows_DoesNotCreateOutputDirectoryWhenResultsAreEmpty()
     {
-        var outputDirectory = this.fileSystem.Path.Combine(this.outputDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        var outputDirectory = this.fileSystem.Path.Combine(this.outputDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
 
         this.writer.WritePlaceRows(
             new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase),

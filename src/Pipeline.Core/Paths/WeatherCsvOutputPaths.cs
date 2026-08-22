@@ -18,7 +18,9 @@ public static class WeatherCsvOutputPaths
 
     public const string TimeNormalizedStageDirectoryName = "time-normalized";
 
-    public const string NormalizedColumnsDirectoryName = "normalized-columns";
+    public const string NarrowFormatDirectoryName = "narrow-format";
+
+    public const string WideFormatDirectoryName = "wide-format";
 
     public const string ParsedSourceFilesManifestFileName = "parsed-source-files.csv";
 

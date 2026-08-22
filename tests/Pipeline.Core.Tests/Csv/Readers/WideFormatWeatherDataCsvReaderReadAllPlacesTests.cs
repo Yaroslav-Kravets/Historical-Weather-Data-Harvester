@@ -12,28 +12,30 @@ namespace Pipeline.Core.Tests.Csv.Readers;
 using Pipeline.Core.Tests.Csv.TestSupport;
 using Xunit;
 
-public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
+public sealed class WideFormatWeatherDataCsvReaderReadAllPlacesTests
 {
     private readonly CsvTestContext testContext;
-    private readonly DenormalizedWeatherDataCsvWriter writer;
-    private readonly DenormalizedWeatherDataCsvReader reader;
+    private readonly WideFormatWeatherDataCsvWriter writer;
+    private readonly WideFormatWeatherDataCsvReader reader;
 
-    public DenormalizedWeatherDataCsvReaderReadAllPlacesTests()
+    public WideFormatWeatherDataCsvReaderReadAllPlacesTests()
     {
         this.testContext = new CsvTestContext();
-        this.writer = new DenormalizedWeatherDataCsvWriter(
+        this.writer = new WideFormatWeatherDataCsvWriter(
             this.testContext.FileSystem,
             this.testContext.PlaceCsvFileNameResolver);
-        this.reader = new DenormalizedWeatherDataCsvReader(this.testContext.FileSystem);
+        this.reader = new WideFormatWeatherDataCsvReader(this.testContext.FileSystem);
     }
 
     [Fact]
-    public void ReadAllPlaces_ReadsFromStageRoot()
+    public void ReadAllPlaces_ReadsFromWideFormatDirectory()
     {
-        var parsedStageDirectory = this.testContext.EnsureDirectoryUnderRoot(WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        var wideFormatDirectory = this.testContext.EnsureDirectoryUnderRoot(
+            WeatherCsvOutputPaths.ParsedStageDirectoryName,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
 
         this.writer.WritePlaceRows(
-            parsedStageDirectory,
+            wideFormatDirectory,
             "Kyiv.csv",
             new[]
             {
@@ -47,7 +49,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                     85),
             });
 
-        var places = this.reader.ReadAllPlaces(parsedStageDirectory);
+        var places = this.reader.ReadAllPlaces(wideFormatDirectory);
 
         Assert.Single(places);
         Assert.True(places.ContainsKey("Kyiv"));
@@ -65,10 +67,12 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
     [Fact]
     public void ReadAllPlaces_FindsUppercaseCsvExtension()
     {
-        var parsedStageDirectory = this.testContext.EnsureDirectoryUnderRoot(WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        var wideFormatDirectory = this.testContext.EnsureDirectoryUnderRoot(
+            WeatherCsvOutputPaths.ParsedStageDirectoryName,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
 
         this.writer.WritePlaceRows(
-            parsedStageDirectory,
+            wideFormatDirectory,
             "Kyiv.CSV",
             new[]
             {
@@ -82,7 +86,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                     85),
             });
 
-        var places = this.reader.ReadAllPlaces(parsedStageDirectory);
+        var places = this.reader.ReadAllPlaces(wideFormatDirectory);
 
         Assert.Single(places);
         Assert.True(places.ContainsKey("Kyiv"));
@@ -91,10 +95,12 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
     [Fact]
     public void ReadAllPlaces_Throws_WhenPlaceNamesCollideIgnoringCase()
     {
-        var parsedStageDirectory = this.testContext.EnsureDirectoryUnderRoot(WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        var wideFormatDirectory = this.testContext.EnsureDirectoryUnderRoot(
+            WeatherCsvOutputPaths.ParsedStageDirectoryName,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
 
         this.writer.WritePlaceRows(
-            parsedStageDirectory,
+            wideFormatDirectory,
             "Kyiv.csv",
             new[]
             {
@@ -108,7 +114,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                     85),
             });
         this.writer.WritePlaceRows(
-            parsedStageDirectory,
+            wideFormatDirectory,
             "kyiv.CSV",
             new[]
             {
@@ -122,14 +128,17 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                     75),
             });
 
-        var exception = Assert.Throws<InvalidDataException>(() => this.reader.ReadAllPlaces(parsedStageDirectory));
+        var exception = Assert.Throws<InvalidDataException>(() => this.reader.ReadAllPlaces(wideFormatDirectory));
         Assert.Contains("duplicate place CSV", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public void ReadAllPlaces_SkipsStageRootSidecarFiles()
+    public void ReadAllPlaces_ReadsWhenStageRootHasSidecarFiles()
     {
         var parsedStageDirectory = this.testContext.EnsureDirectoryUnderRoot(WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        var wideFormatDirectory = this.testContext.EnsureDirectoryUnderRoot(
+            WeatherCsvOutputPaths.ParsedStageDirectoryName,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
 
         this.testContext.FileSystem.File.WriteAllText(
             this.testContext.FileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.ParsedPlacesManifestFileName),
@@ -140,7 +149,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                 WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName),
             "EnglishName,NameInHtml,RowCount,PercentOfRows\nClear,ясно,1,100.00%\n");
         this.writer.WritePlaceRows(
-            parsedStageDirectory,
+            wideFormatDirectory,
             "Kyiv.csv",
             new[]
             {
@@ -154,19 +163,17 @@ public sealed class DenormalizedWeatherDataCsvReaderReadAllPlacesTests
                     85),
             });
 
-        var places = this.reader.ReadAllPlaces(parsedStageDirectory);
+        var places = this.reader.ReadAllPlaces(wideFormatDirectory);
 
         Assert.Single(places);
         Assert.True(places.ContainsKey("Kyiv"));
-        Assert.False(places.ContainsKey("parsed-places"));
-        Assert.False(places.ContainsKey("weather-characteristics-usage"));
     }
 
     [Fact]
     public void ReadAllPlaces_ThrowsWhenDirectoryMissing()
     {
-        var parsedStageDirectory = this.testContext.PathUnderRoot("missing-parsed");
+        var wideFormatDirectory = this.testContext.PathUnderRoot("missing-parsed", WeatherCsvOutputPaths.WideFormatDirectoryName);
 
-        Assert.Throws<DirectoryNotFoundException>(() => this.reader.ReadAllPlaces(parsedStageDirectory));
+        Assert.Throws<DirectoryNotFoundException>(() => this.reader.ReadAllPlaces(wideFormatDirectory));
     }
 }

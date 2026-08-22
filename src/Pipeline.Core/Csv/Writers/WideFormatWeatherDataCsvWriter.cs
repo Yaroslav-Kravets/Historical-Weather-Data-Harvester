@@ -15,14 +15,14 @@ using Common;
 using CsvHelper;
 
 /// <summary>
-/// Writes denormalized weather CSV files where each weather characteristic has its own 0/1 column.
+/// Writes wide-format weather CSV files where each weather characteristic has its own 0/1 column.
 /// </summary>
-public sealed class DenormalizedWeatherDataCsvWriter
+public sealed class WideFormatWeatherDataCsvWriter
 {
     private readonly IFileSystem fileSystem;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
 
-    public DenormalizedWeatherDataCsvWriter(
+    public WideFormatWeatherDataCsvWriter(
         IFileSystem fileSystem,
         PlaceCsvFileNameResolver placeCsvFileNameResolver)
     {

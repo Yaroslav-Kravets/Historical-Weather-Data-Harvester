@@ -10,6 +10,6 @@
 namespace Pipeline.Denormalizer;
 
 public sealed record DenormalizingRunOptions(
-    string NormalizedColumnsDirectory,
-    string StageDirectory,
+    string NarrowFormatDirectory,
+    string WideFormatDirectory,
     bool RunInParallel);

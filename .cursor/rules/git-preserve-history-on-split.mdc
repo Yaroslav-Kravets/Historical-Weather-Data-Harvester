@@ -28,8 +28,8 @@ When the original path must stay (e.g. `Program.cs` as entry point), keep histor
 ```bash
 # WeatherDataCsvWriter.cs (~117 lines) → narrow writer (~70) + wide writer (~40)
 git mv src/Pipeline.Core/Csv/Writers/WeatherDataCsvWriter.cs \
-       src/Pipeline.Core/Csv/Writers/NormalizedColumnsWeatherDataCsvWriter.cs
-# Edit NormalizedColumnsWeatherDataCsvWriter.cs; create DenormalizedWeatherDataCsvWriter.cs fresh
+       src/Pipeline.Core/Csv/Writers/NarrowFormatWeatherDataCsvWriter.cs
+# Edit NarrowFormatWeatherDataCsvWriter.cs; create WideFormatWeatherDataCsvWriter.cs fresh
 ```
 
 After the split, `git status` should show `renamed:` for the history-carrying file.

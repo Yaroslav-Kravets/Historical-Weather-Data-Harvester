@@ -18,8 +18,9 @@ using Xunit;
 public sealed class TimeNormalizingPipelineTests
 {
     private readonly IFileSystem fileSystem;
-    private readonly DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter;
+    private readonly WideFormatWeatherDataCsvWriter wideFormatWeatherDataCsvWriter;
     private readonly string parsedStageDirectory;
+    private readonly string parsedWideFormatDirectory;
     private readonly string timeNormalizedStageDirectory;
     private readonly TimeNormalizingPipeline timeNormalizingPipeline;
 
@@ -28,12 +29,16 @@ public sealed class TimeNormalizingPipelineTests
         this.fileSystem = InMemoryFileSystem.Create();
         var baseDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
         this.parsedStageDirectory = this.fileSystem.Path.Combine(baseDirectory, WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        this.parsedWideFormatDirectory = this.fileSystem.Path.Combine(
+            this.parsedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
         this.timeNormalizedStageDirectory = this.fileSystem.Path.Combine(
             baseDirectory,
             WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
         this.fileSystem.Directory.CreateDirectory(this.parsedStageDirectory);
+        this.fileSystem.Directory.CreateDirectory(this.parsedWideFormatDirectory);
         this.fileSystem.Directory.CreateDirectory(this.timeNormalizedStageDirectory);
-        this.denormalizedWeatherDataCsvWriter = new DenormalizedWeatherDataCsvWriter(
+        this.wideFormatWeatherDataCsvWriter = new WideFormatWeatherDataCsvWriter(
             this.fileSystem,
             new PlaceCsvFileNameResolver(this.fileSystem));
         this.timeNormalizingPipeline = CreatePipeline(this.fileSystem);
@@ -53,54 +58,55 @@ public sealed class TimeNormalizingPipelineTests
     }
 
     [Fact]
-    public void Run_ThrowsInvalidOperationException_WhenNoDenormalizedPlaceCsvs()
+    public void Run_ThrowsInvalidOperationException_WhenNoWideFormatPlaceCsvs()
     {
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result.html");
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false));
 
-        Assert.Contains("No denormalized place CSVs found", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(this.parsedStageDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("No wide-format place CSVs found", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(this.parsedWideFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Run_WritesNormalizedAndDenormalizedOutputs()
+    public void Run_WritesNarrowAndWideFormatOutputs()
     {
         var archiveDate = new DateTime(2003, 1, 1);
-        this.denormalizedWeatherDataCsvWriter.WritePlaceRows(
-            this.parsedStageDirectory,
+        this.wideFormatWeatherDataCsvWriter.WritePlaceRows(
+            this.parsedWideFormatDirectory,
             "Kyiv.csv",
             CreateFullDayRows(archiveDate));
 
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result.html");
         this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false);
 
-        var normalizedPath = this.fileSystem.Path.Combine(
+        var narrowFormatPath = this.fileSystem.Path.Combine(
             this.timeNormalizedStageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName,
             "Kyiv.csv");
-        var normalizedDenormalizedPath = this.fileSystem.Path.Combine(
+        var wideFormatPath = this.fileSystem.Path.Combine(
             this.timeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName,
             "Kyiv.csv");
 
-        Assert.True(this.fileSystem.File.Exists(normalizedPath));
-        Assert.True(this.fileSystem.File.Exists(normalizedDenormalizedPath));
+        Assert.True(this.fileSystem.File.Exists(narrowFormatPath));
+        Assert.True(this.fileSystem.File.Exists(wideFormatPath));
         Assert.True(this.fileSystem.File.Exists(htmlReportPath));
 
-        var normalizedHeader = this.fileSystem.File.ReadLines(normalizedPath).First();
-        Assert.DoesNotContain(WeatherCsvColumns.Place, normalizedHeader);
+        var narrowHeader = this.fileSystem.File.ReadLines(narrowFormatPath).First();
+        Assert.DoesNotContain(WeatherCsvColumns.Place, narrowHeader);
 
-        var denormalizedHeader = this.fileSystem.File.ReadLines(normalizedDenormalizedPath).First();
-        Assert.Equal(WeatherCsvColumns.Place, denormalizedHeader.Split(',')[0]);
+        var wideHeader = this.fileSystem.File.ReadLines(wideFormatPath).First();
+        Assert.Equal(WeatherCsvColumns.Place, wideHeader.Split(',')[0]);
     }
 
     [Fact]
     public void Run_ReadsParsedStageCsvWithPlaceColumn()
     {
         var archiveDate = new DateTime(2003, 1, 1);
-        this.denormalizedWeatherDataCsvWriter.WritePlaceRows(
-            this.parsedStageDirectory,
+        this.wideFormatWeatherDataCsvWriter.WritePlaceRows(
+            this.parsedWideFormatDirectory,
             "Kyiv.csv",
             CreateFullDayRows(archiveDate),
             includePlaceColumn: true);
@@ -108,11 +114,14 @@ public sealed class TimeNormalizingPipelineTests
         var htmlReportPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "result-with-place.html");
         this.RunTimeNormalizing(this.parsedStageDirectory, htmlReportPath, runInParallel: false);
 
-        var normalizedDenormalizedPath = this.fileSystem.Path.Combine(this.timeNormalizedStageDirectory, "Kyiv.csv");
-        Assert.True(this.fileSystem.File.Exists(normalizedDenormalizedPath));
+        var wideFormatPath = this.fileSystem.Path.Combine(
+            this.timeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName,
+            "Kyiv.csv");
+        Assert.True(this.fileSystem.File.Exists(wideFormatPath));
         Assert.Equal(
             WeatherCsvColumns.Place,
-            this.fileSystem.File.ReadLines(normalizedDenormalizedPath).First().Split(',')[0]);
+            this.fileSystem.File.ReadLines(wideFormatPath).First().Split(',')[0]);
     }
 
     private static WeatherDataRow[] CreateFullDayRows(DateTime archiveDate) =>
@@ -132,8 +141,8 @@ public sealed class TimeNormalizingPipelineTests
     {
         var placeCsvFileNameResolver = new PlaceCsvFileNameResolver(fileSystem);
         var csvRecordWriter = new CsvRecordWriter(fileSystem);
-        var denormalizedWeatherDataCsvReader = new DenormalizedWeatherDataCsvReader(fileSystem);
-        var denormalizedWeatherDataCsvWriter = new DenormalizedWeatherDataCsvWriter(fileSystem, placeCsvFileNameResolver);
+        var wideFormatWeatherDataCsvReader = new WideFormatWeatherDataCsvReader(fileSystem);
+        var wideFormatWeatherDataCsvWriter = new WideFormatWeatherDataCsvWriter(fileSystem, placeCsvFileNameResolver);
         var parsedSourceFilesManifestReader = new ParsedSourceFilesManifestReader(fileSystem);
 
         return new TimeNormalizingPipeline(
@@ -141,16 +150,16 @@ public sealed class TimeNormalizingPipelineTests
             fileSystem,
             new HtmlLogFileManager(fileSystem),
             placeCsvFileNameResolver,
-            denormalizedWeatherDataCsvReader,
-            denormalizedWeatherDataCsvWriter,
+            wideFormatWeatherDataCsvReader,
+            wideFormatWeatherDataCsvWriter,
             parsedSourceFilesManifestReader,
             new PlaceTimeNormalizer(
                 NullLogger<PlaceTimeNormalizer>.Instance,
                 new ObservationTimeNormalizer(NullLogger<ObservationTimeNormalizer>.Instance),
                 new ObservationTimeInterpolator(NullLogger<ObservationTimeInterpolator>.Instance),
                 parsedSourceFilesManifestReader),
-            new NormalizedColumnsWeatherDataCsvWriter(
-                NullLogger<NormalizedColumnsWeatherDataCsvWriter>.Instance,
+            new NarrowFormatWeatherDataCsvWriter(
+                NullLogger<NarrowFormatWeatherDataCsvWriter>.Instance,
                 fileSystem,
                 csvRecordWriter,
                 placeCsvFileNameResolver,
@@ -158,7 +167,7 @@ public sealed class TimeNormalizingPipelineTests
                     new WeatherCharacteristicsEnglishCsvConverter(new WeatherCharacteristicConverter()))),
             new TimeNormalizingReportWriter(
                 new TimeNormalizingPlaceErrorCountsBuilder(),
-                denormalizedWeatherDataCsvReader,
+                wideFormatWeatherDataCsvReader,
                 placeCsvFileNameResolver,
                 fileSystem));
     }

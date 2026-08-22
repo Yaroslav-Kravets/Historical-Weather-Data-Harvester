@@ -34,10 +34,10 @@ public static class ServiceCollectionExtensions
         services.TryAddSingleton<WeatherCharacteristicConverter>();
         services.TryAddSingleton<WeatherCharacteristicsEnglishCsvConverter>();
         services.TryAddSingleton<WeatherDataCsvRecordMap>();
-        services.TryAddSingleton<NormalizedColumnsWeatherDataCsvWriter>();
-        services.TryAddSingleton<NormalizedColumnsWeatherDataCsvReader>();
-        services.TryAddSingleton<DenormalizedWeatherDataCsvWriter>();
-        services.TryAddSingleton<DenormalizedWeatherDataCsvReader>();
+        services.TryAddSingleton<NarrowFormatWeatherDataCsvWriter>();
+        services.TryAddSingleton<NarrowFormatWeatherDataCsvReader>();
+        services.TryAddSingleton<WideFormatWeatherDataCsvWriter>();
+        services.TryAddSingleton<WideFormatWeatherDataCsvReader>();
 
         return services;
     }

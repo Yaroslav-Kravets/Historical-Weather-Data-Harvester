@@ -12,19 +12,19 @@ namespace Pipeline.Core.Tests.Csv.Readers;
 using Pipeline.Core.Tests.Csv.TestSupport;
 using Xunit;
 
-public sealed class DenormalizedWeatherDataCsvReaderReadPlaceFileTests
+public sealed class WideFormatWeatherDataCsvReaderReadPlaceFileTests
 {
     private readonly CsvTestContext testContext;
-    private readonly DenormalizedWeatherDataCsvReader reader;
+    private readonly WideFormatWeatherDataCsvReader reader;
 
-    public DenormalizedWeatherDataCsvReaderReadPlaceFileTests()
+    public WideFormatWeatherDataCsvReaderReadPlaceFileTests()
     {
         this.testContext = new CsvTestContext();
-        this.reader = new DenormalizedWeatherDataCsvReader(this.testContext.FileSystem);
+        this.reader = new WideFormatWeatherDataCsvReader(this.testContext.FileSystem);
     }
 
     [Fact]
-    public void ReadPlaceFile_ReadsRowsFromExplicitDenormalizedCsv_WithPlaceColumnPresent()
+    public void ReadPlaceFile_ReadsRowsFromExplicitWideFormatCsv_WithPlaceColumnPresent()
     {
         var sourceRows = new[]
         {
@@ -39,7 +39,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadPlaceFileTests
         };
 
         var csvPath = this.testContext.PathUnderRoot("with-place", "Kyiv.csv");
-        DenormalizedCsvFixtureWriter.WritePlaceFile(
+        WideFormatCsvFixtureWriter.WritePlaceFile(
             this.testContext.FileSystem,
             csvPath,
             sourceRows,
@@ -58,7 +58,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadPlaceFileTests
     }
 
     [Fact]
-    public void ReadPlaceFile_ReadsRowsFromExplicitDenormalizedCsv()
+    public void ReadPlaceFile_ReadsRowsFromExplicitWideFormatCsv()
     {
         var sourceRows = new[]
         {
@@ -81,7 +81,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadPlaceFileTests
         };
 
         var csvPath = this.testContext.PathUnderRoot("out", "Kyiv.csv");
-        DenormalizedCsvFixtureWriter.WritePlaceFile(
+        WideFormatCsvFixtureWriter.WritePlaceFile(
             this.testContext.FileSystem,
             csvPath,
             sourceRows);
@@ -106,7 +106,7 @@ public sealed class DenormalizedWeatherDataCsvReaderReadPlaceFileTests
         };
 
         var csvPath = this.testContext.PathUnderRoot("ordered", "Kyiv.csv");
-        DenormalizedCsvFixtureWriter.WritePlaceFile(
+        WideFormatCsvFixtureWriter.WritePlaceFile(
             this.testContext.FileSystem,
             csvPath,
             sourceRows);

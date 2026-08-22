@@ -130,8 +130,8 @@ public sealed class PipelineRunner
         serviceProvider
             .GetRequiredService<DenormalizingPipeline>()
             .Run(new DenormalizingRunOptions(
-                this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName),
-                parsedStageDirectory,
+                this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName),
+                this.fileSystem.Path.Combine(parsedStageDirectory, WeatherCsvOutputPaths.WideFormatDirectoryName),
                 this.settings.RunInParallel));
 
     private void RunTimeNormalizationStage(

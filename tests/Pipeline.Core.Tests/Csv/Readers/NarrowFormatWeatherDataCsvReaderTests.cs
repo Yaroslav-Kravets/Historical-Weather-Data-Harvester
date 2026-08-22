@@ -12,17 +12,17 @@ namespace Pipeline.Core.Tests.Csv.Readers;
 using Pipeline.Core.Tests.Csv.TestSupport;
 using Xunit;
 
-public sealed class NormalizedColumnsWeatherDataCsvReaderTests
+public sealed class NarrowFormatWeatherDataCsvReaderTests
 {
     private readonly CsvTestContext testContext;
-    private readonly NormalizedColumnsWeatherDataCsvReader reader;
+    private readonly NarrowFormatWeatherDataCsvReader reader;
     private readonly string weatherDirectory;
 
-    public NormalizedColumnsWeatherDataCsvReaderTests()
+    public NarrowFormatWeatherDataCsvReaderTests()
     {
         this.testContext = new CsvTestContext();
-        this.weatherDirectory = this.testContext.EnsureDirectoryUnderRoot("normalized-input");
-        this.reader = new NormalizedColumnsWeatherDataCsvReader(
+        this.weatherDirectory = this.testContext.EnsureDirectoryUnderRoot("narrow-input");
+        this.reader = new NarrowFormatWeatherDataCsvReader(
             this.testContext.FileSystem,
             this.testContext.WeatherDataCsvRecordMap);
     }
@@ -45,7 +45,7 @@ public sealed class NormalizedColumnsWeatherDataCsvReaderTests
         };
         this.testContext.WriteWeatherRecords(this.weatherDirectory, "Kyiv.csv", records);
 
-        var rows = this.reader.ReadPlaceFile(this.testContext.PathUnderRoot("normalized-input", "Kyiv.csv"));
+        var rows = this.reader.ReadPlaceFile(this.testContext.PathUnderRoot("narrow-input", "Kyiv.csv"));
 
         Assert.Equal(2, rows.Count);
         Assert.Equal(archiveDate, rows[0].Time);

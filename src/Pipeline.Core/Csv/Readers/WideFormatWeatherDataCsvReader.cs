@@ -15,37 +15,31 @@ using Common;
 using CsvHelper;
 
 /// <summary>
-/// Reads denormalized weather CSV files from the parsed stage directory (one 0/1 column per characteristic).
+/// Reads wide-format weather CSV files from a <c>wide-format/</c> directory (one 0/1 column per characteristic).
 /// </summary>
-public sealed class DenormalizedWeatherDataCsvReader
+public sealed class WideFormatWeatherDataCsvReader
 {
     private readonly IFileSystem fileSystem;
 
-    public DenormalizedWeatherDataCsvReader(IFileSystem fileSystem)
+    public WideFormatWeatherDataCsvReader(IFileSystem fileSystem)
     {
         Argument.ThrowIfNull(fileSystem);
 
         this.fileSystem = fileSystem;
     }
 
-    public IReadOnlyDictionary<string, IReadOnlyDictionary<DateTime, IReadOnlyList<WeatherDataRow>>> ReadAllPlaces(string parsedStageDirectory)
+    public IReadOnlyDictionary<string, IReadOnlyDictionary<DateTime, IReadOnlyList<WeatherDataRow>>> ReadAllPlaces(string wideFormatDirectory)
     {
-        Argument.ThrowIfNull(parsedStageDirectory);
-        if (!this.fileSystem.Directory.Exists(parsedStageDirectory))
+        Argument.ThrowIfNull(wideFormatDirectory);
+        if (!this.fileSystem.Directory.Exists(wideFormatDirectory))
         {
-            throw new DirectoryNotFoundException($"Parsed stage directory not found: {parsedStageDirectory}");
+            throw new DirectoryNotFoundException($"Wide-format CSV directory not found: {wideFormatDirectory}");
         }
 
         var result = new Dictionary<string, IReadOnlyDictionary<DateTime, IReadOnlyList<WeatherDataRow>>>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, parsedStageDirectory))
+        foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, wideFormatDirectory))
         {
-            var fileName = this.fileSystem.Path.GetFileName(csvPath);
-            if (WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(fileName))
-            {
-                continue;
-            }
-
             var placeName = this.fileSystem.Path.GetFileNameWithoutExtension(csvPath);
             CsvDirectoryFiles.AddPlaceOrThrow(result, placeName, this.ReadPlaceFile(csvPath), csvPath);
         }
@@ -125,7 +119,7 @@ public sealed class DenormalizedWeatherDataCsvReader
         {
             if (!indexes.TryGetValue(columnName, out var index))
             {
-                throw new InvalidDataException($"Denormalized CSV is missing required column '{columnName}'.");
+                throw new InvalidDataException($"Wide-format CSV is missing required column '{columnName}'.");
             }
 
             return index;
@@ -165,7 +159,7 @@ public sealed class DenormalizedWeatherDataCsvReader
             else if (cell != "0" && cell.Length > 0)
             {
                 throw new InvalidDataException(
-                    $"Denormalized CSV characteristic column must be 0 or 1, got '{cell}'.");
+                    $"Wide-format CSV characteristic column must be 0 or 1, got '{cell}'.");
             }
         }
 

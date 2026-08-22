@@ -65,6 +65,6 @@ public sealed class WeatherDataCsvRecord
     /// <remarks>
     /// Requires <see cref="WeatherDataCsvRecordMap"/> for English display-name serialization.
     /// </remarks>
-    [Name(NormalizedWeatherCsvColumns.WeatherCharacteristics)]
+    [Name(NarrowFormatWeatherCsvColumns.WeatherCharacteristics)]
     public WeatherCharacteristics WeatherCharacteristics { get; init; }
 }

@@ -23,11 +23,11 @@ public sealed class AnalysisPipelineTests
     public void AnalyzeStage_WritesCsvAndUsageTableBeforeFooter()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
             parsedStageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
         this.WritePlaceCsv(
-            normalizedColumnsDirectory,
+            narrowFormatDirectory,
             "Kyiv.csv",
             CreateRow(WeatherCharacteristics.Clear),
             CreateRow(WeatherCharacteristics.Rain));
@@ -66,7 +66,7 @@ public sealed class AnalysisPipelineTests
     }
 
     [Fact]
-    public void AnalyzeStage_Throws_WhenNormalizedColumnsMissing()
+    public void AnalyzeStage_Throws_WhenNarrowFormatMissing()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
         this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
@@ -78,7 +78,7 @@ public sealed class AnalysisPipelineTests
                 parsedStageDirectory,
                 htmlReportPath)));
 
-        Assert.Contains("normalized-columns", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("narrow-format", exception.Message, StringComparison.Ordinal);
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
@@ -86,10 +86,10 @@ public sealed class AnalysisPipelineTests
     public void AnalyzeStage_Throws_WhenNoPlaceCsvs()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
             parsedStageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDirectory);
         var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-analysis.html");
         var pipeline = this.CreatePipeline();
 
@@ -99,7 +99,7 @@ public sealed class AnalysisPipelineTests
                 htmlReportPath)));
 
         Assert.Contains("No place CSV files found", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(narrowFormatDirectory, exception.Message, StringComparison.Ordinal);
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
@@ -107,10 +107,10 @@ public sealed class AnalysisPipelineTests
     public void AnalyzeStage_Throws_WhenPlaceCsvsHaveNoDataRows()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed");
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
             parsedStageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        this.WritePlaceCsv(normalizedColumnsDirectory, "Kyiv.csv");
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        this.WritePlaceCsv(narrowFormatDirectory, "Kyiv.csv");
         var htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result-analysis.html");
         var pipeline = this.CreatePipeline();
 
@@ -120,7 +120,7 @@ public sealed class AnalysisPipelineTests
                 htmlReportPath)));
 
         Assert.Contains("No weather data rows found", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(narrowFormatDirectory, exception.Message, StringComparison.Ordinal);
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
@@ -136,7 +136,7 @@ public sealed class AnalysisPipelineTests
             NullLogger<AnalysisPipeline>.Instance,
             this.fileSystem,
             new HtmlLogFileManager(this.fileSystem),
-            new NormalizedColumnsWeatherDataCsvReader(this.fileSystem, weatherDataCsvRecordMap),
+            new NarrowFormatWeatherDataCsvReader(this.fileSystem, weatherDataCsvRecordMap),
             new WeatherCharacteristicUsageAggregator(weatherCharacteristicConverter),
             new WeatherCharacteristicUsageCsvWriter(
                 NullLogger<WeatherCharacteristicUsageCsvWriter>.Instance,

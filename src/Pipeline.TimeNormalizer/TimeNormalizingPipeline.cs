@@ -26,11 +26,11 @@ public sealed class TimeNormalizingPipeline
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
-    private readonly DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader;
-    private readonly DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter;
+    private readonly WideFormatWeatherDataCsvReader wideFormatWeatherDataCsvReader;
+    private readonly WideFormatWeatherDataCsvWriter wideFormatWeatherDataCsvWriter;
     private readonly ParsedSourceFilesManifestReader parsedSourceFilesManifestReader;
     private readonly PlaceTimeNormalizer placeTimeNormalizer;
-    private readonly NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter;
+    private readonly NarrowFormatWeatherDataCsvWriter narrowFormatWeatherDataCsvWriter;
     private readonly TimeNormalizingReportWriter timeNormalizingReportWriter;
 
     public TimeNormalizingPipeline(
@@ -38,33 +38,33 @@ public sealed class TimeNormalizingPipeline
         IFileSystem fileSystem,
         HtmlLogFileManager htmlLogFileManager,
         PlaceCsvFileNameResolver placeCsvFileNameResolver,
-        DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader,
-        DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter,
+        WideFormatWeatherDataCsvReader wideFormatWeatherDataCsvReader,
+        WideFormatWeatherDataCsvWriter wideFormatWeatherDataCsvWriter,
         ParsedSourceFilesManifestReader parsedSourceFilesManifestReader,
         PlaceTimeNormalizer placeTimeNormalizer,
-        NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter,
+        NarrowFormatWeatherDataCsvWriter narrowFormatWeatherDataCsvWriter,
         TimeNormalizingReportWriter timeNormalizingReportWriter)
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
         Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(placeCsvFileNameResolver);
-        Argument.ThrowIfNull(denormalizedWeatherDataCsvReader);
-        Argument.ThrowIfNull(denormalizedWeatherDataCsvWriter);
+        Argument.ThrowIfNull(wideFormatWeatherDataCsvReader);
+        Argument.ThrowIfNull(wideFormatWeatherDataCsvWriter);
         Argument.ThrowIfNull(parsedSourceFilesManifestReader);
         Argument.ThrowIfNull(placeTimeNormalizer);
-        Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvWriter);
+        Argument.ThrowIfNull(narrowFormatWeatherDataCsvWriter);
         Argument.ThrowIfNull(timeNormalizingReportWriter);
 
         this.logger = logger;
         this.fileSystem = fileSystem;
         this.htmlLogFileManager = htmlLogFileManager;
         this.placeCsvFileNameResolver = placeCsvFileNameResolver;
-        this.denormalizedWeatherDataCsvReader = denormalizedWeatherDataCsvReader;
-        this.denormalizedWeatherDataCsvWriter = denormalizedWeatherDataCsvWriter;
+        this.wideFormatWeatherDataCsvReader = wideFormatWeatherDataCsvReader;
+        this.wideFormatWeatherDataCsvWriter = wideFormatWeatherDataCsvWriter;
         this.parsedSourceFilesManifestReader = parsedSourceFilesManifestReader;
         this.placeTimeNormalizer = placeTimeNormalizer;
-        this.normalizedColumnsWeatherDataCsvWriter = normalizedColumnsWeatherDataCsvWriter;
+        this.narrowFormatWeatherDataCsvWriter = narrowFormatWeatherDataCsvWriter;
         this.timeNormalizingReportWriter = timeNormalizingReportWriter;
     }
 
@@ -91,11 +91,14 @@ public sealed class TimeNormalizingPipeline
             throw new DirectoryNotFoundException($"Parsed stage directory not found: {options.ParsedStageDirectory}");
         }
 
-        var denormalizedDataByPlace = this.denormalizedWeatherDataCsvReader.ReadAllPlaces(options.ParsedStageDirectory);
-        if (denormalizedDataByPlace.Count == 0)
+        var parsedWideFormatDirectory = this.fileSystem.Path.Combine(
+            options.ParsedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
+        var wideFormatDataByPlace = this.wideFormatWeatherDataCsvReader.ReadAllPlaces(parsedWideFormatDirectory);
+        if (wideFormatDataByPlace.Count == 0)
         {
             throw new InvalidOperationException(
-                $"No denormalized place CSVs found in parsed stage directory '{options.ParsedStageDirectory}'.");
+                $"No wide-format place CSVs found in '{parsedWideFormatDirectory}'.");
         }
 
         var sourceFilesByPlace = this.parsedSourceFilesManifestReader.ReadByPlaceAndDate(options.ParsedStageDirectory);
@@ -106,7 +109,7 @@ public sealed class TimeNormalizingPipeline
         long totalPlaceProcessingTime = 0;
 
         Parallel.ForEach(
-            denormalizedDataByPlace,
+            wideFormatDataByPlace,
             new ParallelOptions { MaxDegreeOfParallelism = maxDegree },
             kvp =>
             {
@@ -146,12 +149,17 @@ public sealed class TimeNormalizingPipeline
             missingTimeEntriesCount += result.MissingTimeEntriesCount;
         }
 
-        var normalizedColumnsDir = this.fileSystem.Path.Combine(options.TimeNormalizedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        var narrowFormatDir = this.fileSystem.Path.Combine(
+            options.TimeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        var wideFormatDir = this.fileSystem.Path.Combine(
+            options.TimeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
         var projected = normalizedRowsByPlace.ToDictionary(
             kvp => kvp.Key,
             kvp => (IReadOnlyList<WeatherDataRow>)kvp.Value,
             StringComparer.OrdinalIgnoreCase);
-        this.normalizedColumnsWeatherDataCsvWriter.WritePlaceRows(projected, normalizedColumnsDir, "normalized");
+        this.narrowFormatWeatherDataCsvWriter.WritePlaceRows(projected, narrowFormatDir, "normalized");
 
         this.fileSystem.Directory.CreateDirectory(options.TimeNormalizedStageDirectory);
 
@@ -163,8 +171,8 @@ public sealed class TimeNormalizingPipeline
             }
 
             var csvFileName = this.placeCsvFileNameResolver.ToCsvFileName(placeName);
-            this.denormalizedWeatherDataCsvWriter.WritePlaceRows(
-                options.TimeNormalizedStageDirectory,
+            this.wideFormatWeatherDataCsvWriter.WritePlaceRows(
+                wideFormatDir,
                 csvFileName,
                 rows.OrderBy(row => row.Time).ToList(),
                 includePlaceColumn: true);
@@ -172,7 +180,7 @@ public sealed class TimeNormalizingPipeline
 
         totalStopwatch.Stop();
 
-        var totalPlaces = denormalizedDataByPlace.Count;
+        var totalPlaces = wideFormatDataByPlace.Count;
         var totalTime = totalStopwatch.Elapsed.TotalSeconds;
         var averageTime = totalPlaces > 0 ? (totalPlaceProcessingTime / (double)totalPlaces) / 1000.0 : 0;
 
@@ -189,7 +197,7 @@ public sealed class TimeNormalizingPipeline
             normalizedFileCountsByPlace,
             timeNormalizationCountsByPlace,
             issueCollector,
-            options.ParsedStageDirectory);
+            parsedWideFormatDirectory);
 
         this.logger.LogInformation("Finish");
     }

@@ -17,26 +17,29 @@ using Xunit;
 public sealed class TimeNormalizingReportWriterTests
 {
     private readonly IFileSystem fileSystem;
-    private readonly DenormalizedWeatherDataCsvWriter denormalizedWeatherDataCsvWriter;
-    private readonly string parsedStageDirectory;
+    private readonly WideFormatWeatherDataCsvWriter wideFormatWeatherDataCsvWriter;
+    private readonly string parsedWideFormatDirectory;
     private readonly string htmlReportPath;
-    private readonly DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader;
+    private readonly WideFormatWeatherDataCsvReader wideFormatWeatherDataCsvReader;
     private readonly TimeNormalizingReportWriter reportWriter;
     private readonly HtmlLogFileManager htmlLogFileManager;
 
     public TimeNormalizingReportWriterTests()
     {
         this.fileSystem = InMemoryFileSystem.Create();
-        this.parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
-        this.fileSystem.Directory.CreateDirectory(this.parsedStageDirectory);
-        this.htmlReportPath = this.fileSystem.Path.Combine(this.parsedStageDirectory, "result.html");
-        this.denormalizedWeatherDataCsvWriter = new DenormalizedWeatherDataCsvWriter(
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
+        this.parsedWideFormatDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(this.parsedWideFormatDirectory);
+        this.htmlReportPath = this.fileSystem.Path.Combine(parsedStageDirectory, "result.html");
+        this.wideFormatWeatherDataCsvWriter = new WideFormatWeatherDataCsvWriter(
             this.fileSystem,
             new PlaceCsvFileNameResolver(this.fileSystem));
-        this.denormalizedWeatherDataCsvReader = new DenormalizedWeatherDataCsvReader(this.fileSystem);
+        this.wideFormatWeatherDataCsvReader = new WideFormatWeatherDataCsvReader(this.fileSystem);
         this.reportWriter = new TimeNormalizingReportWriter(
             new TimeNormalizingPlaceErrorCountsBuilder(),
-            this.denormalizedWeatherDataCsvReader,
+            this.wideFormatWeatherDataCsvReader,
             new PlaceCsvFileNameResolver(this.fileSystem),
             this.fileSystem);
         this.htmlLogFileManager = new HtmlLogFileManager(this.fileSystem);
@@ -66,8 +69,8 @@ public sealed class TimeNormalizingReportWriterTests
                 70),
         };
 
-        this.denormalizedWeatherDataCsvWriter.WritePlaceRows(
-            this.parsedStageDirectory,
+        this.wideFormatWeatherDataCsvWriter.WritePlaceRows(
+            this.parsedWideFormatDirectory,
             "Kyiv.csv",
             inputRows,
             includePlaceColumn: true);
@@ -98,11 +101,11 @@ public sealed class TimeNormalizingReportWriterTests
                 },
             },
             issueCollector: new TimeNormalizationIssueCollector(),
-            parsedStageDirectory: this.parsedStageDirectory);
+            parsedWideFormatDirectory: this.parsedWideFormatDirectory);
 
         var html = this.fileSystem.File.ReadAllText(this.htmlReportPath);
         Assert.Contains("Row Count Comparison by Place", html, StringComparison.Ordinal);
-        Assert.Contains("Denormalized Input Rows", html, StringComparison.Ordinal);
+        Assert.Contains("Wide Format Input Rows", html, StringComparison.Ordinal);
         Assert.Contains("Kyiv", html, StringComparison.Ordinal);
         Assert.Contains("0.00%", html, StringComparison.Ordinal);
     }

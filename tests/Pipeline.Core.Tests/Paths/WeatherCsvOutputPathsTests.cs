@@ -18,7 +18,8 @@ public sealed class WeatherCsvOutputPathsTests
     {
         Assert.Equal("parsed", WeatherCsvOutputPaths.ParsedStageDirectoryName);
         Assert.Equal("time-normalized", WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
-        Assert.Equal("normalized-columns", WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        Assert.Equal("narrow-format", WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        Assert.Equal("wide-format", WeatherCsvOutputPaths.WideFormatDirectoryName);
     }
 
     [Fact]

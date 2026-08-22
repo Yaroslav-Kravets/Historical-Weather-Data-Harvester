@@ -160,7 +160,7 @@ public sealed class StageServiceProviderFactoryTests
 
         var csvPath = fileSystem.Path.Combine(
             stageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName,
             "Kyiv.csv");
 
         Assert.True(fileSystem.File.Exists(reportPath));
