@@ -12,7 +12,7 @@ namespace Pipeline.Core.Csv.Records;
 using CsvHelper.Configuration.Attributes;
 
 /// <summary>
-/// CSV row shape for normalized-column weather files.
+/// CSV row shape for narrow-format weather files.
 /// </summary>
 /// <remarks>
 /// Always register <see cref="WeatherDataCsvRecordMap"/> on the CsvHelper context when

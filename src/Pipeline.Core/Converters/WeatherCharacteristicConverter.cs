@@ -112,7 +112,7 @@ public sealed class WeatherCharacteristicConverter
     }
 
     /// <summary>
-    /// Formats flags as a comma-separated English display-name cell for normalized-column CSV.
+    /// Formats flags as a comma-separated English display-name cell for narrow-format CSV.
     /// </summary>
     /// <returns>Comma-separated English display names, or empty when <see cref="WeatherCharacteristics.None"/>.</returns>
     public string ToEnglishCsvCell(WeatherCharacteristics characteristics)
@@ -131,7 +131,7 @@ public sealed class WeatherCharacteristicConverter
     }
 
     /// <summary>
-    /// Parses a comma-separated English display-name cell from normalized-column CSV.
+    /// Parses a comma-separated English display-name cell from narrow-format CSV.
     /// </summary>
     /// <returns>Parsed <see cref="WeatherCharacteristics"/> flags from the CSV cell.</returns>
     public WeatherCharacteristics FromEnglishCsvCell(string? cell)
