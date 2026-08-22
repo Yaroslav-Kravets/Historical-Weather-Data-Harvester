@@ -28,10 +28,11 @@ Archives are assumed to be trusted internal weather dumps: there is currently no
 ## Stages and flags
 
 1. **Parse** — writes narrow per-place CSVs and manifests under `parsed/`.
-2. **Denormalization** — always runs next; writes wide-format CSVs at the `parsed/` stage root. If it produces no place files, the run fails.
-3. **Time normalization** — when `RunTimeNormalization` is `true`, writes under `time-normalized/` (`normalized-columns/` plus wide CSVs at that stage root). Set the flag to `false` to skip.
-4. **Analysis** — when `RunAnalysis` is `true`, writes `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html` per analyzed stage.
-5. **HtmlLog CSV comparison** — when `RunHtmlLogCsvComparison` is `true`, runs chain comparison after the pipeline finishes (diagnostic only; see below).
+2. **Parsed-stage analysis** — when `RunAnalysis` is `true`, analyzes `parsed/` and writes `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html`.
+3. **Denormalization** — always runs after optional parsed-stage analysis; writes wide-format CSVs at the `parsed/` stage root. If it produces no place files, the run fails.
+4. **Time normalization** — when `RunTimeNormalization` is `true`, writes under `time-normalized/` (`normalized-columns/` plus wide CSVs at that stage root). Set the flag to `false` to skip.
+5. **Time-normalized-stage analysis** — when both `RunTimeNormalization` and `RunAnalysis` are `true`, analyzes `time-normalized/` and writes its usage CSV and analysis report.
+6. **HtmlLog CSV comparison** — when `RunHtmlLogCsvComparison` is `true`, runs chain comparison after the pipeline finishes (diagnostic only; see below).
 
 Each stage directory has one text log (`parsed/log{timestamp}.log` and, when enabled, `time-normalized/log{timestamp}.log`) and HTML reports (`result{timestamp}.html` for parsing/time-normalization; `result-analysis{timestamp}.html` for each analysis).
 
