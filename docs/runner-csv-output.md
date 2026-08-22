@@ -17,6 +17,7 @@ How **Pipeline.Runner** writes CSV files after a run. For configuration, stage f
   - [`parsed-places.csv`](#parsed-placescsv)
   - [`weather-characteristics.csv`](#weather-characteristicscsv)
   - [`weather-characteristics-usage.csv`](#weather-characteristics-usagecsv)
+  - [`place-date-coverage.csv`](#place-date-coveragecsv)
 - [Place names](#place-names)
   - [How a place is resolved](#how-a-place-is-resolved)
   - [Folder path self-check and aliases](#folder-path-self-check-and-aliases)
@@ -35,7 +36,7 @@ How **Pipeline.Runner** writes CSV files after a run. For configuration, stage f
 
 Historical weather HTML files are parsed, grouped by place, and written under `HtmlLog_<timestamp>/parsed/`. After optional parsed-stage analysis, denormalization writes wide-format CSVs under `parsed/wide-format/`; if it produces no place files, the run fails with an error. When `RunTimeNormalization` is enabled (default), observation-time normalization writes under `HtmlLog_<timestamp>/time-normalized/`.
 
-Each place gets its own CSV file. Narrow CSVs store weather conditions as English labels in a single column. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `weather-characteristics-usage.csv` and `result-analysis{timestamp}.html`. Stage text logs and HTML reports are described in [Pipeline Runner](pipeline-runner.md#stages-and-flags).
+Each place gets its own CSV file. Narrow CSVs store weather conditions as English labels in a single column. Three manifest files at the parsed stage root record places, weather flags, and which source HTML file won for each `(place, date)` pair. When `RunAnalysis` is enabled (default), each analyzed stage also gets `place-date-coverage.csv`, `weather-characteristics-usage.csv`, and `result-analysis{timestamp}.html`. Stage text logs and HTML reports are described in [Pipeline Runner](pipeline-runner.md#stages-and-flags).
 
 The run folder `HtmlLog_<yyyy-MM-dd_HH-mm-ss>/` is created under the **process current working directory** (not under `HistoricalWeatherFilesRoot`).
 
@@ -55,6 +56,7 @@ HtmlLog_<timestamp>/                 # under process CWD
     parsed-places.csv                # places seen in this run
     weather-characteristics.csv      # weather flags seen in this run
     weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
+    place-date-coverage.csv          # per-place first/last date and skipped days (when analysis enabled)
     narrow-format/                   # narrow format
       Kyiv.csv
       Kharkiv.csv
@@ -80,7 +82,7 @@ HtmlLog_<timestamp>/                 # under process CWD
 
 - **`parsed/`** — stage text log, parsing and analysis HTML reports, manifests, narrow per-place CSVs in `narrow-format/`, and wide-format CSVs in `wide-format/`.
 - **`time-normalized/`** — stage text log, time-normalization and analysis HTML reports, narrow per-place CSVs in `narrow-format/`, and wide-format CSVs in `wide-format/`. Created only when `RunTimeNormalization` is `true`.
-- **`weather-characteristics-usage.csv`** — written by weather-characteristics analysis (default on via `RunAnalysis`) under each analyzed stage root. One row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/narrow-format/*.csv` rows). Analysis writes `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
+- **`weather-characteristics-usage.csv`** and **`place-date-coverage.csv`** — written by analysis (default on via `RunAnalysis`) under each analyzed stage root. Usage CSV has one row per known flag with `EnglishName`, `NameInHtml`, `RowCount`, and `PercentOfRows` (counts across all `{stage}/narrow-format/*.csv` rows). Coverage CSV has one row per place with `FirstDate`, `LastDate`, and `SkippedDays` (calendar days in the inclusive date range without any observations). Analysis writes both tables to `result-analysis{timestamp}.html` in that stage directory (footer once) and appends its text output to that stage’s text log.
 
 Both `narrow-format/` trees use the same narrow CSV shape (`NarrowFormatWeatherCsvColumns.CoreColumns`) and naming rules. The place name is **not** repeated inside those files — read it from the filename. **Wide** CSVs under both `wide-format/` directories include a leading `Place` column.
 
@@ -231,7 +233,20 @@ Unlike `weather-characteristics.csv`, this file lists the **full catalog** of kn
 | `RowCount` | Number of data rows where the flag bit is set |
 | `PercentOfRows` | `RowCount / totalDataRows * 100`, formatted to five decimal places with `%` |
 
-Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages may sum above 100% when rows carry multiple flags. Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` in that stage directory.
+Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages may sum above 100% when rows carry multiple flags.
+
+### `place-date-coverage.csv`
+
+Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). One row per `{stage}/narrow-format/*.csv` file, sorted by `Place`:
+
+| Column | Description |
+|--------|-------------|
+| `Place` | English display name (filename stem) |
+| `FirstDate` | Earliest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
+| `LastDate` | Latest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
+| `SkippedDays` | Calendar days in the inclusive `[FirstDate, LastDate]` range without any observations: `(LastDate - FirstDate + 1) - uniqueDates` |
+
+Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table).
 
 ---
 
@@ -403,6 +418,6 @@ All `WeatherCharacteristics` enum members except `None` (53 flags). Sorted A–Z
 | `WideFormatWeatherDataCsvReader` | Pipeline.Core | Reads wide-format CSVs from a `wide-format/` directory for time normalization |
 | `WideFormatWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format per-place CSVs under `wide-format/` |
 | `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/narrow-format/`, writes wide CSVs under `parsed/wide-format/` |
-| `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/narrow-format/`, writes usage CSV + `result-analysis{timestamp}.html` |
+| `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/narrow-format/`, writes coverage + usage CSVs and `result-analysis{timestamp}.html` |
 
 Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.

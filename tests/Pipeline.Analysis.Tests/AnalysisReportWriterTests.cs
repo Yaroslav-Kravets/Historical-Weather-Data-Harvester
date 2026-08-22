@@ -15,12 +15,12 @@ using HtmlLog;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
-public sealed class WeatherCharacteristicUsageReportWriterTests
+public sealed class AnalysisReportWriterTests
 {
     private readonly IFileSystem fileSystem = InMemoryFileSystem.Create();
 
     [Fact]
-    public void Write_WritesUsageTableBeforeFooter()
+    public void Write_WritesCoverageTableBeforeUsageTableBeforeFooter()
     {
         var reportPath = InMemoryFileSystem.UnderRoot(this.fileSystem, "result.html");
         this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(reportPath)!);
@@ -28,16 +28,24 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
         this.CreateWriter().Write(
             [
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-03", 1),
+            ],
+            [
                 new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
             ],
             fileManager,
             reportPath);
 
         var html = this.fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
+        Assert.Contains("2003-01-03", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("100.00000%", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
+        Assert.True(
+            html.IndexOf("Place Date Coverage", StringComparison.Ordinal)
+            < html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal));
         Assert.True(
             html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
@@ -50,11 +58,11 @@ public sealed class WeatherCharacteristicUsageReportWriterTests
         this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(reportPath)!);
 
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
-        this.CreateWriter().Write([], fileManager, reportPath);
+        this.CreateWriter().Write([], [], fileManager, reportPath);
 
         Assert.False(this.fileSystem.File.Exists(reportPath));
     }
 
-    private WeatherCharacteristicUsageReportWriter CreateWriter() =>
-        new(NullLogger<WeatherCharacteristicUsageReportWriter>.Instance);
+    private AnalysisReportWriter CreateWriter() =>
+        new(NullLogger<AnalysisReportWriter>.Instance);
 }

@@ -42,6 +42,15 @@ public sealed class AnalysisPipelineTests
             parsedStageDirectory,
             htmlReportPath));
 
+        var coverageCsvPath = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.PlaceDateCoverageFileName);
+        Assert.True(this.fileSystem.File.Exists(coverageCsvPath));
+
+        var coverageCsv = this.fileSystem.File.ReadAllText(coverageCsvPath);
+        Assert.Contains("Place,FirstDate,LastDate,SkippedDays", coverageCsv, StringComparison.Ordinal);
+        Assert.Contains("Kyiv,2003-01-01,2003-01-01,0", coverageCsv, StringComparison.Ordinal);
+
         var usageCsvPath = this.fileSystem.Path.Combine(
             parsedStageDirectory,
             WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName);
@@ -54,12 +63,16 @@ public sealed class AnalysisPipelineTests
 
         Assert.True(this.fileSystem.File.Exists(htmlReportPath));
         var html = this.fileSystem.File.ReadAllText(htmlReportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
         Assert.Contains("English Name", html, StringComparison.Ordinal);
         Assert.Contains("Clear", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("50.00000%", html, StringComparison.Ordinal);
         Assert.Contains("End of summary report", html, StringComparison.Ordinal);
+        Assert.True(
+            html.IndexOf("Place Date Coverage", StringComparison.Ordinal)
+            < html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal));
         Assert.True(
             html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
@@ -137,13 +150,18 @@ public sealed class AnalysisPipelineTests
             this.fileSystem,
             new HtmlLogFileManager(this.fileSystem),
             new NarrowFormatWeatherDataCsvReader(this.fileSystem, weatherDataCsvRecordMap),
+            new PlaceDateCoverageAggregator(),
             new WeatherCharacteristicUsageAggregator(weatherCharacteristicConverter),
+            new PlaceDateCoverageCsvWriter(
+                NullLogger<PlaceDateCoverageCsvWriter>.Instance,
+                this.fileSystem,
+                new CsvRecordWriter(this.fileSystem)),
             new WeatherCharacteristicUsageCsvWriter(
                 NullLogger<WeatherCharacteristicUsageCsvWriter>.Instance,
                 this.fileSystem,
                 new CsvRecordWriter(this.fileSystem)),
-            new WeatherCharacteristicUsageReportWriter(
-                NullLogger<WeatherCharacteristicUsageReportWriter>.Instance));
+            new AnalysisReportWriter(
+                NullLogger<AnalysisReportWriter>.Instance));
     }
 
     private void WritePlaceCsv(string directory, string fileName, params WeatherDataRow[] rows)
