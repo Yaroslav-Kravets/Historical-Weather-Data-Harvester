@@ -70,6 +70,7 @@ HtmlLog_<timestamp>/                 # under process CWD
     result<timestamp>.html           # time-normalization HTML report
     result-analysis<timestamp>.html  # time-normalized analysis report
     weather-characteristics-usage.csv  # same analysis over time-normalized rows
+    place-date-coverage.csv          # same coverage analysis over time-normalized rows
     narrow-format/                   # narrow format
       Kyiv.csv
       Kharkiv.csv
@@ -246,7 +247,7 @@ Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` i
 | `LastDate` | Latest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
 | `SuccessfulDays` | Distinct calendar days with at least one observation |
 | `SkippedDays` | Calendar days in the inclusive `[FirstDate, LastDate]` range without any observations: `(LastDate - FirstDate + 1) - SuccessfulDays` |
-| `SkippedDates` | Those missing calendar days as a comma-separated list; consecutive days are clustered into `start..end` ranges (e.g. `2003-01-02,2003-01-04..2003-01-05`). Empty when there are no gaps |
+| `SkippedDates` | Those missing calendar days as a comma-separated list; consecutive days are clustered into `start..end` ranges (e.g. `2003-01-02,2003-01-04..2003-01-05`). Empty when there are no gaps. Can grow large for long, sparse spans — clustering only collapses contiguous gaps |
 
 Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table).
 
