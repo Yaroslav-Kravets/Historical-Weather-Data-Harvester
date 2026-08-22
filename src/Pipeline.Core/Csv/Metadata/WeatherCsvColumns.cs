@@ -10,7 +10,7 @@
 namespace Pipeline.Core.Csv.Metadata;
 
 /// <summary>
-/// Provides constant names for the core columns that appear in normalized weather CSV files.
+/// Provides constant names for the core columns that appear in narrow-format weather CSV files.
 /// </summary>
 public static class WeatherCsvColumns
 {
@@ -25,7 +25,7 @@ public static class WeatherCsvColumns
     public const string WindSpeed = WeatherScalarCsvColumns.WindSpeed;
     public const string AtmosphericPressure = WeatherScalarCsvColumns.AtmosphericPressure;
     public const string Humidity = WeatherScalarCsvColumns.Humidity;
-    public const string WeatherCharacteristics = NormalizedWeatherCsvColumns.WeatherCharacteristics;
+    public const string WeatherCharacteristics = NarrowFormatWeatherCsvColumns.WeatherCharacteristics;
 
     public const string EnglishName = WeatherManifestCsvColumns.EnglishName;
     public const string NameInHtml = WeatherManifestCsvColumns.NameInHtml;
@@ -40,12 +40,12 @@ public static class WeatherCsvColumns
     public static readonly IReadOnlyList<string> ManifestColumns = WeatherManifestCsvColumns.ManifestColumns;
 
     /// <summary>
-    /// Scalar measurement columns shared by normalized and denormalized weather CSV files.
+    /// Scalar measurement columns shared by narrow- and wide-format weather CSV files.
     /// </summary>
     public static readonly IReadOnlyList<string> ScalarColumns = WeatherScalarCsvColumns.ScalarColumns;
 
     /// <summary>
-    /// Ordered collection of all core columns in normalized weather CSV files.
+    /// Ordered collection of all core columns in narrow-format weather CSV files.
     /// </summary>
-    public static readonly IReadOnlyList<string> CoreColumns = NormalizedWeatherCsvColumns.CoreColumns;
+    public static readonly IReadOnlyList<string> CoreColumns = NarrowFormatWeatherCsvColumns.CoreColumns;
 }

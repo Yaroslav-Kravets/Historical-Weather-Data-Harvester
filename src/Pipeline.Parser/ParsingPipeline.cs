@@ -26,7 +26,7 @@ public sealed class ParsingPipeline
     private readonly ParseResultOrganizer parseResultOrganizer;
     private readonly ParsedFileInfoFlattener parsedFileInfoFlattener;
     private readonly ParsedWeatherCharacteristicsCollector parsedWeatherCharacteristicsCollector;
-    private readonly NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter;
+    private readonly NarrowFormatWeatherDataCsvWriter narrowFormatWeatherDataCsvWriter;
     private readonly ParsedStageManifestCsvWriter parsedStageManifestCsvWriter;
     private readonly ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter;
     private readonly ParsingReportWriter parsingReportWriter;
@@ -41,7 +41,7 @@ public sealed class ParsingPipeline
         ParseResultOrganizer parseResultOrganizer,
         ParsedFileInfoFlattener parsedFileInfoFlattener,
         ParsedWeatherCharacteristicsCollector parsedWeatherCharacteristicsCollector,
-        NormalizedColumnsWeatherDataCsvWriter normalizedColumnsWeatherDataCsvWriter,
+        NarrowFormatWeatherDataCsvWriter narrowFormatWeatherDataCsvWriter,
         ParsedStageManifestCsvWriter parsedStageManifestCsvWriter,
         ParsedSourceFilesManifestWriter parsedSourceFilesManifestWriter,
         ParsingReportWriter parsingReportWriter,
@@ -55,7 +55,7 @@ public sealed class ParsingPipeline
         Argument.ThrowIfNull(parseResultOrganizer);
         Argument.ThrowIfNull(parsedFileInfoFlattener);
         Argument.ThrowIfNull(parsedWeatherCharacteristicsCollector);
-        Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvWriter);
+        Argument.ThrowIfNull(narrowFormatWeatherDataCsvWriter);
         Argument.ThrowIfNull(parsedStageManifestCsvWriter);
         Argument.ThrowIfNull(parsedSourceFilesManifestWriter);
         Argument.ThrowIfNull(parsingReportWriter);
@@ -69,7 +69,7 @@ public sealed class ParsingPipeline
         this.parseResultOrganizer = parseResultOrganizer;
         this.parsedFileInfoFlattener = parsedFileInfoFlattener;
         this.parsedWeatherCharacteristicsCollector = parsedWeatherCharacteristicsCollector;
-        this.normalizedColumnsWeatherDataCsvWriter = normalizedColumnsWeatherDataCsvWriter;
+        this.narrowFormatWeatherDataCsvWriter = narrowFormatWeatherDataCsvWriter;
         this.parsedStageManifestCsvWriter = parsedStageManifestCsvWriter;
         this.parsedSourceFilesManifestWriter = parsedSourceFilesManifestWriter;
         this.parsingReportWriter = parsingReportWriter;
@@ -131,14 +131,14 @@ public sealed class ParsingPipeline
         var totalTime = totalStopwatch.Elapsed.TotalSeconds;
         var averageTime = sourceFileCount > 0 ? (totalFileProcessingTime / (double)sourceFileCount) / 1000.0 : 0;
 
-        var normalizedColumnsDir = this.fileSystem.Path.Combine(options.ParsedStageDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        var narrowFormatDir = this.fileSystem.Path.Combine(options.ParsedStageDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
         var parsedCharacteristics = this.parsedWeatherCharacteristicsCollector.Collect(organizationResult.ResultsByPlace);
 
         var projected = organizationResult.ResultsByPlace.ToDictionary(
             kvp => kvp.Key,
             kvp => (IReadOnlyList<WeatherDataRow>)ProjectRows(kvp.Value).ToList(),
             StringComparer.OrdinalIgnoreCase);
-        this.normalizedColumnsWeatherDataCsvWriter.WritePlaceRows(projected, normalizedColumnsDir, "parsed");
+        this.narrowFormatWeatherDataCsvWriter.WritePlaceRows(projected, narrowFormatDir, "parsed");
         this.parsedStageManifestCsvWriter.WriteParsedPlacesManifest(organizationResult.ParsedPlaces, options.ParsedStageDirectory);
         this.parsedStageManifestCsvWriter.WriteWeatherCharacteristicsManifest(parsedCharacteristics, options.ParsedStageDirectory);
         this.parsedSourceFilesManifestWriter.Write(organizationResult.SourceFileEntries, options.ParsedStageDirectory);

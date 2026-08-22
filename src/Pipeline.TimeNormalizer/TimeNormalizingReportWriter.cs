@@ -19,23 +19,23 @@ public sealed class TimeNormalizingReportWriter
     private const string HtmlReportTitle = "Historical Weather Data Harvester — Time Normalizing";
 
     private readonly TimeNormalizingPlaceErrorCountsBuilder errorCountsBuilder;
-    private readonly DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader;
+    private readonly WideFormatWeatherDataCsvReader wideFormatWeatherDataCsvReader;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
     private readonly IFileSystem fileSystem;
 
     public TimeNormalizingReportWriter(
         TimeNormalizingPlaceErrorCountsBuilder errorCountsBuilder,
-        DenormalizedWeatherDataCsvReader denormalizedWeatherDataCsvReader,
+        WideFormatWeatherDataCsvReader wideFormatWeatherDataCsvReader,
         PlaceCsvFileNameResolver placeCsvFileNameResolver,
         IFileSystem fileSystem)
     {
         Argument.ThrowIfNull(errorCountsBuilder);
-        Argument.ThrowIfNull(denormalizedWeatherDataCsvReader);
+        Argument.ThrowIfNull(wideFormatWeatherDataCsvReader);
         Argument.ThrowIfNull(placeCsvFileNameResolver);
         Argument.ThrowIfNull(fileSystem);
 
         this.errorCountsBuilder = errorCountsBuilder;
-        this.denormalizedWeatherDataCsvReader = denormalizedWeatherDataCsvReader;
+        this.wideFormatWeatherDataCsvReader = wideFormatWeatherDataCsvReader;
         this.placeCsvFileNameResolver = placeCsvFileNameResolver;
         this.fileSystem = fileSystem;
     }
@@ -53,7 +53,7 @@ public sealed class TimeNormalizingReportWriter
         Dictionary<string, int> normalizedFileCountsByPlace,
         IReadOnlyDictionary<string, PlaceTimeNormalizationCounts> timeNormalizationCountsByPlace,
         TimeNormalizationIssueCollector issueCollector,
-        string parsedStageDirectory)
+        string parsedWideFormatDirectory)
     {
         Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(htmlReportPath);
@@ -61,13 +61,13 @@ public sealed class TimeNormalizingReportWriter
         Argument.ThrowIfNull(normalizedFileCountsByPlace);
         Argument.ThrowIfNull(timeNormalizationCountsByPlace);
         Argument.ThrowIfNull(issueCollector);
-        Argument.ThrowIfNull(parsedStageDirectory);
+        Argument.ThrowIfNull(parsedWideFormatDirectory);
 
         var errorCountsByPlace = this.errorCountsBuilder.Build(
             normalizedRowsByPlace.Keys,
             issueCollector,
             timeNormalizationCountsByPlace);
-        var rowCountComparisons = this.BuildRowCountComparisons(parsedStageDirectory, normalizedRowsByPlace);
+        var rowCountComparisons = this.BuildRowCountComparisons(parsedWideFormatDirectory, normalizedRowsByPlace);
 
         using var writer = new HtmlLogWriter(htmlLogFileManager, htmlReportPath, HtmlReportTitle);
         WriteTimeNormalizationStatisticsTable(
@@ -130,7 +130,7 @@ public sealed class TimeNormalizingReportWriter
             .Select(stats => new
             {
                 stats.Place,
-                DenormalizedInputRows = stats.DenormalizedInputRows,
+                WideFormatInputRows = stats.WideFormatInputRows,
                 NormalizedRows = stats.NormalizedRows,
                 Delta = stats.Delta,
                 DeltaPercent = stats.DeltaPercent.ToString("F2", CultureInfo.InvariantCulture) + "%",
@@ -165,15 +165,15 @@ public sealed class TimeNormalizingReportWriter
     }
 
     private List<RowCountComparisonStats> BuildRowCountComparisons(
-        string parsedStageDirectory,
+        string parsedWideFormatDirectory,
         Dictionary<string, List<WeatherDataRow>> normalizedRowsByPlace)
     {
         var comparisons = new List<RowCountComparisonStats>();
 
         foreach (var (place, normalizedRows) in normalizedRowsByPlace.OrderBy(pair => pair.Key, StringComparer.OrdinalIgnoreCase))
         {
-            var inputCsvPath = this.fileSystem.Path.Combine(parsedStageDirectory, this.placeCsvFileNameResolver.ToCsvFileName(place));
-            var inputRows = this.denormalizedWeatherDataCsvReader.CountDataRows(inputCsvPath);
+            var inputCsvPath = this.fileSystem.Path.Combine(parsedWideFormatDirectory, this.placeCsvFileNameResolver.ToCsvFileName(place));
+            var inputRows = this.wideFormatWeatherDataCsvReader.CountDataRows(inputCsvPath);
             var normalizedRowCount = normalizedRows.Count;
             var delta = normalizedRowCount - inputRows;
             var deltaPercent = inputRows > 0 ? (delta / (double)inputRows) * 100.0 : 0.0;
@@ -181,10 +181,9 @@ public sealed class TimeNormalizingReportWriter
             comparisons.Add(new RowCountComparisonStats(place, inputRows, normalizedRowCount, delta, deltaPercent));
         }
 
-        if (this.fileSystem.Directory.Exists(parsedStageDirectory))
+        if (this.fileSystem.Directory.Exists(parsedWideFormatDirectory))
         {
-            foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, parsedStageDirectory)
-                         .Where(path => !WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(this.fileSystem.Path.GetFileName(path))))
+            foreach (var csvPath in CsvDirectoryFiles.EnumerateCsvFiles(this.fileSystem, parsedWideFormatDirectory))
             {
                 var place = this.fileSystem.Path.GetFileNameWithoutExtension(csvPath);
                 if (place is null || normalizedRowsByPlace.ContainsKey(place))
@@ -192,8 +191,8 @@ public sealed class TimeNormalizingReportWriter
                     continue;
                 }
 
-                var inputCsvPath = this.fileSystem.Path.Combine(parsedStageDirectory, this.placeCsvFileNameResolver.ToCsvFileName(place));
-                var inputRows = this.denormalizedWeatherDataCsvReader.CountDataRows(inputCsvPath);
+                var inputCsvPath = this.fileSystem.Path.Combine(parsedWideFormatDirectory, this.placeCsvFileNameResolver.ToCsvFileName(place));
+                var inputRows = this.wideFormatWeatherDataCsvReader.CountDataRows(inputCsvPath);
                 comparisons.Add(new RowCountComparisonStats(place, inputRows, 0, -inputRows, inputRows > 0 ? -100.0 : 0.0));
             }
         }
@@ -240,7 +239,7 @@ public sealed class TimeNormalizingReportWriter
 
     private sealed record RowCountComparisonStats(
         string Place,
-        int DenormalizedInputRows,
+        int WideFormatInputRows,
         int NormalizedRows,
         int Delta,
         double DeltaPercent);

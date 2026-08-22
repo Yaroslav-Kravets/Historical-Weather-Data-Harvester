@@ -12,19 +12,19 @@ namespace Pipeline.Core.Tests.Csv.Readers;
 using Pipeline.Core.Tests.Csv.TestSupport;
 using Xunit;
 
-public sealed class DenormalizedWeatherDataCsvReaderCountDataRowsTests
+public sealed class WideFormatWeatherDataCsvReaderCountDataRowsTests
 {
     private readonly CsvTestContext testContext;
-    private readonly DenormalizedWeatherDataCsvWriter writer;
-    private readonly DenormalizedWeatherDataCsvReader reader;
+    private readonly WideFormatWeatherDataCsvWriter writer;
+    private readonly WideFormatWeatherDataCsvReader reader;
 
-    public DenormalizedWeatherDataCsvReaderCountDataRowsTests()
+    public WideFormatWeatherDataCsvReaderCountDataRowsTests()
     {
         this.testContext = new CsvTestContext();
-        this.writer = new DenormalizedWeatherDataCsvWriter(
+        this.writer = new WideFormatWeatherDataCsvWriter(
             this.testContext.FileSystem,
             this.testContext.PlaceCsvFileNameResolver);
-        this.reader = new DenormalizedWeatherDataCsvReader(this.testContext.FileSystem);
+        this.reader = new WideFormatWeatherDataCsvReader(this.testContext.FileSystem);
     }
 
     [Fact]

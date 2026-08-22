@@ -12,17 +12,17 @@ namespace Pipeline.Core.Tests.Csv.Writers;
 using Pipeline.Core.Tests.Csv.TestSupport;
 using Xunit;
 
-public sealed class DenormalizedWeatherDataCsvWriterTests
+public sealed class WideFormatWeatherDataCsvWriterTests
 {
     private readonly CsvTestContext testContext;
-    private readonly DenormalizedWeatherDataCsvWriter writer;
+    private readonly WideFormatWeatherDataCsvWriter writer;
     private readonly string outputDirectory;
 
-    public DenormalizedWeatherDataCsvWriterTests()
+    public WideFormatWeatherDataCsvWriterTests()
     {
         this.testContext = new CsvTestContext();
         this.outputDirectory = this.testContext.EnsureDirectoryUnderRoot("writer-output");
-        this.writer = new DenormalizedWeatherDataCsvWriter(
+        this.writer = new WideFormatWeatherDataCsvWriter(
             this.testContext.FileSystem,
             this.testContext.PlaceCsvFileNameResolver);
     }

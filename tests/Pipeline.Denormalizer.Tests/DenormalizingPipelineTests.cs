@@ -38,19 +38,19 @@ public sealed class DenormalizingPipelineTests
             NullLogger<DenormalizingPipeline>.Instance,
             this.fileSystem,
             this.placeCsvFileNameResolver,
-            new NormalizedColumnsWeatherDataCsvReader(this.fileSystem, this.weatherDataCsvRecordMap),
-            new DenormalizedWeatherDataCsvWriter(this.fileSystem, this.placeCsvFileNameResolver));
+            new NarrowFormatWeatherDataCsvReader(this.fileSystem, this.weatherDataCsvRecordMap),
+            new WideFormatWeatherDataCsvWriter(this.fileSystem, this.placeCsvFileNameResolver));
     }
 
     [Fact]
-    public void Run_WritesDenormalizedCsvFromParsedSource()
+    public void Run_WritesWideFormatCsvFromNarrowFormatSource()
     {
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        var stageDirectory = this.rootDirectory;
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        var wideFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDirectory);
 
         this.WriteWeatherRecords(
-            normalizedColumnsDirectory,
+            narrowFormatDirectory,
             "Kyiv.csv",
             new[]
             {
@@ -64,9 +64,9 @@ public sealed class DenormalizingPipelineTests
                     70)),
             });
 
-        this.pipeline.Run(new DenormalizingRunOptions(normalizedColumnsDirectory, stageDirectory, RunInParallel: false));
+        this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false));
 
-        var outputPath = this.fileSystem.Path.Combine(stageDirectory, "Kyiv.csv");
+        var outputPath = this.fileSystem.Path.Combine(wideFormatDirectory, "Kyiv.csv");
         Assert.True(this.fileSystem.File.Exists(outputPath));
 
         var rows = this.ReadCsv(outputPath);
@@ -83,45 +83,45 @@ public sealed class DenormalizingPipelineTests
     [Fact]
     public void Run_ThrowsWhenAllPlacesHaveNoDataRows()
     {
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        var stageDirectory = this.rootDirectory;
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        var wideFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDirectory);
 
         this.WriteWeatherRecords(
-            normalizedColumnsDirectory,
+            narrowFormatDirectory,
             "Kyiv.csv",
             Array.Empty<WeatherDataCsvRecord>());
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            this.pipeline.Run(new DenormalizingRunOptions(normalizedColumnsDirectory, stageDirectory, RunInParallel: false)));
+            this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false)));
 
-        Assert.Contains("Denormalization produced no output files", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(stageDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Wide-format output produced no place files", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(wideFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Run_ThrowsWhenNoOutputProduced_AndNormalizedColumnsDirectoryIsEmpty()
+    public void Run_ThrowsWhenNoOutputProduced_AndNarrowFormatDirectoryIsEmpty()
     {
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        var stageDirectory = this.rootDirectory;
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        var wideFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDirectory);
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
-            this.pipeline.Run(new DenormalizingRunOptions(normalizedColumnsDirectory, stageDirectory, RunInParallel: false)));
+            this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false)));
 
-        Assert.Contains("Denormalization produced no output files", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(stageDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains("Wide-format output produced no place files", exception.Message, StringComparison.Ordinal);
+        Assert.Contains(wideFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
     [Fact]
     public void Run_OrdersOutputRowsByTime()
     {
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
-        var stageDirectory = this.rootDirectory;
-        this.fileSystem.Directory.CreateDirectory(normalizedColumnsDirectory);
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        var wideFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDirectory);
 
         this.WriteWeatherRecords(
-            normalizedColumnsDirectory,
+            narrowFormatDirectory,
             "Kyiv.csv",
             new[]
             {
@@ -143,25 +143,25 @@ public sealed class DenormalizingPipelineTests
                     70)),
             });
 
-        this.pipeline.Run(new DenormalizingRunOptions(normalizedColumnsDirectory, stageDirectory, RunInParallel: false));
+        this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false));
 
-        var rows = this.ReadCsv(this.fileSystem.Path.Combine(stageDirectory, "Kyiv.csv"));
+        var rows = this.ReadCsv(this.fileSystem.Path.Combine(wideFormatDirectory, "Kyiv.csv"));
         var dateTimeIndex = Array.IndexOf(rows[0], WeatherCsvColumns.DateTime);
         Assert.Equal("2003-01-01 00:00", rows[1][dateTimeIndex]);
         Assert.Equal("2003-01-01 06:00", rows[2][dateTimeIndex]);
     }
 
     [Fact]
-    public void Run_ThrowsWhenNormalizedColumnsDirectoryMissing()
+    public void Run_ThrowsWhenNarrowFormatDirectoryMissing()
     {
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(this.rootDirectory, "missing");
-        var stageDirectory = this.fileSystem.Path.Combine(this.rootDirectory, "out");
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, "missing");
+        var wideFormatDirectory = this.fileSystem.Path.Combine(this.rootDirectory, "wide-format");
 
         var exception = Assert.Throws<DirectoryNotFoundException>(() =>
-            this.pipeline.Run(new DenormalizingRunOptions(normalizedColumnsDirectory, stageDirectory, RunInParallel: false)));
+            this.pipeline.Run(new DenormalizingRunOptions(narrowFormatDirectory, wideFormatDirectory, RunInParallel: false)));
 
         Assert.Contains("Weather CSV directory not found", exception.Message, StringComparison.Ordinal);
-        Assert.Contains(normalizedColumnsDirectory, exception.Message, StringComparison.Ordinal);
+        Assert.Contains(narrowFormatDirectory, exception.Message, StringComparison.Ordinal);
     }
 
     private int WriteWeatherRecords(string outputDirectory, string fileName, IEnumerable<WeatherDataCsvRecord> records) =>

@@ -19,7 +19,7 @@ public sealed class AnalysisPipeline
     private readonly ILogger<AnalysisPipeline> logger;
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
-    private readonly NormalizedColumnsWeatherDataCsvReader normalizedColumnsWeatherDataCsvReader;
+    private readonly NarrowFormatWeatherDataCsvReader narrowFormatWeatherDataCsvReader;
     private readonly WeatherCharacteristicUsageAggregator usageAggregator;
     private readonly WeatherCharacteristicUsageCsvWriter usageCsvWriter;
     private readonly WeatherCharacteristicUsageReportWriter usageReportWriter;
@@ -28,7 +28,7 @@ public sealed class AnalysisPipeline
         ILogger<AnalysisPipeline> logger,
         IFileSystem fileSystem,
         HtmlLogFileManager htmlLogFileManager,
-        NormalizedColumnsWeatherDataCsvReader normalizedColumnsWeatherDataCsvReader,
+        NarrowFormatWeatherDataCsvReader narrowFormatWeatherDataCsvReader,
         WeatherCharacteristicUsageAggregator usageAggregator,
         WeatherCharacteristicUsageCsvWriter usageCsvWriter,
         WeatherCharacteristicUsageReportWriter usageReportWriter)
@@ -36,7 +36,7 @@ public sealed class AnalysisPipeline
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
         Argument.ThrowIfNull(htmlLogFileManager);
-        Argument.ThrowIfNull(normalizedColumnsWeatherDataCsvReader);
+        Argument.ThrowIfNull(narrowFormatWeatherDataCsvReader);
         Argument.ThrowIfNull(usageAggregator);
         Argument.ThrowIfNull(usageCsvWriter);
         Argument.ThrowIfNull(usageReportWriter);
@@ -44,7 +44,7 @@ public sealed class AnalysisPipeline
         this.logger = logger;
         this.fileSystem = fileSystem;
         this.htmlLogFileManager = htmlLogFileManager;
-        this.normalizedColumnsWeatherDataCsvReader = normalizedColumnsWeatherDataCsvReader;
+        this.narrowFormatWeatherDataCsvReader = narrowFormatWeatherDataCsvReader;
         this.usageAggregator = usageAggregator;
         this.usageCsvWriter = usageCsvWriter;
         this.usageReportWriter = usageReportWriter;
@@ -58,27 +58,27 @@ public sealed class AnalysisPipeline
 
         this.logger.LogInformation("Start");
 
-        var normalizedColumnsDirectory = this.fileSystem.Path.Combine(
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
             options.StageDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
 
-        if (!this.fileSystem.Directory.Exists(normalizedColumnsDirectory))
+        if (!this.fileSystem.Directory.Exists(narrowFormatDirectory))
         {
             throw new DirectoryNotFoundException(
-                $"Weather CSV directory not found: {normalizedColumnsDirectory}");
+                $"Weather CSV directory not found: {narrowFormatDirectory}");
         }
 
-        var rowsByPlace = this.normalizedColumnsWeatherDataCsvReader.ReadAllPlaces(normalizedColumnsDirectory);
+        var rowsByPlace = this.narrowFormatWeatherDataCsvReader.ReadAllPlaces(narrowFormatDirectory);
         if (rowsByPlace.Count == 0)
         {
             throw new InvalidOperationException(
-                $"No place CSV files found in {normalizedColumnsDirectory}");
+                $"No place CSV files found in {narrowFormatDirectory}");
         }
 
         if (rowsByPlace.Values.Sum(rows => rows.Count) == 0)
         {
             throw new InvalidOperationException(
-                $"No weather data rows found in {normalizedColumnsDirectory}");
+                $"No weather data rows found in {narrowFormatDirectory}");
         }
 
         this.logger.LogInformation(

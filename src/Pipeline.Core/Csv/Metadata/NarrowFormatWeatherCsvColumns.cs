@@ -9,7 +9,7 @@
 
 namespace Pipeline.Core.Csv.Metadata;
 
-public static class NormalizedWeatherCsvColumns
+public static class NarrowFormatWeatherCsvColumns
 {
     public const string WeatherCharacteristics = "Weather Characteristics";
 

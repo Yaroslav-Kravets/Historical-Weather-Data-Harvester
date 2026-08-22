@@ -84,7 +84,7 @@ public sealed class ParsingPipelineTests
 
         var csvPath = this.fileSystem.Path.Combine(
             this.outputDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName,
             "Kyiv.csv");
         Assert.True(this.fileSystem.File.Exists(csvPath));
     }
@@ -130,7 +130,7 @@ public sealed class ParsingPipelineTests
 
         var csvPath = this.fileSystem.Path.Combine(
             this.outputDirectory,
-            WeatherCsvOutputPaths.NormalizedColumnsDirectoryName,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName,
             "Kyiv.csv");
         Assert.True(this.fileSystem.File.Exists(csvPath));
 
@@ -170,8 +170,8 @@ public sealed class ParsingPipelineTests
             new ParseResultOrganizer(NullLogger<ParseResultOrganizer>.Instance, placeConverter),
             new ParsedFileInfoFlattener(),
             new ParsedWeatherCharacteristicsCollector(weatherCharacteristicConverter),
-            new NormalizedColumnsWeatherDataCsvWriter(
-                NullLogger<NormalizedColumnsWeatherDataCsvWriter>.Instance,
+            new NarrowFormatWeatherDataCsvWriter(
+                NullLogger<NarrowFormatWeatherDataCsvWriter>.Instance,
                 fileSystem,
                 csvRecordWriter,
                 placeCsvFileNameResolver,

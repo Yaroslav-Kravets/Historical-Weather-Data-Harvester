@@ -15,14 +15,14 @@ using Common;
 using CsvHelper;
 
 /// <summary>
-/// Reads normalized-column weather CSV files where characteristics are stored in a single English column.
+/// Reads narrow-format weather CSV files where characteristics are stored in a single English column.
 /// </summary>
-public sealed class NormalizedColumnsWeatherDataCsvReader
+public sealed class NarrowFormatWeatherDataCsvReader
 {
     private readonly IFileSystem fileSystem;
     private readonly WeatherDataCsvRecordMap weatherDataCsvRecordMap;
 
-    public NormalizedColumnsWeatherDataCsvReader(
+    public NarrowFormatWeatherDataCsvReader(
         IFileSystem fileSystem,
         WeatherDataCsvRecordMap weatherDataCsvRecordMap)
     {

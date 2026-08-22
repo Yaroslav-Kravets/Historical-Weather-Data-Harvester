@@ -12,7 +12,7 @@ namespace Pipeline.Core.Csv.Records;
 using CsvHelper.Configuration.Attributes;
 
 /// <summary>
-/// CSV row shape for normalized-column weather files.
+/// CSV row shape for narrow-format weather files.
 /// </summary>
 /// <remarks>
 /// Always register <see cref="WeatherDataCsvRecordMap"/> on the CsvHelper context when
@@ -65,6 +65,6 @@ public sealed class WeatherDataCsvRecord
     /// <remarks>
     /// Requires <see cref="WeatherDataCsvRecordMap"/> for English display-name serialization.
     /// </remarks>
-    [Name(NormalizedWeatherCsvColumns.WeatherCharacteristics)]
+    [Name(NarrowFormatWeatherCsvColumns.WeatherCharacteristics)]
     public WeatherCharacteristics WeatherCharacteristics { get; init; }
 }

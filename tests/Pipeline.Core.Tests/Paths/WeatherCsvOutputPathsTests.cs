@@ -18,18 +18,19 @@ public sealed class WeatherCsvOutputPathsTests
     {
         Assert.Equal("parsed", WeatherCsvOutputPaths.ParsedStageDirectoryName);
         Assert.Equal("time-normalized", WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
-        Assert.Equal("normalized-columns", WeatherCsvOutputPaths.NormalizedColumnsDirectoryName);
+        Assert.Equal("narrow-format", WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        Assert.Equal("wide-format", WeatherCsvOutputPaths.WideFormatDirectoryName);
     }
 
     [Fact]
-    public void StageRootSidecarFileNames_AreDistinctAndRecognized()
+    public void ManifestFileNames_AreDistinctAndNonEmpty()
     {
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.ParsedSourceFilesManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.ParsedPlacesManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
 
-        var sidecarFileNames = new[]
+        var manifestFileNames = new[]
         {
             WeatherCsvOutputPaths.ParsedSourceFilesManifestFileName,
             WeatherCsvOutputPaths.ParsedPlacesManifestFileName,
@@ -37,10 +38,6 @@ public sealed class WeatherCsvOutputPathsTests
             WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName,
         };
 
-        Assert.Equal(sidecarFileNames.Length, sidecarFileNames.Distinct(StringComparer.Ordinal).Count());
-        Assert.All(
-            sidecarFileNames,
-            fileName => Assert.True(WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName(fileName)));
-        Assert.False(WeatherCsvOutputPaths.IsStageRootSidecarCsvFileName("Kyiv.csv"));
+        Assert.Equal(manifestFileNames.Length, manifestFileNames.Distinct(StringComparer.Ordinal).Count());
     }
 }

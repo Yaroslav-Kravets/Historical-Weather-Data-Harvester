@@ -14,19 +14,19 @@ using Common;
 using Microsoft.Extensions.Logging;
 
 /// <summary>
-/// Writes normalized-column weather CSV files to the <c>normalized-columns/</c> subdirectory.
+/// Writes narrow-format weather CSV files to the <c>narrow-format/</c> subdirectory.
 /// Characteristics are stored in a single comma-separated English column.
 /// </summary>
-public sealed class NormalizedColumnsWeatherDataCsvWriter
+public sealed class NarrowFormatWeatherDataCsvWriter
 {
-    private readonly ILogger<NormalizedColumnsWeatherDataCsvWriter> logger;
+    private readonly ILogger<NarrowFormatWeatherDataCsvWriter> logger;
     private readonly IFileSystem fileSystem;
     private readonly CsvRecordWriter csvRecordWriter;
     private readonly PlaceCsvFileNameResolver placeCsvFileNameResolver;
     private readonly WeatherDataCsvRecordMap weatherDataCsvRecordMap;
 
-    public NormalizedColumnsWeatherDataCsvWriter(
-        ILogger<NormalizedColumnsWeatherDataCsvWriter> logger,
+    public NarrowFormatWeatherDataCsvWriter(
+        ILogger<NarrowFormatWeatherDataCsvWriter> logger,
         IFileSystem fileSystem,
         CsvRecordWriter csvRecordWriter,
         PlaceCsvFileNameResolver placeCsvFileNameResolver,

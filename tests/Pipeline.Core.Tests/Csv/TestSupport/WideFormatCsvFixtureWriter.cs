@@ -12,7 +12,7 @@ namespace Pipeline.Core.Tests.Csv.TestSupport;
 using System.Globalization;
 using System.IO.Abstractions;
 
-internal static class DenormalizedCsvFixtureWriter
+internal static class WideFormatCsvFixtureWriter
 {
     public static void WritePlaceFile(
         IFileSystem fileSystem,
