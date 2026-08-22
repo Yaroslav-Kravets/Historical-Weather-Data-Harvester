@@ -14,9 +14,9 @@ using Common;
 
 public sealed class PlaceDateCoverageAggregator
 {
-    private readonly IDateRangeClusterFormatter dateRangeClusterFormatter;
+    private readonly DateRangeClusterFormatter dateRangeClusterFormatter;
 
-    public PlaceDateCoverageAggregator(IDateRangeClusterFormatter dateRangeClusterFormatter)
+    public PlaceDateCoverageAggregator(DateRangeClusterFormatter dateRangeClusterFormatter)
     {
         Argument.ThrowIfNull(dateRangeClusterFormatter);
 

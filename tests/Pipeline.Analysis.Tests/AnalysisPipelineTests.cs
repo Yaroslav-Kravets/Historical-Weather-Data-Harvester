@@ -78,6 +78,40 @@ public sealed class AnalysisPipelineTests
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
     }
 
+
+    [Fact]
+    public void AnalyzeStage_WritesCoverageCsv_WithClusteredSkippedDates()
+    {
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed-gaps");
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        this.WritePlaceCsv(
+            narrowFormatDirectory,
+            "Kyiv.csv",
+            CreateRow(WeatherCharacteristics.Clear, new DateTime(2003, 1, 1)),
+            CreateRow(WeatherCharacteristics.Clear, new DateTime(2003, 1, 3)),
+            CreateRow(WeatherCharacteristics.Clear, new DateTime(2003, 1, 6)));
+
+        var htmlReportPath = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            "result-analysis.html");
+        this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
+
+        this.CreatePipeline().AnalyzeStage(new AnalysisRunOptions(
+            parsedStageDirectory,
+            htmlReportPath));
+
+        var coverageCsv = this.fileSystem.File.ReadAllText(
+            this.fileSystem.Path.Combine(
+                parsedStageDirectory,
+                WeatherCsvOutputPaths.PlaceDateCoverageFileName));
+        Assert.Contains(
+            "Kyiv,2003-01-01,2003-01-06,3,3,\"2003-01-02,2003-01-04..2003-01-05\"",
+            coverageCsv,
+            StringComparison.Ordinal);
+    }
+
     [Fact]
     public void AnalyzeStage_Throws_WhenNarrowFormatMissing()
     {
@@ -137,8 +171,10 @@ public sealed class AnalysisPipelineTests
         Assert.False(this.fileSystem.File.Exists(htmlReportPath));
     }
 
-    private static WeatherDataRow CreateRow(WeatherCharacteristics characteristics) =>
-        new(new DateTime(2003, 1, 1, 0, 0, 0), characteristics, -5, 0, 1.0m, 750, 70);
+    private static WeatherDataRow CreateRow(
+        WeatherCharacteristics characteristics,
+        DateTime? time = null) =>
+        new(time ?? new DateTime(2003, 1, 1, 0, 0, 0), characteristics, -5, 0, 1.0m, 750, 70);
 
     private AnalysisPipeline CreatePipeline()
     {

@@ -13,7 +13,7 @@ using System.Globalization;
 using System.Text;
 using Common;
 
-public sealed class DateRangeClusterFormatter : IDateRangeClusterFormatter
+public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
 
