@@ -5,7 +5,7 @@ alwaysApply: true
 
 # Do Not Run Code Without Explicit Request
 
-Do **not** run the Processor or HtmlScrapper unless the user **explicitly** asks you to run them.
+Do **not** run **Pipeline.Runner** or **HtmlScrapper** unless the user **explicitly** asks you to run them.
 
 ## Allowed without explicit request
 
@@ -14,7 +14,7 @@ Do **not** run the Processor or HtmlScrapper unless the user **explicitly** asks
 
 ## Requires explicit user request
 
-- `dotnet run` on Processor or HtmlScrapper.
+- `dotnet run` on Pipeline.Runner or HtmlScrapper.
 - Full pipeline runs against real data paths (e.g. `HistoricalWeatherFilesRoot`).
 - Any long-running or data-producing execution outside build/test.
 

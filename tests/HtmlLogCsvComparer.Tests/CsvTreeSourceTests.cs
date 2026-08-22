@@ -131,7 +131,9 @@ public sealed class CsvTreeSourceTests
         }
     }
 
-    private sealed class OpenReadTrackingFileProxy : DispatchProxy
+    // DispatchProxy generates a derived type at runtime; must not be sealed (CA1852).
+#pragma warning disable CA1852
+    private class OpenReadTrackingFileProxy : DispatchProxy
     {
         private IFile inner = null!;
         private List<TrackingFileSystemStream> opened = null!;
@@ -162,6 +164,8 @@ public sealed class CsvTreeSourceTests
             return targetMethod.Invoke(this.inner, args);
         }
     }
+
+#pragma warning restore CA1852
 
     private sealed class TrackingFileSystemStream : FileSystemStream
     {

@@ -12,10 +12,10 @@ trim_trailing_whitespace = true
 [*.{csproj,props,targets}]
 indent_size = 2
 
-# Visual Studio always writes solution files with tab indentation and a BOM
+# Solution files use tab indentation; encoding/EOL follow root [*] (UTF-8 no BOM, LF)
 [*.sln]
 indent_style = tab
-charset = utf-8-bom
+charset = utf-8
 
 # Legacy HtmlScrapper config files keep their original tab indentation and BOM
 [src/HtmlScrapper/*.config*]

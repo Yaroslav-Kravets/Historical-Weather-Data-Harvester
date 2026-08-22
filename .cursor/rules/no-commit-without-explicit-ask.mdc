@@ -13,10 +13,9 @@ If it is unclear whether the user wants a commit, **ask first** rather than comm
 
 - Read-only git inspection (`git status`, `git diff`, `git log`).
 
-Staging rules are defined in `no-stage-without-explicit-ask.mdc`. An explicit commit request still permits staging as part of that commit workflow.
-
 ## Requires explicit user request
 
 - Any command that creates or rewrites commits (`git commit`, `git commit --amend`, empty commits).
+- Staging files (`git add`) when not part of an explicit commit request.
 
 Do **not** amend unless the user explicitly requests it and other safety conditions from existing git rules are met (e.g. commit not pushed).
