@@ -102,6 +102,47 @@ public sealed class TimeNormalizingPipelineTests
     }
 
     [Fact]
+    public void Run_WritesOutputs_WhenTimeNormalizedStageDirectoryDoesNotExist()
+    {
+        var archiveDate = new DateTime(2003, 1, 1);
+        var baseDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, Guid.NewGuid().ToString("N"));
+        var parsedStageDirectory = this.fileSystem.Path.Combine(baseDirectory, WeatherCsvOutputPaths.ParsedStageDirectoryName);
+        var parsedWideFormatDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName);
+        var timeNormalizedStageDirectory = this.fileSystem.Path.Combine(
+            baseDirectory,
+            WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
+
+        this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
+        this.fileSystem.Directory.CreateDirectory(parsedWideFormatDirectory);
+        this.wideFormatWeatherDataCsvWriter.WritePlaceRows(
+            parsedWideFormatDirectory,
+            "Kyiv.csv",
+            CreateFullDayRows(archiveDate));
+
+        var htmlReportPath = this.fileSystem.Path.Combine(timeNormalizedStageDirectory, "result.html");
+        CreatePipeline(this.fileSystem).Run(new TimeNormalizingRunOptions(
+            parsedStageDirectory,
+            timeNormalizedStageDirectory,
+            htmlReportPath,
+            RunInParallel: false));
+
+        var narrowFormatPath = this.fileSystem.Path.Combine(
+            timeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName,
+            "Kyiv.csv");
+        var wideFormatPath = this.fileSystem.Path.Combine(
+            timeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.WideFormatDirectoryName,
+            "Kyiv.csv");
+
+        Assert.True(this.fileSystem.File.Exists(narrowFormatPath));
+        Assert.True(this.fileSystem.File.Exists(wideFormatPath));
+        Assert.True(this.fileSystem.File.Exists(htmlReportPath));
+    }
+
+    [Fact]
     public void Run_ReadsParsedStageCsvWithPlaceColumn()
     {
         var archiveDate = new DateTime(2003, 1, 1);

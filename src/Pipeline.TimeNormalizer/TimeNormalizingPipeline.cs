@@ -155,13 +155,15 @@ public sealed class TimeNormalizingPipeline
         var wideFormatDir = this.fileSystem.Path.Combine(
             options.TimeNormalizedStageDirectory,
             WeatherCsvOutputPaths.WideFormatDirectoryName);
+        this.fileSystem.Directory.CreateDirectory(options.TimeNormalizedStageDirectory);
+        this.fileSystem.Directory.CreateDirectory(narrowFormatDir);
+        this.fileSystem.Directory.CreateDirectory(wideFormatDir);
+
         var projected = normalizedRowsByPlace.ToDictionary(
             kvp => kvp.Key,
             kvp => (IReadOnlyList<WeatherDataRow>)kvp.Value,
             StringComparer.OrdinalIgnoreCase);
         this.narrowFormatWeatherDataCsvWriter.WritePlaceRows(projected, narrowFormatDir, "normalized");
-
-        this.fileSystem.Directory.CreateDirectory(options.TimeNormalizedStageDirectory);
 
         foreach (var (placeName, rows) in normalizedRowsByPlace)
         {
