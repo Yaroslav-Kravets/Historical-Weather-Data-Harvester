@@ -51,14 +51,14 @@ public sealed class PlaceDateCoverageCsvWriterTests
         this.writer.Write(
             [
                 new PlaceDateCoverageRow("Kharkiv", null, null, 0, 0, string.Empty),
-                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-04", 3, 2, "2003-01-02,03"),
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-04", 3, 2, "2003-01-02, 03"),
             ],
             this.outputDirectory);
 
         var csv = this.fileSystem.File.ReadAllText(this.CsvPath());
         Assert.Contains("Kharkiv,,,0,0,", csv, StringComparison.Ordinal);
         Assert.Contains(
-            "Kyiv,2003-01-01,2003-01-04,3,2,\"2003-01-02,03\"",
+            "Kyiv,2003-01-01,2003-01-04,3,2,\"2003-01-02, 03\"",
             csv,
             StringComparison.Ordinal);
     }

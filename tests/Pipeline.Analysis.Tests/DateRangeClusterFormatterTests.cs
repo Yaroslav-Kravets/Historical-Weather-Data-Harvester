@@ -72,7 +72,7 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
-    public void Format_MultipleClusters_JoinsWithCommaAndSameMonthChaining()
+    public void Format_MultipleClusters_JoinsWithCommaAndSpaceAndSameMonthChaining()
     {
         var result = this.formatter.Format(
         [
@@ -81,7 +81,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 5),
         ]);
 
-        Assert.Equal("2003-01-02,04..05", result);
+        Assert.Equal("2003-01-02, 04..05", result);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 4),
         ]);
 
-        Assert.Equal("2003-01-02,04..05", result);
+        Assert.Equal("2003-01-02, 04..05", result);
     }
 
     [Fact]
@@ -119,7 +119,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2004, 1, 2),
         ]);
 
-        Assert.Equal("2003-01-02,2004-01-02", result);
+        Assert.Equal("2003-01-02, 2004-01-02", result);
     }
 
     [Fact]
@@ -132,7 +132,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 3, 5),
         ]);
 
-        Assert.Equal("2003-01-02..03,2003-03-05", result);
+        Assert.Equal("2003-01-02..03, 2003-03-05", result);
     }
 
     [Theory]
@@ -155,7 +155,7 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
-    public void FormatRanges_SingleDayAndMultiDayRange_JoinsWithCommaAndSameMonthChaining()
+    public void FormatRanges_SingleDayAndMultiDayRange_JoinsWithCommaAndSpaceAndSameMonthChaining()
     {
         var result = this.formatter.FormatRanges(
         [
@@ -163,7 +163,7 @@ public sealed class DateRangeClusterFormatterTests
             (new DateTime(2003, 1, 4), new DateTime(2003, 1, 5)),
         ]);
 
-        Assert.Equal("2003-01-02,04..05", result);
+        Assert.Equal("2003-01-02, 04..05", result);
     }
 
     [Fact]

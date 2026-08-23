@@ -106,7 +106,7 @@ public sealed class AnalysisPipelineTests
                 parsedStageDirectory,
                 WeatherCsvOutputPaths.PlaceDateCoverageFileName));
         Assert.Contains(
-            "Kyiv,2003-01-01,2003-01-06,3,3,\"2003-01-02,04..05\"",
+            "Kyiv,2003-01-01,2003-01-06,3,3,\"2003-01-02, 04..05\"",
             coverageCsv,
             StringComparison.Ordinal);
 

@@ -17,6 +17,7 @@ public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
     private const string YearMonthFormat = "yyyy-MM";
+    private const string ClusterSeparator = ", ";
 
     public string FormatDate(DateTime date) =>
         date.Date.ToString(DateFormat, CultureInfo.InvariantCulture);
@@ -81,7 +82,7 @@ public sealed class DateRangeClusterFormatter
     {
         if (builder.Length > 0)
         {
-            builder.Append(',');
+            builder.Append(ClusterSeparator);
         }
 
         builder.Append(this.FormatCompactClusterStart(rangeStart, previousClusterYearMonth));

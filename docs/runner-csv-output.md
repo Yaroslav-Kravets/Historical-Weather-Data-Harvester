@@ -247,7 +247,7 @@ Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` i
 | `LastDate` | Latest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
 | `ObservedDays` | Distinct calendar days with at least one observation |
 | `SkippedDays` | Calendar days in the inclusive `[FirstDate, LastDate]` range without any observations: `(LastDate - FirstDate + 1) - ObservedDays`. Gaps **before** `FirstDate` or **after** `LastDate` are not counted — only holes inside the observed span |
-| `SkippedDates` | In-span missing days as a comma-separated list (`yyyy-MM-dd` tokens). Consecutive missing days cluster into ranges with abbreviated ends: same month `2003-01-02..05`, same year `2003-01-02..03-05`, cross-year `2003-01-02..2004-01-05`. When the next cluster shares the same `yyyy-MM` as the previous one, the repeated prefix is omitted (e.g. `2003-01-02,04..05`). Empty when there are no gaps |
+| `SkippedDates` | In-span missing days as a comma-and-space-separated list (`yyyy-MM-dd` tokens). Consecutive missing days cluster into ranges with abbreviated ends: same month `2003-01-02..05`, same year `2003-01-02..03-05`, cross-year `2003-01-02..2004-01-05`. When the next cluster shares the same `yyyy-MM` as the previous one, the repeated prefix is omitted (e.g. `2003-01-02, 04..05`). Empty when there are no gaps |
 
 Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table).
 
