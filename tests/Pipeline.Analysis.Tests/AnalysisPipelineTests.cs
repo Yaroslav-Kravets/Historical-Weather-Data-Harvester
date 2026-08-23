@@ -149,8 +149,22 @@ public sealed class AnalysisPipelineTests
 
         var html = this.fileSystem.File.ReadAllText(htmlReportPath);
         Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
-        Assert.Contains("Kharkiv", html, StringComparison.Ordinal);
-        Assert.Contains("Kyiv", html, StringComparison.Ordinal);
+
+        // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>; null dates become empty <td></td>.
+        // Match the full row fragment so CSV and HTML stay aligned, not just that the place name appears.
+        Assert.Contains(
+            ">Kharkiv</td><td></td><td></td><td class=\"numeric\">0</td><td class=\"numeric\">0</td>",
+            html,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            ">Kyiv</td><td>2003-01-01</td><td>2003-01-01</td><td class=\"numeric\">1</td><td class=\"numeric\">0</td>",
+            html,
+            StringComparison.Ordinal);
+
+        // Coverage rows are sorted by place name, same as in the CSV assertions above.
+        Assert.True(
+            html.IndexOf(">Kharkiv</td>", StringComparison.Ordinal)
+            < html.IndexOf(">Kyiv</td>", StringComparison.Ordinal));
     }
 
     [Fact]
