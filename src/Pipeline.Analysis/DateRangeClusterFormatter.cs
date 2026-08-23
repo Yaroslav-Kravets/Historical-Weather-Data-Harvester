@@ -16,6 +16,7 @@ using Common;
 public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
+    private const string YearMonthFormat = "yyyy-MM";
 
     public string FormatDate(DateTime date) =>
         date.Date.ToString(DateFormat, CultureInfo.InvariantCulture);
@@ -36,6 +37,7 @@ public sealed class DateRangeClusterFormatter
         }
 
         var builder = new StringBuilder();
+        string? previousClusterYearMonth = null;
         var rangeStart = orderedDates[0];
         var rangeEnd = rangeStart;
 
@@ -48,12 +50,12 @@ public sealed class DateRangeClusterFormatter
                 continue;
             }
 
-            this.AppendCluster(builder, rangeStart, rangeEnd);
+            this.AppendCompactCluster(builder, rangeStart, rangeEnd, ref previousClusterYearMonth);
             rangeStart = current;
             rangeEnd = current;
         }
 
-        this.AppendCluster(builder, rangeStart, rangeEnd);
+        this.AppendCompactCluster(builder, rangeStart, rangeEnd, ref previousClusterYearMonth);
         return builder.ToString();
     }
 
@@ -62,26 +64,65 @@ public sealed class DateRangeClusterFormatter
         Argument.ThrowIfNull(ranges);
 
         var builder = new StringBuilder();
+        string? previousClusterYearMonth = null;
         foreach (var (start, end) in ranges)
         {
-            this.AppendCluster(builder, start.Date, end.Date);
+            this.AppendCompactCluster(builder, start.Date, end.Date, ref previousClusterYearMonth);
         }
 
         return builder.ToString();
     }
 
-    private void AppendCluster(StringBuilder builder, DateTime rangeStart, DateTime rangeEnd)
+    private void AppendCompactCluster(
+        StringBuilder builder,
+        DateTime rangeStart,
+        DateTime rangeEnd,
+        ref string? previousClusterYearMonth)
     {
         if (builder.Length > 0)
         {
             builder.Append(',');
         }
 
-        builder.Append(this.FormatDate(rangeStart));
+        builder.Append(this.FormatCompactClusterStart(rangeStart, previousClusterYearMonth));
         if (rangeEnd != rangeStart)
         {
             builder.Append("..");
-            builder.Append(this.FormatDate(rangeEnd));
+            builder.Append(this.FormatCompactRangeEnd(rangeStart, rangeEnd));
         }
+
+        previousClusterYearMonth = this.FormatYearMonthKey(rangeStart);
+    }
+
+    private string FormatCompactDate(DateTime date) => this.FormatDate(date);
+
+    private string FormatYearMonthKey(DateTime date) =>
+        date.Date.ToString(YearMonthFormat, CultureInfo.InvariantCulture);
+
+    private string FormatCompactClusterStart(DateTime start, string? previousClusterYearMonth)
+    {
+        var yearMonth = this.FormatYearMonthKey(start);
+        if (previousClusterYearMonth != null
+            && string.Equals(yearMonth, previousClusterYearMonth, StringComparison.Ordinal))
+        {
+            return start.ToString("dd", CultureInfo.InvariantCulture);
+        }
+
+        return this.FormatCompactDate(start);
+    }
+
+    private string FormatCompactRangeEnd(DateTime start, DateTime end)
+    {
+        if (start.Year == end.Year && start.Month == end.Month)
+        {
+            return end.ToString("dd", CultureInfo.InvariantCulture);
+        }
+
+        if (start.Year == end.Year)
+        {
+            return end.ToString("MM-dd", CultureInfo.InvariantCulture);
+        }
+
+        return this.FormatCompactDate(end);
     }
 }

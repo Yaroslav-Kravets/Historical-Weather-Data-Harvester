@@ -28,7 +28,7 @@ public sealed class AnalysisReportWriterTests
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
         this.CreateWriter().Write(
             [
-                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-04", 3, 2, "2003-01-02,2003-01-03"),
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-04", 3, 2, "2003-01-02,03"),
             ],
             [
                 new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
@@ -43,9 +43,8 @@ public sealed class AnalysisReportWriterTests
         Assert.Contains("Skipped Days", html, StringComparison.Ordinal);
         Assert.Contains("Skipped Dates", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-01", html, StringComparison.Ordinal);
-        Assert.Contains("2003-01-02", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-04", html, StringComparison.Ordinal);
-        Assert.Contains("2003-01-03", html, StringComparison.Ordinal);
+        Assert.Contains("2003-01-02,03", html, StringComparison.Ordinal);
 
         // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>.
         Assert.Contains(">3</td>", html, StringComparison.Ordinal);

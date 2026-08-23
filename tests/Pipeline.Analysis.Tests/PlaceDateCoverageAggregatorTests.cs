@@ -96,7 +96,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var kyiv = Assert.Single(coverageRows);
         Assert.Equal(2, kyiv.ObservedDays);
         Assert.Equal(3, kyiv.SkippedDays);
-        Assert.Equal("2003-01-02..2003-01-04", kyiv.SkippedDates);
+        Assert.Equal("2003-01-02..04", kyiv.SkippedDates);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var kyiv = Assert.Single(coverageRows);
         Assert.Equal(3, kyiv.ObservedDays);
         Assert.Equal(3, kyiv.SkippedDays);
-        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", kyiv.SkippedDates);
+        Assert.Equal("2003-01-02,04..05", kyiv.SkippedDates);
     }
 
     [Fact]

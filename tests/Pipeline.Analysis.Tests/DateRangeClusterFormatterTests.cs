@@ -39,7 +39,7 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
-    public void Format_SingleDay_ReturnsSingleDate()
+    public void Format_SingleDay_ReturnsCompactDate()
     {
         var result = this.formatter.Format([new DateTime(2003, 1, 2)]);
 
@@ -47,7 +47,7 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
-    public void Format_TwoConsecutiveDays_ReturnsRange()
+    public void Format_TwoConsecutiveDays_ReturnsAbbreviatedRange()
     {
         var result = this.formatter.Format(
         [
@@ -55,11 +55,11 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 3),
         ]);
 
-        Assert.Equal("2003-01-02..2003-01-03", result);
+        Assert.Equal("2003-01-02..03", result);
     }
 
     [Fact]
-    public void Format_ThreeOrMoreConsecutiveDays_ReturnsSingleRange()
+    public void Format_ThreeOrMoreConsecutiveDays_ReturnsAbbreviatedRange()
     {
         var result = this.formatter.Format(
         [
@@ -68,11 +68,11 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2025, 5, 3),
         ]);
 
-        Assert.Equal("2025-05-01..2025-05-03", result);
+        Assert.Equal("2025-05-01..03", result);
     }
 
     [Fact]
-    public void Format_MultipleClusters_JoinsWithComma()
+    public void Format_MultipleClusters_JoinsWithCommaAndSameMonthChaining()
     {
         var result = this.formatter.Format(
         [
@@ -81,7 +81,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 5),
         ]);
 
-        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", result);
+        Assert.Equal("2003-01-02,04..05", result);
     }
 
     [Fact]
@@ -95,7 +95,7 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 4),
         ]);
 
-        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", result);
+        Assert.Equal("2003-01-02,04..05", result);
     }
 
     [Fact]
@@ -107,7 +107,32 @@ public sealed class DateRangeClusterFormatterTests
             new DateTime(2003, 1, 2, 0, 0, 0),
         ]);
 
-        Assert.Equal("2003-01-01..2003-01-02", result);
+        Assert.Equal("2003-01-01..02", result);
+    }
+
+    [Fact]
+    public void Format_CrossYearRange_UsesCompactFullEndDate()
+    {
+        var result = this.formatter.Format(
+        [
+            new DateTime(2003, 1, 2),
+            new DateTime(2004, 1, 2),
+        ]);
+
+        Assert.Equal("2003-01-02,2004-01-02", result);
+    }
+
+    [Fact]
+    public void Format_SameYearDifferentMonthRange_AbbreviatesMonthDayEnd()
+    {
+        var result = this.formatter.Format(
+        [
+            new DateTime(2003, 1, 2),
+            new DateTime(2003, 1, 3),
+            new DateTime(2003, 3, 5),
+        ]);
+
+        Assert.Equal("2003-01-02..03,2003-03-05", result);
     }
 
     [Theory]
@@ -130,7 +155,7 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
-    public void FormatRanges_SingleDayAndMultiDayRange_JoinsWithComma()
+    public void FormatRanges_SingleDayAndMultiDayRange_JoinsWithCommaAndSameMonthChaining()
     {
         var result = this.formatter.FormatRanges(
         [
@@ -138,6 +163,28 @@ public sealed class DateRangeClusterFormatterTests
             (new DateTime(2003, 1, 4), new DateTime(2003, 1, 5)),
         ]);
 
-        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", result);
+        Assert.Equal("2003-01-02,04..05", result);
+    }
+
+    [Fact]
+    public void FormatRanges_CrossYearWideRange_UsesCompactFullEndDate()
+    {
+        var result = this.formatter.FormatRanges(
+        [
+            (new DateTime(2000, 1, 2), new DateTime(2019, 12, 31)),
+        ]);
+
+        Assert.Equal("2000-01-02..2019-12-31", result);
+    }
+
+    [Fact]
+    public void FormatRanges_SameYearDifferentMonthRange_AbbreviatesMonthDayEnd()
+    {
+        var result = this.formatter.FormatRanges(
+        [
+            (new DateTime(2003, 1, 2), new DateTime(2003, 3, 5)),
+        ]);
+
+        Assert.Equal("2003-01-02..03-05", result);
     }
 }
