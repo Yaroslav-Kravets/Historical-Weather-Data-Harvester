@@ -17,7 +17,8 @@ public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
     private const string YearMonthFormat = "yyyy-MM";
-    private const string ClusterSeparator = ", ";
+    private const string SameYearSeparator = ", ";
+    private const string GroupSeparator = "; ";
 
     public string FormatDate(DateTime date) =>
         date.Date.ToString(DateFormat, CultureInfo.InvariantCulture);
@@ -38,6 +39,7 @@ public sealed class DateRangeClusterFormatter
         }
 
         var builder = new StringBuilder();
+        int? previousClusterYear = null;
         string? previousClusterYearMonth = null;
         var rangeStart = orderedDates[0];
         var rangeEnd = rangeStart;
@@ -51,12 +53,22 @@ public sealed class DateRangeClusterFormatter
                 continue;
             }
 
-            this.AppendCompactCluster(builder, rangeStart, rangeEnd, ref previousClusterYearMonth);
+            this.AppendCompactCluster(
+                builder,
+                rangeStart,
+                rangeEnd,
+                ref previousClusterYear,
+                ref previousClusterYearMonth);
             rangeStart = current;
             rangeEnd = current;
         }
 
-        this.AppendCompactCluster(builder, rangeStart, rangeEnd, ref previousClusterYearMonth);
+        this.AppendCompactCluster(
+            builder,
+            rangeStart,
+            rangeEnd,
+            ref previousClusterYear,
+            ref previousClusterYearMonth);
         return builder.ToString();
     }
 
@@ -65,10 +77,16 @@ public sealed class DateRangeClusterFormatter
         Argument.ThrowIfNull(ranges);
 
         var builder = new StringBuilder();
+        int? previousClusterYear = null;
         string? previousClusterYearMonth = null;
         foreach (var (start, end) in ranges)
         {
-            this.AppendCompactCluster(builder, start.Date, end.Date, ref previousClusterYearMonth);
+            this.AppendCompactCluster(
+                builder,
+                start.Date,
+                end.Date,
+                ref previousClusterYear,
+                ref previousClusterYearMonth);
         }
 
         return builder.ToString();
@@ -78,20 +96,29 @@ public sealed class DateRangeClusterFormatter
         StringBuilder builder,
         DateTime rangeStart,
         DateTime rangeEnd,
+        ref int? previousClusterYear,
         ref string? previousClusterYearMonth)
     {
         if (builder.Length > 0)
         {
-            builder.Append(ClusterSeparator);
+            var separator = previousClusterYear != null
+                && rangeStart.Year == previousClusterYear.Value
+                ? SameYearSeparator
+                : GroupSeparator;
+            builder.Append(separator);
         }
 
-        builder.Append(this.FormatCompactClusterStart(rangeStart, previousClusterYearMonth));
+        builder.Append(this.FormatCompactClusterStart(
+            rangeStart,
+            previousClusterYear,
+            previousClusterYearMonth));
         if (rangeEnd != rangeStart)
         {
             builder.Append("..");
             builder.Append(this.FormatCompactRangeEnd(rangeStart, rangeEnd));
         }
 
+        previousClusterYear = rangeStart.Year;
         previousClusterYearMonth = this.FormatYearMonthKey(rangeStart);
     }
 
@@ -100,13 +127,21 @@ public sealed class DateRangeClusterFormatter
     private string FormatYearMonthKey(DateTime date) =>
         date.Date.ToString(YearMonthFormat, CultureInfo.InvariantCulture);
 
-    private string FormatCompactClusterStart(DateTime start, string? previousClusterYearMonth)
+    private string FormatCompactClusterStart(
+        DateTime start,
+        int? previousClusterYear,
+        string? previousClusterYearMonth)
     {
         var yearMonth = this.FormatYearMonthKey(start);
         if (previousClusterYearMonth != null
             && string.Equals(yearMonth, previousClusterYearMonth, StringComparison.Ordinal))
         {
             return start.ToString("dd", CultureInfo.InvariantCulture);
+        }
+
+        if (previousClusterYear != null && start.Year == previousClusterYear.Value)
+        {
+            return start.ToString("MM-dd", CultureInfo.InvariantCulture);
         }
 
         return this.FormatCompactDate(start);
