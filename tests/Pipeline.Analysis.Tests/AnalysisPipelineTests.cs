@@ -78,7 +78,6 @@ public sealed class AnalysisPipelineTests
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
     }
 
-
     [Fact]
     public void AnalyzeStage_WritesCoverageCsv_WithClusteredSkippedDates()
     {
@@ -110,6 +109,39 @@ public sealed class AnalysisPipelineTests
             "Kyiv,2003-01-01,2003-01-06,3,3,\"2003-01-02,2003-01-04..2003-01-05\"",
             coverageCsv,
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void AnalyzeStage_WritesCoverageCsv_WithEmptyPlaceFile()
+    {
+        var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed-mixed");
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        this.WritePlaceCsv(
+            narrowFormatDirectory,
+            "Kyiv.csv",
+            CreateRow(WeatherCharacteristics.Clear));
+        this.WritePlaceCsv(narrowFormatDirectory, "Kharkiv.csv");
+
+        var htmlReportPath = this.fileSystem.Path.Combine(
+            parsedStageDirectory,
+            "result-analysis.html");
+        this.fileSystem.Directory.CreateDirectory(parsedStageDirectory);
+
+        this.CreatePipeline().AnalyzeStage(new AnalysisRunOptions(
+            parsedStageDirectory,
+            htmlReportPath));
+
+        var coverageCsv = this.fileSystem.File.ReadAllText(
+            this.fileSystem.Path.Combine(
+                parsedStageDirectory,
+                WeatherCsvOutputPaths.PlaceDateCoverageFileName));
+        Assert.Contains("Kharkiv,,,0,0,", coverageCsv, StringComparison.Ordinal);
+        Assert.Contains("Kyiv,2003-01-01,2003-01-01,1,0,", coverageCsv, StringComparison.Ordinal);
+        Assert.True(
+            coverageCsv.IndexOf("Kharkiv", StringComparison.Ordinal)
+            < coverageCsv.IndexOf("Kyiv", StringComparison.Ordinal));
     }
 
     [Fact]
