@@ -56,7 +56,7 @@ public sealed class AnalysisReportWriter
                     row.Place,
                     row.FirstDate,
                     row.LastDate,
-                    row.SuccessfulDays,
+                    row.ObservedDays,
                     row.SkippedDays,
                     row.SkippedDates,
                 })

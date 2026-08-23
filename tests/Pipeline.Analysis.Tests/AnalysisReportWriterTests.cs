@@ -39,14 +39,14 @@ public sealed class AnalysisReportWriterTests
         var html = this.fileSystem.File.ReadAllText(reportPath);
         Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
         Assert.Contains("Weather Characteristics Usage", html, StringComparison.Ordinal);
-        Assert.Contains("Successful Days", html, StringComparison.Ordinal);
+        Assert.Contains("Observed Days", html, StringComparison.Ordinal);
         Assert.Contains("Skipped Days", html, StringComparison.Ordinal);
         Assert.Contains("Skipped Dates", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-01", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-02", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-03", html, StringComparison.Ordinal);
 
-        // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>; fixture SuccessfulDays is 2.
+        // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>; fixture ObservedDays is 2.
         // Avoid ">1</td>" — the row # column is also 1 and would be ambiguous for SkippedDays.
         Assert.Contains(">2</td>", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);

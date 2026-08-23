@@ -35,7 +35,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal("Kyiv", kyiv.Place);
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-03", kyiv.LastDate);
-        Assert.Equal(3, kyiv.SuccessfulDays);
+        Assert.Equal(3, kyiv.ObservedDays);
         Assert.Equal(0, kyiv.SkippedDays);
         Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
@@ -57,7 +57,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var kyiv = Assert.Single(coverageRows);
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-03", kyiv.LastDate);
-        Assert.Equal(2, kyiv.SuccessfulDays);
+        Assert.Equal(2, kyiv.ObservedDays);
         Assert.Equal(1, kyiv.SkippedDays);
         Assert.Equal("2003-01-02", kyiv.SkippedDates);
     }
@@ -77,7 +77,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var coverageRows = this.aggregator.Aggregate(rowsByPlace);
 
         var kyiv = Assert.Single(coverageRows);
-        Assert.Equal(2, kyiv.SuccessfulDays);
+        Assert.Equal(2, kyiv.ObservedDays);
         Assert.Equal(3, kyiv.SkippedDays);
         Assert.Equal("2003-01-02..2003-01-04", kyiv.SkippedDates);
     }
@@ -98,7 +98,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var coverageRows = this.aggregator.Aggregate(rowsByPlace);
 
         var kyiv = Assert.Single(coverageRows);
-        Assert.Equal(3, kyiv.SuccessfulDays);
+        Assert.Equal(3, kyiv.ObservedDays);
         Assert.Equal(3, kyiv.SkippedDays);
         Assert.Equal("2003-01-02,2003-01-04..2003-01-05", kyiv.SkippedDates);
     }
@@ -121,7 +121,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         var kyiv = Assert.Single(coverageRows);
         Assert.Equal("2003-01-01", kyiv.FirstDate);
         Assert.Equal("2003-01-02", kyiv.LastDate);
-        Assert.Equal(2, kyiv.SuccessfulDays);
+        Assert.Equal(2, kyiv.ObservedDays);
         Assert.Equal(0, kyiv.SkippedDays);
         Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
@@ -140,7 +140,7 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal("Kyiv", kyiv.Place);
         Assert.Null(kyiv.FirstDate);
         Assert.Null(kyiv.LastDate);
-        Assert.Equal(0, kyiv.SuccessfulDays);
+        Assert.Equal(0, kyiv.ObservedDays);
         Assert.Equal(0, kyiv.SkippedDays);
         Assert.Equal(string.Empty, kyiv.SkippedDates);
     }
