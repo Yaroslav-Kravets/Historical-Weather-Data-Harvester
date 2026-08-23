@@ -9,7 +9,6 @@
 
 namespace Pipeline.Analysis;
 
-using System.Globalization;
 using Common;
 
 public sealed class PlaceDateCoverageAggregator
@@ -62,8 +61,8 @@ public sealed class PlaceDateCoverageAggregator
 
         return new PlaceDateCoverageRow(
             place,
-            firstDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
-            lastDate.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture),
+            DateRangeClusterFormatter.FormatDate(firstDate),
+            DateRangeClusterFormatter.FormatDate(lastDate),
             dates.Count,
             missingDates.Count,
             this.dateRangeClusterFormatter.Format(missingDates));

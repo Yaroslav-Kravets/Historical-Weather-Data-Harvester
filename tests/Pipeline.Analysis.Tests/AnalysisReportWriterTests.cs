@@ -45,6 +45,7 @@ public sealed class AnalysisReportWriterTests
         Assert.Contains("2003-01-01", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-02", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-03", html, StringComparison.Ordinal);
+
         // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>; fixture SuccessfulDays is 2.
         // Avoid ">1</td>" — the row # column is also 1 and would be ambiguous for SkippedDays.
         Assert.Contains(">2</td>", html, StringComparison.Ordinal);

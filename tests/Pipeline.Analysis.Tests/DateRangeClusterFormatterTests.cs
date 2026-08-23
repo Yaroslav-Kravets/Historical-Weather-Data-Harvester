@@ -15,6 +15,17 @@ public sealed class DateRangeClusterFormatterTests
 {
     private readonly DateRangeClusterFormatter formatter = new();
 
+    public static TheoryData<DateTime, string> FormatDateCases() => new()
+    {
+        { new DateTime(2003, 1, 2), "2003-01-02" },
+        { new DateTime(2003, 1, 2, 15, 30, 0), "2003-01-02" },
+        { new DateTime(2003, 1, 2, 23, 59, 59), "2003-01-02" },
+        { new DateTime(2024, 2, 29), "2024-02-29" },
+        { new DateTime(1999, 12, 31), "1999-12-31" },
+        { new DateTime(2000, 1, 1, 6, 0, 0), "2000-01-01" },
+        { new DateTime(2025, 5, 3, 12, 0, 0), "2025-05-03" },
+    };
+
     [Fact]
     public void Format_Null_ThrowsArgumentNullException()
     {
@@ -97,5 +108,12 @@ public sealed class DateRangeClusterFormatterTests
         ]);
 
         Assert.Equal("2003-01-01..2003-01-02", result);
+    }
+
+    [Theory]
+    [MemberData(nameof(FormatDateCases))]
+    public void FormatDate_ReturnsYyyyMmDd(DateTime date, string expected)
+    {
+        Assert.Equal(expected, DateRangeClusterFormatter.FormatDate(date));
     }
 }

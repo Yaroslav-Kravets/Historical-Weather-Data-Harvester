@@ -17,6 +17,9 @@ public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
 
+    public static string FormatDate(DateTime date) =>
+        date.ToString(DateFormat, CultureInfo.InvariantCulture);
+
     public string Format(IEnumerable<DateTime> dates)
     {
         Argument.ThrowIfNull(dates);
@@ -68,7 +71,4 @@ public sealed class DateRangeClusterFormatter
             builder.Append(FormatDate(rangeEnd));
         }
     }
-
-    private static string FormatDate(DateTime date) =>
-        date.ToString(DateFormat, CultureInfo.InvariantCulture);
 }
