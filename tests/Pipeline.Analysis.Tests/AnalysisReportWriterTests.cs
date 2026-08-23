@@ -28,7 +28,7 @@ public sealed class AnalysisReportWriterTests
         using var fileManager = new HtmlLogFileManager(this.fileSystem);
         this.CreateWriter().Write(
             [
-                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-03", 2, 1, "2003-01-02"),
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-04", 3, 2, "2003-01-02,2003-01-03"),
             ],
             [
                 new WeatherCharacteristicUsageRow("Clear", "ясно", 1, 100.0),
@@ -44,10 +44,11 @@ public sealed class AnalysisReportWriterTests
         Assert.Contains("Skipped Dates", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-01", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-02", html, StringComparison.Ordinal);
+        Assert.Contains("2003-01-04", html, StringComparison.Ordinal);
         Assert.Contains("2003-01-03", html, StringComparison.Ordinal);
 
-        // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>; fixture ObservedDays is 2.
-        // Avoid ">1</td>" — the row # column is also 1 and would be ambiguous for SkippedDays.
+        // HtmlLogWriter renders numeric cells as <td class="numeric">N</td>.
+        Assert.Contains(">3</td>", html, StringComparison.Ordinal);
         Assert.Contains(">2</td>", html, StringComparison.Ordinal);
         Assert.Contains("ясно", html, StringComparison.Ordinal);
         Assert.Contains("100.00000%", html, StringComparison.Ordinal);
@@ -58,6 +59,27 @@ public sealed class AnalysisReportWriterTests
         Assert.True(
             html.IndexOf("Weather Characteristics Usage", StringComparison.Ordinal)
             < html.IndexOf("End of summary report", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Write_WritesCoverageTableOnly_WhenUsageRowsEmpty()
+    {
+        var reportPath = InMemoryFileSystem.UnderRoot(this.fileSystem, "coverage-only.html");
+        this.fileSystem.Directory.CreateDirectory(this.fileSystem.Path.GetDirectoryName(reportPath)!);
+
+        using var fileManager = new HtmlLogFileManager(this.fileSystem);
+        this.CreateWriter().Write(
+            [
+                new PlaceDateCoverageRow("Kyiv", "2003-01-01", "2003-01-01", 1, 0, string.Empty),
+            ],
+            [],
+            fileManager,
+            reportPath);
+
+        var html = this.fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Weather Characteristics Usage", html, StringComparison.Ordinal);
+        Assert.Contains("End of summary report", html, StringComparison.Ordinal);
     }
 
     [Fact]

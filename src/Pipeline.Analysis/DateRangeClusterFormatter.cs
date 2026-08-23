@@ -17,8 +17,8 @@ public sealed class DateRangeClusterFormatter
 {
     private const string DateFormat = "yyyy-MM-dd";
 
-    public static string FormatDate(DateTime date) =>
-        date.ToString(DateFormat, CultureInfo.InvariantCulture);
+    public string FormatDate(DateTime date) =>
+        date.Date.ToString(DateFormat, CultureInfo.InvariantCulture);
 
     public string Format(IEnumerable<DateTime> dates)
     {
@@ -48,27 +48,27 @@ public sealed class DateRangeClusterFormatter
                 continue;
             }
 
-            AppendCluster(builder, rangeStart, rangeEnd);
+            this.AppendCluster(builder, rangeStart, rangeEnd);
             rangeStart = current;
             rangeEnd = current;
         }
 
-        AppendCluster(builder, rangeStart, rangeEnd);
+        this.AppendCluster(builder, rangeStart, rangeEnd);
         return builder.ToString();
     }
 
-    private static void AppendCluster(StringBuilder builder, DateTime rangeStart, DateTime rangeEnd)
+    private void AppendCluster(StringBuilder builder, DateTime rangeStart, DateTime rangeEnd)
     {
         if (builder.Length > 0)
         {
             builder.Append(',');
         }
 
-        builder.Append(FormatDate(rangeStart));
+        builder.Append(this.FormatDate(rangeStart));
         if (rangeEnd != rangeStart)
         {
             builder.Append("..");
-            builder.Append(FormatDate(rangeEnd));
+            builder.Append(this.FormatDate(rangeEnd));
         }
     }
 }

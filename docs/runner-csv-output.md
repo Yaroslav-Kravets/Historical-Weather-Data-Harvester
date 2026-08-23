@@ -56,7 +56,7 @@ HtmlLog_<timestamp>/                 # under process CWD
     parsed-places.csv                # places seen in this run
     weather-characteristics.csv      # weather flags seen in this run
     weather-characteristics-usage.csv  # flag counts/% over all place rows (when analysis enabled)
-    place-date-coverage.csv          # per-place first/last date, successful/skipped day counts, and clustered skipped dates (when analysis enabled)
+    place-date-coverage.csv          # per-place first/last date, ObservedDays/SkippedDays counts, and clustered skipped dates (when analysis enabled)
     narrow-format/                   # narrow format
       Kyiv.csv
       Kharkiv.csv

@@ -17,6 +17,23 @@ public sealed class PlaceDateCoverageAggregatorTests
         new(new DateRangeClusterFormatter());
 
     [Fact]
+    public void Aggregate_Throws_WhenRowsByPlaceNull()
+    {
+        Assert.Throws<ArgumentNullException>(() => this.aggregator.Aggregate(null!));
+    }
+
+    [Fact]
+    public void Aggregate_Throws_WhenPlaceRowsNull()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] = null!,
+        };
+
+        Assert.Throws<ArgumentNullException>(() => this.aggregator.Aggregate(rowsByPlace));
+    }
+
+    [Fact]
     public void Aggregate_ContiguousRange_HasZeroSkippedDays()
     {
         var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)

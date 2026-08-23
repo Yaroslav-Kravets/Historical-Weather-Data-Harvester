@@ -114,6 +114,6 @@ public sealed class DateRangeClusterFormatterTests
     [MemberData(nameof(FormatDateCases))]
     public void FormatDate_ReturnsYyyyMmDd(DateTime date, string expected)
     {
-        Assert.Equal(expected, DateRangeClusterFormatter.FormatDate(date));
+        Assert.Equal(expected, this.formatter.FormatDate(date));
     }
 }

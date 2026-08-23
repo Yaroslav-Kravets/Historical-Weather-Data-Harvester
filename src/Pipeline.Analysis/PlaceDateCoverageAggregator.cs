@@ -35,6 +35,8 @@ public sealed class PlaceDateCoverageAggregator
 
     private PlaceDateCoverageRow BuildRow(string place, IReadOnlyList<WeatherDataRow> rows)
     {
+        Argument.ThrowIfNull(rows);
+
         if (rows.Count == 0)
         {
             return new PlaceDateCoverageRow(place, null, null, 0, 0, string.Empty);
@@ -61,8 +63,8 @@ public sealed class PlaceDateCoverageAggregator
 
         return new PlaceDateCoverageRow(
             place,
-            DateRangeClusterFormatter.FormatDate(firstDate),
-            DateRangeClusterFormatter.FormatDate(lastDate),
+            this.dateRangeClusterFormatter.FormatDate(firstDate),
+            this.dateRangeClusterFormatter.FormatDate(lastDate),
             dates.Count,
             missingDates.Count,
             this.dateRangeClusterFormatter.Format(missingDates));

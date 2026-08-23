@@ -109,6 +109,10 @@ public sealed class AnalysisPipelineTests
             "Kyiv,2003-01-01,2003-01-06,3,3,\"2003-01-02,2003-01-04..2003-01-05\"",
             coverageCsv,
             StringComparison.Ordinal);
+
+        var html = this.fileSystem.File.ReadAllText(htmlReportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
+        Assert.Contains("2003-01-04..2003-01-05", html, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -142,6 +146,11 @@ public sealed class AnalysisPipelineTests
         Assert.True(
             coverageCsv.IndexOf("Kharkiv", StringComparison.Ordinal)
             < coverageCsv.IndexOf("Kyiv", StringComparison.Ordinal));
+
+        var html = this.fileSystem.File.ReadAllText(htmlReportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
+        Assert.Contains("Kharkiv", html, StringComparison.Ordinal);
+        Assert.Contains("Kyiv", html, StringComparison.Ordinal);
     }
 
     [Fact]
