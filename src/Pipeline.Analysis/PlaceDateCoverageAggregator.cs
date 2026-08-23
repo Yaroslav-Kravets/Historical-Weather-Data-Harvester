@@ -50,14 +50,17 @@ public sealed class PlaceDateCoverageAggregator
 
         var firstDate = dates[0];
         var lastDate = dates[^1];
-        var observedDates = dates.ToHashSet();
-        var missingDates = new List<DateTime>();
+        var observedDays = dates.Count;
+        var skippedDays = (lastDate - firstDate).Days + 1 - observedDays;
+        var gapRanges = new List<(DateTime Start, DateTime End)>();
 
-        for (var day = firstDate; day <= lastDate; day = day.AddDays(1))
+        for (var index = 0; index < dates.Count - 1; index++)
         {
-            if (!observedDates.Contains(day))
+            var gapStart = dates[index].AddDays(1);
+            var gapEnd = dates[index + 1].AddDays(-1);
+            if (gapStart <= gapEnd)
             {
-                missingDates.Add(day);
+                gapRanges.Add((gapStart, gapEnd));
             }
         }
 
@@ -65,8 +68,8 @@ public sealed class PlaceDateCoverageAggregator
             place,
             this.dateRangeClusterFormatter.FormatDate(firstDate),
             this.dateRangeClusterFormatter.FormatDate(lastDate),
-            dates.Count,
-            missingDates.Count,
-            this.dateRangeClusterFormatter.Format(missingDates));
+            observedDays,
+            skippedDays,
+            this.dateRangeClusterFormatter.FormatRanges(gapRanges));
     }
 }

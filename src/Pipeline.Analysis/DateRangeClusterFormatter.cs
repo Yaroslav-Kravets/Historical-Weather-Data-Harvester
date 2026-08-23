@@ -57,6 +57,19 @@ public sealed class DateRangeClusterFormatter
         return builder.ToString();
     }
 
+    public string FormatRanges(IEnumerable<(DateTime Start, DateTime End)> ranges)
+    {
+        Argument.ThrowIfNull(ranges);
+
+        var builder = new StringBuilder();
+        foreach (var (start, end) in ranges)
+        {
+            this.AppendCluster(builder, start.Date, end.Date);
+        }
+
+        return builder.ToString();
+    }
+
     private void AppendCluster(StringBuilder builder, DateTime rangeStart, DateTime rangeEnd)
     {
         if (builder.Length > 0)

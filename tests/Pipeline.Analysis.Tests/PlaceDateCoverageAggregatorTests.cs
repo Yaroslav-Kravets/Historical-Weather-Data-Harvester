@@ -176,6 +176,28 @@ public sealed class PlaceDateCoverageAggregatorTests
         Assert.Equal(["Kharkiv", "Kyiv"], coverageRows.Select(row => row.Place));
     }
 
+    [Fact]
+    public void Aggregate_WideSpanWithSparseObservations_ComputesSkippedDaysWithoutEnumeratingEachDay()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] =
+            [
+                CreateRow(new DateTime(2000, 1, 1)),
+                CreateRow(new DateTime(2020, 1, 1)),
+            ],
+        };
+
+        var coverageRows = this.aggregator.Aggregate(rowsByPlace);
+
+        var kyiv = Assert.Single(coverageRows);
+        Assert.Equal("2000-01-01", kyiv.FirstDate);
+        Assert.Equal("2020-01-01", kyiv.LastDate);
+        Assert.Equal(2, kyiv.ObservedDays);
+        Assert.Equal(7304, kyiv.SkippedDays);
+        Assert.Equal("2000-01-02..2019-12-31", kyiv.SkippedDates);
+    }
+
     private static WeatherDataRow CreateRow(DateTime time) =>
         new(time, WeatherCharacteristics.Clear, -5, 0, 1.0m, 750, 70);
 }

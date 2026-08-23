@@ -116,4 +116,28 @@ public sealed class DateRangeClusterFormatterTests
     {
         Assert.Equal(expected, this.formatter.FormatDate(date));
     }
+
+    [Fact]
+    public void FormatRanges_Null_ThrowsArgumentNullException()
+    {
+        Assert.Throws<ArgumentNullException>(() => this.formatter.FormatRanges(null!));
+    }
+
+    [Fact]
+    public void FormatRanges_Empty_ReturnsEmptyString()
+    {
+        Assert.Equal(string.Empty, this.formatter.FormatRanges([]));
+    }
+
+    [Fact]
+    public void FormatRanges_SingleDayAndMultiDayRange_JoinsWithComma()
+    {
+        var result = this.formatter.FormatRanges(
+        [
+            (new DateTime(2003, 1, 2), new DateTime(2003, 1, 2)),
+            (new DateTime(2003, 1, 4), new DateTime(2003, 1, 5)),
+        ]);
+
+        Assert.Equal("2003-01-02,2003-01-04..2003-01-05", result);
+    }
 }
