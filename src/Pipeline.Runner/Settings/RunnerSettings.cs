@@ -20,9 +20,11 @@ public sealed class RunnerSettings
 
     public bool RunTimeNormalization { get; set; } = true;
 
+    public bool RunAnalysis { get; set; } = true;
+
     public bool RunHtmlLogCsvComparison { get; set; } = true;
 
-    public bool RunAnalysis { get; set; } = true;
+    public bool HtmlLogCsvComparisonVerbose { get; set; } = true;
 
     public static RunnerSettings Load(IConfiguration configuration)
     {

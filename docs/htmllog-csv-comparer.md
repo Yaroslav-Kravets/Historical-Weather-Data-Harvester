@@ -78,9 +78,9 @@ Each comparison logs a status line `[n/m] <left_path> (N csv) vs <right_path> (M
 - **1** — overall STATUS is PARTLY EQUAL or NOT EQUAL (including unmatched leftovers)
 - **2** — load/compare/discovery error (including header-only or empty CSV); chain mode prints no SUMMARY
 
-These exit codes apply to the standalone CLI. When Pipeline Runner runs chain comparison via `RunHtmlLogCsvComparison`, it logs the result and does not fail the pipeline on exit 1 or 2.
+These exit codes apply to the standalone CLI. When Pipeline Runner runs chain comparison via `RunHtmlLogCsvComparison`, it logs the result and does not fail the pipeline on exit 1 or 2. Verbosity comes from `HtmlLogCsvComparisonVerbose` (default `true`). The standalone CLI remains `--verbose` **opt-in** (default off); pipeline deliberately defaults verbose on.
 
 ## Related docs
 
 - [Pipeline Runner CSV output](runner-csv-output.md) — output layout, column contracts, manifests, place resolution
-- [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison) — `RunHtmlLogCsvComparison` after a pipeline finish
+- [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison) — `RunHtmlLogCsvComparison` and `HtmlLogCsvComparisonVerbose` after a pipeline finish
