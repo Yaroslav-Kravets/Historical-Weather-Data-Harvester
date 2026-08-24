@@ -157,7 +157,7 @@ public sealed class ParsingPipeline
             issueCollector,
             flattenedRawParseResults);
 
-        PlacePathSelfCheckLogger.LogRunSummary(this.logger, issueCollector);
+        PlacePathCheckLogger.LogRunSummary(this.logger, issueCollector);
         this.logger.LogInformation("Finish");
     }
 

@@ -90,7 +90,7 @@ public sealed class ParsingReportWriterTests
     }
 
     [Fact]
-    public void WriteReport_PlacePathSelfCheck_IncludesMismatchesOnly()
+    public void WriteReport_PlacePathMismatches_IncludesMismatchPathsOnly()
     {
         var fileSystem = InMemoryFileSystem.Create();
         var reportDirectory = InMemoryFileSystem.UnderRoot(fileSystem, Guid.NewGuid().ToString("N"));
@@ -103,7 +103,7 @@ public sealed class ParsingReportWriterTests
         var mismatchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "bad.html");
 
         var issueCollector = new ParsingIssueCollector(new PlaceConverter());
-        issueCollector.AddPathPlaceMatch(matchPath, "Kyiv", "Киеве", "Kyiv");
+        issueCollector.AddPathPlaceMatch("Kyiv");
         issueCollector.AddPathPlaceMismatch(mismatchPath, "Kyiv", "Харькове", "Kharkiv");
 
         WriteMinimalReport(
@@ -115,7 +115,7 @@ public sealed class ParsingReportWriterTests
             issueCollector);
 
         var html = fileSystem.File.ReadAllText(reportPath);
-        Assert.Contains("Place Path Self-Check Mismatches", html, StringComparison.Ordinal);
+        Assert.Contains("Place Path Mismatches", html, StringComparison.Ordinal);
         Assert.Contains(mismatchPath, html, StringComparison.Ordinal);
         Assert.DoesNotContain(matchPath, html, StringComparison.Ordinal);
     }

@@ -90,7 +90,7 @@ public sealed class ParseResultOrganizer
                 dateEntry => new ParsedSourceFileEntry(pair.Key, dateEntry.Key, dateEntry.Value.FilePath)))
             .ToList();
 
-        PlacePathSelfCheckLogger.LogPerPlaceSummary(this.logger, issueCollector);
+        PlacePathCheckLogger.LogPerPlaceSummary(this.logger, issueCollector);
 
         var parsedPlaces = parsedPlacesByTranslatedName
             .Select(pair => (EnglishName: pair.Key, NameInHtml: pair.Value))
@@ -124,7 +124,7 @@ public sealed class ParseResultOrganizer
                 htmlPlaceFromUnknownPath);
 
             this.logger.LogError(
-                "Place path self-check failed for {FilePath}: path has no known place segment but HTML city is '{HtmlCityName}' ('{HtmlPlace}').",
+                "Place path check failed for {FilePath}: path has no known place segment but HTML city is '{HtmlCityName}' ('{HtmlPlace}').",
                 filePath,
                 nameInHtml,
                 htmlPlaceFromUnknownPath);
@@ -146,7 +146,7 @@ public sealed class ParseResultOrganizer
                 htmlPlaceDisplay);
 
             this.logger.LogError(
-                "Place path self-check failed for {FilePath}: path place '{PathPlace}' does not match HTML city '{HtmlCityName}' ('{HtmlPlace}').",
+                "Place path check failed for {FilePath}: path place '{PathPlace}' does not match HTML city '{HtmlCityName}' ('{HtmlPlace}').",
                 filePath,
                 pathPlaceDisplay,
                 nameInHtml,
@@ -156,11 +156,7 @@ public sealed class ParseResultOrganizer
             return false;
         }
 
-        issueCollector.AddPathPlaceMatch(
-            filePath,
-            pathPlaceDisplay,
-            nameInHtml,
-            htmlPlaceDisplay);
+        issueCollector.AddPathPlaceMatch(htmlPlaceDisplay);
 
         return true;
     }

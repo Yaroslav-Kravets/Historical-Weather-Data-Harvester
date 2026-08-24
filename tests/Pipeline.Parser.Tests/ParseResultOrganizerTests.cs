@@ -39,8 +39,8 @@ public sealed class ParseResultOrganizerTests
         Assert.Single(result.ResultsByPlace);
         Assert.True(result.ResultsByPlace.ContainsKey("Kyiv"));
         Assert.Single(result.ResultsByPlace["Kyiv"]);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Matches);
-        Assert.Equal(0, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Matches);
+        Assert.Equal(0, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
@@ -61,8 +61,8 @@ public sealed class ParseResultOrganizerTests
         var snapshot = collector.GetSnapshot();
         Assert.Equal(1, snapshot["Kharkiv"].PathPlaceMismatches);
         Assert.Equal(1, snapshot["Kharkiv"].TotalIssues);
-        Assert.Equal(0, collector.GetPathSelfCheckTotals().Matches);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(0, collector.GetPlacePathCheckTotals().Matches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
@@ -79,7 +79,7 @@ public sealed class ParseResultOrganizerTests
         Assert.Equal(1, result.PathPlaceMismatchRejections);
         Assert.Empty(result.ResultsByPlace);
         Assert.Equal(1, collector.GetSnapshot()["Kyiv"].PathPlaceMismatches);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
