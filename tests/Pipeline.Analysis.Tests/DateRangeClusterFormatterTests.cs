@@ -279,4 +279,17 @@ public sealed class DateRangeClusterFormatterTests
 
         Assert.Equal("2003-01-02..03-05", result);
     }
+
+    [Fact]
+    public void FormatRanges_InvertedRange_ThrowsArgumentException()
+    {
+        var exception = Assert.Throws<ArgumentException>(() =>
+            this.formatter.FormatRanges(
+            [
+                (new DateTime(2003, 1, 5), new DateTime(2003, 1, 2)),
+            ]));
+
+        Assert.Contains("2003-01-05", exception.Message, StringComparison.Ordinal);
+        Assert.Contains("2003-01-02", exception.Message, StringComparison.Ordinal);
+    }
 }

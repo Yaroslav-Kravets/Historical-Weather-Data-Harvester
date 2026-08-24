@@ -80,7 +80,20 @@ public sealed class DateRangeClusterFormatter
         int? previousClusterYear = null;
         string? previousClusterYearMonth = null;
         foreach (var (start, end) in ranges
-            .Select(range => (Start: range.Start.Date, End: range.End.Date))
+            .Select(range =>
+            {
+                var startDate = range.Start.Date;
+                var endDate = range.End.Date;
+
+                if (startDate > endDate)
+                {
+                    throw new ArgumentException(
+                        $"Range start ({startDate:yyyy-MM-dd}) must not be after end ({endDate:yyyy-MM-dd}).",
+                        nameof(ranges));
+                }
+
+                return (Start: startDate, End: endDate);
+            })
             .OrderBy(range => range.Start))
         {
             this.AppendCompactCluster(
