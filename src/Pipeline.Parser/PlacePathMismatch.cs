@@ -9,8 +9,8 @@
 
 namespace Pipeline.Parser;
 
-public sealed record PlacePathSelfCheckPlaceSummary(
-    string Place,
-    int FilesChecked,
-    int Matches,
-    int Mismatches);
+public sealed record PlacePathMismatch(
+    string FilePath,
+    string PathPlaceDisplay,
+    string HtmlCityName,
+    string HtmlPlaceDisplay);

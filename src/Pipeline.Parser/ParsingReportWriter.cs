@@ -73,8 +73,8 @@ public sealed class ParsingReportWriter
             issueCollector);
         this.WritePerPlaceParsingSummaryTable(writer, resultsByPlace);
         WriteErrorsPerPlaceTable(writer, this.errorCountsBuilder.Build(resultsByPlace.Keys, issueCollector));
-        WritePlacePathSelfCheckSummaryTable(writer, issueCollector);
-        WritePlacePathSelfCheckTable(writer, issueCollector);
+        WritePlacePathCheckSummaryTable(writer, issueCollector);
+        WritePlacePathMismatchesTable(writer, issueCollector);
         this.WriteParsedDataByPlaceTable(writer, resultsByPlace);
         this.LogAllKnownWeatherCharacteristics(writer);
         this.LogAllKnownWindDirections(writer);
@@ -107,12 +107,12 @@ public sealed class ParsingReportWriter
             ("Average time per file", DurationFormatter.FormatSeconds(averageTimePerFileSeconds)),
         };
 
-        var pathSelfCheckTotals = issueCollector.GetPathSelfCheckTotals();
-        if (pathSelfCheckTotals.FilesChecked > 0)
+        var placePathCheckTotals = issueCollector.GetPlacePathCheckTotals();
+        if (placePathCheckTotals.FilesChecked > 0)
         {
-            metrics.Add(("Path self-check files checked", pathSelfCheckTotals.FilesChecked.ToString(CultureInfo.InvariantCulture)));
-            metrics.Add(("Path self-check matches", pathSelfCheckTotals.Matches.ToString(CultureInfo.InvariantCulture)));
-            metrics.Add(("Path self-check mismatches", pathSelfCheckTotals.Mismatches.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Path place files checked", placePathCheckTotals.FilesChecked.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Path place matches", placePathCheckTotals.Matches.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Path place mismatches", placePathCheckTotals.Mismatches.ToString(CultureInfo.InvariantCulture)));
         }
 
         writer.WriteTable(
@@ -120,9 +120,9 @@ public sealed class ParsingReportWriter
             "Parsing Statistics");
     }
 
-    private static void WritePlacePathSelfCheckSummaryTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
+    private static void WritePlacePathCheckSummaryTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
     {
-        var summaryByPlace = issueCollector.GetPathSelfCheckSummaryByPlace();
+        var summaryByPlace = issueCollector.GetPlacePathCheckSummaryByPlace();
         if (summaryByPlace.Count == 0)
         {
             return;
@@ -138,29 +138,28 @@ public sealed class ParsingReportWriter
             })
             .ToList();
 
-        writer.WriteTable(tableData, "Place Path Self-Check Summary");
+        writer.WriteTable(tableData, "Place Path Check Summary");
     }
 
-    private static void WritePlacePathSelfCheckTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
+    private static void WritePlacePathMismatchesTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
     {
-        var selfChecks = issueCollector.GetPathSelfChecks();
-        if (selfChecks.Count == 0)
+        var mismatches = issueCollector.GetPathPlaceMismatches();
+        if (mismatches.Count == 0)
         {
             return;
         }
 
-        var tableData = selfChecks
+        var tableData = mismatches
             .Select(entry => new
             {
                 entry.FilePath,
                 PathPlace = entry.PathPlaceDisplay,
                 HtmlCityName = entry.HtmlCityName,
                 HtmlPlace = entry.HtmlPlaceDisplay,
-                Match = entry.IsMatch ? "Yes" : "No",
             })
             .ToList();
 
-        writer.WriteTable(tableData, "Place Path Self-Check");
+        writer.WriteTable(tableData, "Place Path Mismatches");
     }
 
     private static void WriteErrorsPerPlaceTable(HtmlLogWriter writer, IReadOnlyList<ParsingPlaceErrorCounts> errorCountsByPlace)

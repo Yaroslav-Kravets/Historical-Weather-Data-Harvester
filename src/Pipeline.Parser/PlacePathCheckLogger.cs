@@ -11,18 +11,18 @@ namespace Pipeline.Parser;
 
 using Microsoft.Extensions.Logging;
 
-internal static class PlacePathSelfCheckLogger
+internal static class PlacePathCheckLogger
 {
     public static void LogRunSummary(ILogger logger, ParsingIssueCollector issueCollector)
     {
-        var totals = issueCollector.GetPathSelfCheckTotals();
+        var totals = issueCollector.GetPlacePathCheckTotals();
         if (totals.FilesChecked == 0)
         {
             return;
         }
 
         logger.LogInformation(
-            "Place path self-check summary: {FilesChecked} checked, {Matches} matched, {Mismatches} mismatched.",
+            "Place path check summary: {FilesChecked} checked, {Matches} matched, {Mismatches} mismatched.",
             totals.FilesChecked,
             totals.Matches,
             totals.Mismatches);
@@ -30,12 +30,12 @@ internal static class PlacePathSelfCheckLogger
 
     public static void LogPerPlaceSummary(ILogger logger, ParsingIssueCollector issueCollector)
     {
-        foreach (var placeSummary in issueCollector.GetPathSelfCheckSummaryByPlace())
+        foreach (var placeSummary in issueCollector.GetPlacePathCheckSummaryByPlace())
         {
             if (placeSummary.Mismatches > 0)
             {
                 logger.LogWarning(
-                    "Place path self-check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
+                    "Place path check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
                     placeSummary.Place,
                     placeSummary.Matches,
                     placeSummary.Mismatches,
@@ -44,7 +44,7 @@ internal static class PlacePathSelfCheckLogger
             else
             {
                 logger.LogInformation(
-                    "Place path self-check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
+                    "Place path check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
                     placeSummary.Place,
                     placeSummary.Matches,
                     placeSummary.Mismatches,

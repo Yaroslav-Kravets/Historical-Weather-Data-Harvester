@@ -9,4 +9,4 @@
 
 namespace Pipeline.Parser;
 
-public sealed record PathSelfCheckTotals(int FilesChecked, int Matches, int Mismatches);
+public sealed record PlacePathCheckTotals(int FilesChecked, int Matches, int Mismatches);
