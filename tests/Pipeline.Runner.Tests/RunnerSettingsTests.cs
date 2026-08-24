@@ -88,6 +88,29 @@ public sealed class RunnerSettingsTests
         Assert.False(settings.RunAnalysis);
     }
 
+    [Fact]
+    public void Load_DefaultsHtmlLogCsvComparisonVerboseTrue_WhenKeyAbsent()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>());
+
+        var settings = RunnerSettings.Load(configuration);
+
+        Assert.True(settings.HtmlLogCsvComparisonVerbose);
+    }
+
+    [Fact]
+    public void Load_UsesHtmlLogCsvComparisonVerbose_WhenKeyPresent()
+    {
+        var configuration = BuildConfiguration(new Dictionary<string, string?>
+        {
+            ["HtmlLogCsvComparisonVerbose"] = "false",
+        });
+
+        var settings = RunnerSettings.Load(configuration);
+
+        Assert.False(settings.HtmlLogCsvComparisonVerbose);
+    }
+
     private static IConfiguration BuildConfiguration(IReadOnlyDictionary<string, string?> values)
     {
         return new ConfigurationBuilder()

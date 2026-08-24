@@ -304,7 +304,7 @@ To support a new location, add a `Place` enum member with the appropriate `NameI
 
 ## HtmlLog CSV comparison
 
-See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior. Pipeline integration via `RunHtmlLogCsvComparison` is covered in [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison).
+See **[htmllog-csv-comparer.md](htmllog-csv-comparer.md)** for pair/chain CLI, matching rules, ZIP layout, PARTLY EQUAL semantics, verbose JSON, and exit behavior. Pipeline integration via `RunHtmlLogCsvComparison` and `HtmlLogCsvComparisonVerbose` is covered in [Pipeline Runner](pipeline-runner.md#post-run-htmllog-comparison).
 
 ---
 

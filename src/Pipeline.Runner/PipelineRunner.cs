@@ -104,6 +104,13 @@ public sealed class PipelineRunner
         }
     }
 
+    public void RunHtmlLogCsvComparisonStage(IServiceProvider serviceProvider) =>
+        serviceProvider
+            .GetRequiredService<CsvComparisonOutput>()
+            .CompareChain(
+                this.fileSystem.Directory.GetCurrentDirectory(),
+                verbose: this.settings.HtmlLogCsvComparisonVerbose);
+
     private void RunParsingStage(
         IServiceProvider serviceProvider,
         string parsedStageDirectory,
@@ -146,11 +153,6 @@ public sealed class PipelineRunner
                 timeNormalizedStageDirectory,
                 this.StageHtmlReportPath(timeNormalizedStageDirectory, "result", logDateTime),
                 this.settings.RunInParallel));
-
-    private void RunHtmlLogCsvComparisonStage(IServiceProvider serviceProvider) =>
-        serviceProvider
-            .GetRequiredService<CsvComparisonOutput>()
-            .CompareChain(this.fileSystem.Directory.GetCurrentDirectory());
 
     private StageServiceProviderFactory CreateParsedStageServices(
         string parsedStageDirectory,
