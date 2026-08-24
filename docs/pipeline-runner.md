@@ -15,8 +15,11 @@ The committed `appsettings.json` keeps an empty root so clones do not inherit ma
 | `RunTimeNormalization` | `true` | Write `time-normalized/` after denormalization |
 | `RunAnalysis` | `true` | Weather-characteristic usage stats per analyzed stage |
 | `RunHtmlLogCsvComparison` | `true` | Chain-compare `HtmlLog_*` folders/zips after the run |
+| `HtmlLogCsvComparisonVerbose` | `true` | Verbose JSON for chain comparison (equal `matched` breakdown; expanded paths/columns on unequal pairs) |
 
 If you still have `RunNormalization` in an older config, rename it to `RunTimeNormalization` — the old key is not read.
+
+`HtmlLogCsvComparisonVerbose` defaults to `true` in Pipeline.Runner (property default and committed `appsettings.json`). Omitting the key after upgrade still yields verbose output via the property default. The standalone HtmlLog CSV comparer CLI keeps `--verbose` **opt-in** (`CompareChain` / `--verbose` default `false`); pipeline deliberately opts in.
 
 ## Source root (directory vs archive)
 
@@ -32,7 +35,7 @@ Archives are assumed to be trusted internal weather dumps: there is currently no
 3. **Denormalization** — always runs after optional parsed-stage analysis; writes wide-format CSVs under `parsed/wide-format/`. If it produces no place files, the run fails.
 4. **Time normalization** — when `RunTimeNormalization` is `true`, writes under `time-normalized/` (`narrow-format/` and `wide-format/`). Set the flag to `false` to skip.
 5. **Time-normalized-stage analysis** — when both `RunTimeNormalization` and `RunAnalysis` are `true`, analyzes `time-normalized/` and writes its usage CSV and analysis report.
-6. **HtmlLog CSV comparison** — when `RunHtmlLogCsvComparison` is `true`, runs chain comparison after the pipeline finishes (diagnostic only; see below).
+6. **HtmlLog CSV comparison** — when `RunHtmlLogCsvComparison` is `true`, runs chain comparison after the pipeline finishes (diagnostic only; see below). Verbosity follows `HtmlLogCsvComparisonVerbose` (default `true`; see Post-run).
 
 Each stage directory has one text log (`parsed/log{timestamp}.log` and, when enabled, `time-normalized/log{timestamp}.log`) and HTML reports (`result{timestamp}.html` for parsing/time-normalization; `result-analysis{timestamp}.html` for each analysis).
 
@@ -46,9 +49,9 @@ dotnet run --project src/Pipeline.Runner/Pipeline.Runner.csproj
 
 ## Post-run HtmlLog comparison
 
-When `RunHtmlLogCsvComparison` is `true` (default), chain comparison discovers all `HtmlLog_*` folders and `HtmlLog_*.zip` files under the working directory (any depth), compares each adjacent chronological pair, and appends results to `parsed/log{timestamp}.log` and the console **without failing the pipeline** on comparer exit 1 or 2.
+When `RunHtmlLogCsvComparison` is `true` (default), chain comparison discovers all `HtmlLog_*` folders and `HtmlLog_*.zip` files under the working directory (any depth), compares each adjacent chronological pair, and appends results to `parsed/log{timestamp}.log` and the console **without failing the pipeline** on comparer exit 1 or 2. When `HtmlLogCsvComparisonVerbose` is `true` (default), each pair emits verbose JSON: compact `matched` breakdown for EQUAL pairs, and expanded unmatched / partly-equal / different details for unequal pairs (see [HtmlLog CSV comparer](htmllog-csv-comparer.md)). Set `HtmlLogCsvComparisonVerbose` to `false` for compact unequal counts only and no EQUAL JSON.
 
-Set `RunHtmlLogCsvComparison` to `false` to skip. Legacy `HtmlLog_*` folders from before an output-layout change may produce expected `NOT EQUAL` lines; archive or prune old trees if you want a clean chain.
+Set `RunHtmlLogCsvComparison` to `false` to skip. Legacy `HtmlLog_*` folders from before an output-layout change may produce expected `NOT EQUAL` lines; with `HtmlLogCsvComparisonVerbose` on (the default), those pairs emit expanded path/column JSON rather than compact counts — archive or prune old trees, or set `HtmlLogCsvComparisonVerbose` to `false`, if you want compact logs.
 
 Standalone pair/chain CLI details: [HtmlLog CSV comparer](htmllog-csv-comparer.md).
 
