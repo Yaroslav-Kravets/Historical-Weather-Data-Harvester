@@ -29,4 +29,6 @@ public static class WeatherCsvOutputPaths
     public const string WeatherCharacteristicsManifestFileName = "weather-characteristics.csv";
 
     public const string WeatherCharacteristicsUsageFileName = "weather-characteristics-usage.csv";
+
+    public const string PlaceDateCoverageFileName = "place-date-coverage.csv";
 }

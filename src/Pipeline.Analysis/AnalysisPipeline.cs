@@ -20,34 +20,42 @@ public sealed class AnalysisPipeline
     private readonly IFileSystem fileSystem;
     private readonly HtmlLogFileManager htmlLogFileManager;
     private readonly NarrowFormatWeatherDataCsvReader narrowFormatWeatherDataCsvReader;
+    private readonly PlaceDateCoverageAggregator placeDateCoverageAggregator;
     private readonly WeatherCharacteristicUsageAggregator usageAggregator;
+    private readonly PlaceDateCoverageCsvWriter placeDateCoverageCsvWriter;
     private readonly WeatherCharacteristicUsageCsvWriter usageCsvWriter;
-    private readonly WeatherCharacteristicUsageReportWriter usageReportWriter;
+    private readonly AnalysisReportWriter analysisReportWriter;
 
     public AnalysisPipeline(
         ILogger<AnalysisPipeline> logger,
         IFileSystem fileSystem,
         HtmlLogFileManager htmlLogFileManager,
         NarrowFormatWeatherDataCsvReader narrowFormatWeatherDataCsvReader,
+        PlaceDateCoverageAggregator placeDateCoverageAggregator,
         WeatherCharacteristicUsageAggregator usageAggregator,
+        PlaceDateCoverageCsvWriter placeDateCoverageCsvWriter,
         WeatherCharacteristicUsageCsvWriter usageCsvWriter,
-        WeatherCharacteristicUsageReportWriter usageReportWriter)
+        AnalysisReportWriter analysisReportWriter)
     {
         Argument.ThrowIfNull(logger);
         Argument.ThrowIfNull(fileSystem);
         Argument.ThrowIfNull(htmlLogFileManager);
         Argument.ThrowIfNull(narrowFormatWeatherDataCsvReader);
+        Argument.ThrowIfNull(placeDateCoverageAggregator);
         Argument.ThrowIfNull(usageAggregator);
+        Argument.ThrowIfNull(placeDateCoverageCsvWriter);
         Argument.ThrowIfNull(usageCsvWriter);
-        Argument.ThrowIfNull(usageReportWriter);
+        Argument.ThrowIfNull(analysisReportWriter);
 
         this.logger = logger;
         this.fileSystem = fileSystem;
         this.htmlLogFileManager = htmlLogFileManager;
         this.narrowFormatWeatherDataCsvReader = narrowFormatWeatherDataCsvReader;
+        this.placeDateCoverageAggregator = placeDateCoverageAggregator;
         this.usageAggregator = usageAggregator;
+        this.placeDateCoverageCsvWriter = placeDateCoverageCsvWriter;
         this.usageCsvWriter = usageCsvWriter;
-        this.usageReportWriter = usageReportWriter;
+        this.analysisReportWriter = analysisReportWriter;
     }
 
     public void AnalyzeStage(AnalysisRunOptions options)
@@ -82,14 +90,17 @@ public sealed class AnalysisPipeline
         }
 
         this.logger.LogInformation(
-            "Analyzing weather characteristics for {StageDirectory} ({PlaceCount} places)",
+            "Analyzing stage data for {StageDirectory} ({PlaceCount} places)",
             options.StageDirectory,
             rowsByPlace.Count);
 
+        var coverageRows = this.placeDateCoverageAggregator.Aggregate(rowsByPlace);
         var usageRows = this.usageAggregator.Aggregate(rowsByPlace);
+        this.placeDateCoverageCsvWriter.Write(coverageRows, options.StageDirectory);
         this.usageCsvWriter.Write(usageRows, options.StageDirectory);
 
-        this.usageReportWriter.Write(
+        this.analysisReportWriter.Write(
+            coverageRows,
             usageRows,
             this.htmlLogFileManager,
             options.HtmlReportPath);

@@ -23,9 +23,12 @@ public static class ServiceCollectionExtensions
 
         services.AddPipelineCoreServices();
         services.AddHtmlLogServices();
+        services.TryAddSingleton<DateRangeClusterFormatter>();
+        services.TryAddSingleton<PlaceDateCoverageAggregator>();
         services.TryAddSingleton<WeatherCharacteristicUsageAggregator>();
+        services.TryAddSingleton<PlaceDateCoverageCsvWriter>();
         services.TryAddSingleton<WeatherCharacteristicUsageCsvWriter>();
-        services.TryAddSingleton<WeatherCharacteristicUsageReportWriter>();
+        services.TryAddSingleton<AnalysisReportWriter>();
         services.TryAddSingleton<AnalysisPipeline>();
 
         return services;

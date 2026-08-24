@@ -29,6 +29,7 @@ public sealed class WeatherCsvOutputPathsTests
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.ParsedPlacesManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsManifestFileName));
         Assert.False(string.IsNullOrWhiteSpace(WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName));
+        Assert.Equal("place-date-coverage.csv", WeatherCsvOutputPaths.PlaceDateCoverageFileName);
 
         var manifestFileNames = new[]
         {
@@ -36,6 +37,7 @@ public sealed class WeatherCsvOutputPathsTests
             WeatherCsvOutputPaths.ParsedPlacesManifestFileName,
             WeatherCsvOutputPaths.WeatherCharacteristicsManifestFileName,
             WeatherCsvOutputPaths.WeatherCharacteristicsUsageFileName,
+            WeatherCsvOutputPaths.PlaceDateCoverageFileName,
         };
 
         Assert.Equal(manifestFileNames.Length, manifestFileNames.Distinct(StringComparer.Ordinal).Count());
