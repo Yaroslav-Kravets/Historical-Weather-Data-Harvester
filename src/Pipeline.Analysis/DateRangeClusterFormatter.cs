@@ -72,10 +72,6 @@ public sealed class DateRangeClusterFormatter
         return builder.ToString();
     }
 
-    /// <remarks>
-    /// Expects chronologically ordered, non-overlapping ranges (start ≤ end).
-    /// Separator and abbreviation context follow iteration order.
-    /// </remarks>
     public string FormatRanges(IEnumerable<(DateTime Start, DateTime End)> ranges)
     {
         Argument.ThrowIfNull(ranges);
@@ -83,12 +79,14 @@ public sealed class DateRangeClusterFormatter
         var builder = new StringBuilder();
         int? previousClusterYear = null;
         string? previousClusterYearMonth = null;
-        foreach (var (start, end) in ranges)
+        foreach (var (start, end) in ranges
+            .Select(range => (Start: range.Start.Date, End: range.End.Date))
+            .OrderBy(range => range.Start))
         {
             this.AppendCompactCluster(
                 builder,
-                start.Date,
-                end.Date,
+                start,
+                end,
                 ref previousClusterYear,
                 ref previousClusterYearMonth);
         }

@@ -241,6 +241,24 @@ public sealed class DateRangeClusterFormatterTests
     }
 
     [Fact]
+    public void FormatRanges_UnsortedInput_ProducesSameOutputAsSorted()
+    {
+        var expected = this.formatter.FormatRanges(
+        [
+            (new DateTime(2003, 1, 2), new DateTime(2003, 1, 2)),
+            (new DateTime(2003, 1, 4), new DateTime(2003, 1, 5)),
+        ]);
+
+        var result = this.formatter.FormatRanges(
+        [
+            (new DateTime(2003, 1, 4), new DateTime(2003, 1, 5)),
+            (new DateTime(2003, 1, 2), new DateTime(2003, 1, 2)),
+        ]);
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
     public void FormatRanges_CrossYearWideRange_UsesCompactFullEndDate()
     {
         var result = this.formatter.FormatRanges(

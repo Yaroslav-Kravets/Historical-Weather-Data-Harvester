@@ -238,7 +238,7 @@ Rows are sorted by `PercentOfRows` descending, then `EnglishName`. Percentages m
 
 ### `place-date-coverage.csv`
 
-Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). One row per `{stage}/narrow-format/*.csv` file, sorted by `Place`:
+Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, the stage **aborts** if `{stage}/narrow-format/` is missing, contains no `*.csv` files, or **every** place file has zero data rows (same hard-fail policy for parsed and time-normalized). Individual header-only place files are allowed when at least one other place has data. One row per `{stage}/narrow-format/*.csv` file, sorted by `Place`:
 
 | Column | Description |
 |--------|-------------|
@@ -247,9 +247,9 @@ Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` i
 | `LastDate` | Latest observation date (`yyyy-MM-dd`), or empty when the place file has no data rows |
 | `ObservedDays` | Distinct calendar days with at least one observation |
 | `SkippedDays` | Calendar days in the inclusive `[FirstDate, LastDate]` range without any observations: `(LastDate - FirstDate + 1) - ObservedDays`. Gaps **before** `FirstDate` or **after** `LastDate` are not counted — only holes inside the observed span |
-| `SkippedDates` | In-span missing days as a semicolon-separated list of year groups. Within each year, gaps are comma-separated. Consecutive missing days cluster into ranges with abbreviated ends: same month `2003-01-02..05`, same year `2003-01-02..03-05`, cross-year `2003-01-02..2004-01-05`. Cluster-start prefix omission: same month → day only (`2003-01-02, 04..05`); same year → `MM-dd` (`2011-10-30, 11-22..12-13, 12-31`); new year → full `yyyy-MM-dd` after `;` (`2017-10-29; 2018-09-19, 23`). Empty when there are no gaps |
+| `SkippedDates` | In-span missing days as a semicolon-separated list of year groups. Within each year, gaps are comma-separated. Consecutive missing days cluster into ranges with abbreviated ends: same month `2003-01-02..05`, same year `2003-01-02..03-05`, cross-year `2003-01-02..2004-01-05`. Cluster-start prefix omission: same month → day only (`2003-01-02, 04..05`); same year → `MM-dd` (`2011-10-30, 11-22..12-13, 12-31`); new year → full `yyyy-MM-dd` after `;` (`2017-10-29; 2018-09-19, 23`). Empty when there are no gaps. Clustering shortens contiguous gaps, but very sparse coverage over a long span (many isolated missing days or year-by-year holes) can still produce large `SkippedDates` strings in CSV and HTML |
 
-Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table).
+Analysis appends to that stage’s text log and writes the same table to `result-analysis{timestamp}.html` (before the weather-characteristics usage table). The HTML document `<title>` is `Historical Weather Data Harvester — Analysis` (replacing the prior usage-only title when place-date coverage was added).
 
 ---
 
