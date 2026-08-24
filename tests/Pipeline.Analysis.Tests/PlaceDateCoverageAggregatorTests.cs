@@ -80,6 +80,54 @@ public sealed class PlaceDateCoverageAggregatorTests
     }
 
     [Fact]
+    public void Aggregate_MultiYearGaps_UsesSemicolonBetweenYears()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] =
+            [
+                CreateRow(new DateTime(2011, 10, 30)),
+                CreateRow(new DateTime(2011, 11, 1)),
+                CreateRow(new DateTime(2018, 9, 19)),
+                CreateRow(new DateTime(2018, 9, 23)),
+            ],
+        };
+
+        var coverageRows = this.aggregator.Aggregate(rowsByPlace);
+
+        var kyiv = Assert.Single(coverageRows);
+        Assert.Equal("2011-10-30", kyiv.FirstDate);
+        Assert.Equal("2018-09-23", kyiv.LastDate);
+        Assert.Equal(4, kyiv.ObservedDays);
+        Assert.Equal(
+            (new DateTime(2018, 9, 23) - new DateTime(2011, 10, 30)).Days + 1 - 4,
+            kyiv.SkippedDays);
+        Assert.Equal("2011-10-31, 11-02..2018-09-18; 2018-09-20..22", kyiv.SkippedDates);
+    }
+
+    [Fact]
+    public void Aggregate_CrossYearContiguousGap_KeepsSingleRangeCluster()
+    {
+        var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Kyiv"] =
+            [
+                CreateRow(new DateTime(2011, 12, 30)),
+                CreateRow(new DateTime(2012, 1, 3)),
+            ],
+        };
+
+        var coverageRows = this.aggregator.Aggregate(rowsByPlace);
+
+        var kyiv = Assert.Single(coverageRows);
+        Assert.Equal("2011-12-30", kyiv.FirstDate);
+        Assert.Equal("2012-01-03", kyiv.LastDate);
+        Assert.Equal(2, kyiv.ObservedDays);
+        Assert.Equal(3, kyiv.SkippedDays);
+        Assert.Equal("2011-12-31..2012-01-02", kyiv.SkippedDates);
+    }
+
+    [Fact]
     public void Aggregate_ConsecutiveGaps_ClustersSkippedDates()
     {
         var rowsByPlace = new Dictionary<string, IReadOnlyList<WeatherDataRow>>(StringComparer.OrdinalIgnoreCase)

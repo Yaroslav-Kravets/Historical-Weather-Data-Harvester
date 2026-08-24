@@ -223,7 +223,7 @@ Use it to see which original NameInHtml terms were seen and how they are labeled
 
 ### `weather-characteristics-usage.csv`
 
-Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, a missing or empty `{stage}/narrow-format/` **aborts the run** (same hard-fail policy for parsed and time-normalized).
+Written by [`Pipeline.Analysis`](../src/Pipeline.Analysis/) when `RunAnalysis` is `true` (default). Present under each analyzed stage root (`parsed/` always; `time-normalized/` when that stage ran). When analysis runs, the stage **aborts** if `{stage}/narrow-format/` is missing, contains no `*.csv` files, or **every** place file has zero data rows (same hard-fail policy for parsed and time-normalized). Individual header-only place files are allowed when at least one other place has data.
 
 Unlike `weather-characteristics.csv`, this file lists the **full catalog** of known flags (all entries in [Supported weather characteristics](#supported-weather-characteristics), even when `RowCount` is 0) with occurrence counts over all `{stage}/narrow-format/*.csv` data rows:
 
@@ -422,5 +422,9 @@ All `WeatherCharacteristics` enum members except `None` (53 flags). Sorted A–Z
 | `WideFormatWeatherDataCsvWriter` | Pipeline.Core | Writes wide-format per-place CSVs under `wide-format/` |
 | `DenormalizingPipeline` | Pipeline.Denormalizer | Reads `parsed/narrow-format/`, writes wide CSVs under `parsed/wide-format/` |
 | `AnalysisPipeline` | Pipeline.Analysis | Own runner stage writing to the host stage text log; reads `{stage}/narrow-format/`, writes coverage + usage CSVs and `result-analysis{timestamp}.html` |
+| `PlaceDateCoverageAggregator` | Pipeline.Analysis | Per-place first/last dates, observed/skipped day counts, and clustered `SkippedDates` |
+| `DateRangeClusterFormatter` | Pipeline.Analysis | Compact year-grouped gap ranges for `SkippedDates` (`;` between years, `, ` within a year) |
+| `PlaceDateCoverageCsvWriter` | Pipeline.Analysis | Writes `place-date-coverage.csv` under the analyzed stage root |
+| `AnalysisReportWriter` | Pipeline.Analysis | Writes `result-analysis{timestamp}.html` (coverage table then usage table) |
 
 Unit tests live in `tests/Pipeline.Core.Tests` (CSV readers/writers and shared helpers), `tests/Pipeline.Parser.Tests`, `tests/Pipeline.Denormalizer.Tests`, `tests/Pipeline.TimeNormalizer.Tests`, and `tests/Pipeline.Analysis.Tests`.

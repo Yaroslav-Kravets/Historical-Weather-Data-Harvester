@@ -72,6 +72,10 @@ public sealed class DateRangeClusterFormatter
         return builder.ToString();
     }
 
+    /// <remarks>
+    /// Expects chronologically ordered, non-overlapping ranges (start ≤ end).
+    /// Separator and abbreviation context follow iteration order.
+    /// </remarks>
     public string FormatRanges(IEnumerable<(DateTime Start, DateTime End)> ranges)
     {
         Argument.ThrowIfNull(ranges);

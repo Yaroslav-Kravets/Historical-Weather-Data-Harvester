@@ -116,6 +116,45 @@ public sealed class AnalysisPipelineTests
     }
 
     [Fact]
+    public void AnalyzeStage_WritesCoverageCsv_ForTimeNormalizedStage()
+    {
+        var timeNormalizedStageDirectory = InMemoryFileSystem.UnderRoot(
+            this.fileSystem,
+            WeatherCsvOutputPaths.TimeNormalizedStageDirectoryName);
+        var narrowFormatDirectory = this.fileSystem.Path.Combine(
+            timeNormalizedStageDirectory,
+            WeatherCsvOutputPaths.NarrowFormatDirectoryName);
+        this.WritePlaceCsv(
+            narrowFormatDirectory,
+            "Kyiv.csv",
+            CreateRow(WeatherCharacteristics.Clear, new DateTime(2003, 1, 1)),
+            CreateRow(WeatherCharacteristics.Clear, new DateTime(2003, 1, 3)));
+
+        var htmlReportPath = this.fileSystem.Path.Combine(
+            timeNormalizedStageDirectory,
+            "result-analysis.html");
+        this.fileSystem.Directory.CreateDirectory(timeNormalizedStageDirectory);
+
+        this.CreatePipeline().AnalyzeStage(new AnalysisRunOptions(
+            timeNormalizedStageDirectory,
+            htmlReportPath));
+
+        var coverageCsv = this.fileSystem.File.ReadAllText(
+            this.fileSystem.Path.Combine(
+                timeNormalizedStageDirectory,
+                WeatherCsvOutputPaths.PlaceDateCoverageFileName));
+        Assert.Contains(
+            "Kyiv,2003-01-01,2003-01-03,2,1,2003-01-02",
+            coverageCsv,
+            StringComparison.Ordinal);
+
+        Assert.True(this.fileSystem.File.Exists(htmlReportPath));
+        var html = this.fileSystem.File.ReadAllText(htmlReportPath);
+        Assert.Contains("Place Date Coverage", html, StringComparison.Ordinal);
+        Assert.Contains("2003-01-02", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void AnalyzeStage_WritesCoverageCsv_WithEmptyPlaceFile()
     {
         var parsedStageDirectory = InMemoryFileSystem.UnderRoot(this.fileSystem, "parsed-mixed");
