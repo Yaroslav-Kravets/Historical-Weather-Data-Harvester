@@ -89,12 +89,44 @@ public sealed class ParsingReportWriterTests
         Assert.DoesNotContain("<img src=x onerror=", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void WriteReport_PlacePathSelfCheck_IncludesMismatchesOnly()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportDirectory = InMemoryFileSystem.UnderRoot(fileSystem, Guid.NewGuid().ToString("N"));
+        fileSystem.Directory.CreateDirectory(reportDirectory);
+        var reportPath = fileSystem.Path.Combine(reportDirectory, "result.html");
+        var sourceRoot = InMemoryFileSystem.UnderRoot(fileSystem, "html");
+        fileSystem.Directory.CreateDirectory(sourceRoot);
+        var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
+        var matchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "ok.html");
+        var mismatchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "bad.html");
+
+        var issueCollector = new ParsingIssueCollector(new PlaceConverter());
+        issueCollector.AddPathPlaceMatch(matchPath, "Kyiv", "Киеве", "Kyiv");
+        issueCollector.AddPathPlaceMismatch(mismatchPath, "Kyiv", "Харькове", "Kharkiv");
+
+        WriteMinimalReport(
+            fileSystem,
+            reportPath,
+            sourcePath: sourceRoot,
+            isSevenZipSource: false,
+            parsedPath,
+            issueCollector);
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Path Self-Check Mismatches", html, StringComparison.Ordinal);
+        Assert.Contains(mismatchPath, html, StringComparison.Ordinal);
+        Assert.DoesNotContain(matchPath, html, StringComparison.Ordinal);
+    }
+
     private static void WriteMinimalReport(
         IFileSystem fileSystem,
         string reportPath,
         string sourcePath,
         bool isSevenZipSource,
-        string filePath)
+        string filePath,
+        ParsingIssueCollector? issueCollector = null)
     {
         var date = new DateTime(2003, 1, 1);
 
@@ -135,7 +167,7 @@ public sealed class ParsingReportWriterTests
             totalTimeSeconds: 1,
             averageTimePerFileSeconds: 1,
             resultsByPlace: new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase),
-            issueCollector: new ParsingIssueCollector(new PlaceConverter()),
+            issueCollector: issueCollector ?? new ParsingIssueCollector(new PlaceConverter()),
             flattenedParseResults: flattened);
     }
 }

@@ -74,6 +74,7 @@ public sealed class ParsingReportWriter
         this.WritePerPlaceParsingSummaryTable(writer, resultsByPlace);
         WriteErrorsPerPlaceTable(writer, this.errorCountsBuilder.Build(resultsByPlace.Keys, issueCollector));
         WritePlacePathSelfCheckSummaryTable(writer, issueCollector);
+        WritePlacePathSelfCheckMismatchesTable(writer, issueCollector);
         this.WriteParsedDataByPlaceTable(writer, resultsByPlace);
         this.LogAllKnownWeatherCharacteristics(writer);
         this.LogAllKnownWindDirections(writer);
@@ -138,6 +139,29 @@ public sealed class ParsingReportWriter
             .ToList();
 
         writer.WriteTable(tableData, "Place Path Self-Check Summary");
+    }
+
+    private static void WritePlacePathSelfCheckMismatchesTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
+    {
+        var mismatches = issueCollector.GetPathSelfChecks()
+            .Where(entry => !entry.IsMatch)
+            .ToList();
+        if (mismatches.Count == 0)
+        {
+            return;
+        }
+
+        var tableData = mismatches
+            .Select(entry => new
+            {
+                entry.FilePath,
+                PathPlace = entry.PathPlaceDisplay,
+                HtmlCityName = entry.HtmlCityName,
+                HtmlPlace = entry.HtmlPlaceDisplay,
+            })
+            .ToList();
+
+        writer.WriteTable(tableData, "Place Path Self-Check Mismatches");
     }
 
     private static void WriteErrorsPerPlaceTable(HtmlLogWriter writer, IReadOnlyList<ParsingPlaceErrorCounts> errorCountsByPlace)
