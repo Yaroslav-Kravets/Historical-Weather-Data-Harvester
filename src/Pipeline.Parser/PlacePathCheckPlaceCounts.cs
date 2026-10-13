@@ -9,25 +9,25 @@
 
 namespace Pipeline.Parser;
 
-public sealed class PlacePathCheckPlaceCounts
+internal sealed class PlacePathCheckPlaceCounts
 {
     private int matches;
     private int mismatches;
 
-    public PlacePathCheckPlaceCounts(string place)
+    internal PlacePathCheckPlaceCounts(string place)
     {
         this.Place = place;
     }
 
     public string Place { get; }
 
-    public int Matches => this.matches;
+    public int Matches => Volatile.Read(ref this.matches);
 
-    public int Mismatches => this.mismatches;
+    public int Mismatches => Volatile.Read(ref this.mismatches);
 
-    public int FilesChecked => this.matches + this.mismatches;
+    public int FilesChecked => this.Matches + this.Mismatches;
 
-    public void IncrementMatches() => Interlocked.Increment(ref this.matches);
+    internal void IncrementMatches() => Interlocked.Increment(ref this.matches);
 
-    public void IncrementMismatches() => Interlocked.Increment(ref this.mismatches);
+    internal void IncrementMismatches() => Interlocked.Increment(ref this.mismatches);
 }

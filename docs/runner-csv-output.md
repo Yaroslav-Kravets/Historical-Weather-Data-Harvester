@@ -20,7 +20,7 @@ How **Pipeline.Runner** writes CSV files after a run. For configuration, stage f
   - [`place-date-coverage.csv`](#place-date-coveragecsv)
 - [Place names](#place-names)
   - [How a place is resolved](#how-a-place-is-resolved)
-  - [Folder path self-check and aliases](#folder-path-self-check-and-aliases)
+  - [Place path check and aliases](#place-path-check-and-aliases)
   - [Unknown or unmapped places](#unknown-or-unmapped-places)
   - [Parse failures vs place failures](#parse-failures-vs-place-failures)
 - [Encoding and write behavior](#encoding-and-write-behavior)
@@ -207,7 +207,7 @@ Maps each `(place, date)` in parsed output to the source HTML file that contribu
 | `Date` | Archive date (`yyyy-MM-dd`) |
 | `SourceFilePath` | Winning HTML path for duplicate `(place, date)` resolution. Shape depends on the run source: host absolute path for a directory root; archive-relative entry key (e.g. `Kyiv/2003-01-01.html`) when `HistoricalWeatherFilesRoot` is a `.7z` (the opened archive is its own read-only file system) |
 
-Downstream consumers must not assume `SourceFilePath` is always a host absolute path. When multiple HTML files map to the same place and date, only the lexicographically last file path is kept (same rule as under "Folder path self-check and aliases"). The normalizer reads this manifest to attribute normalization errors and log messages to the correct source file; if the file is absent, it falls back to `{place}/{yyyy-MM-dd}`.
+Downstream consumers must not assume `SourceFilePath` is always a host absolute path. When multiple HTML files map to the same place and date, only the lexicographically last file path is kept (same rule as under "Place path check and aliases"). The normalizer reads this manifest to attribute normalization errors and log messages to the correct source file; if the file is absent, it falls back to `{place}/{yyyy-MM-dd}`.
 
 ### `parsed-places.csv`
 
@@ -263,7 +263,7 @@ Analysis appends to that stage’s text log and writes the same table to `result
 
 All rows for the same place are grouped under one English name, regardless of how many HTML files contributed.
 
-### Folder path self-check and aliases
+### Place path check and aliases
 
 During parsing, Pipeline.Parser compares the Cyrillic city name from the HTML with the place inferred from **directory segments** in the file path (not the filename). `PlaceConverter.TryFromFilePath` scans path segments from the leaf directory upward and matches against English aliases built at startup from:
 

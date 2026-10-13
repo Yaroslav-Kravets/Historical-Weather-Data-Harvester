@@ -42,7 +42,7 @@ public sealed class ParseResultOrganizer
         {
             var nameInHtml = result.CityName!.Trim();
 
-            if (!this.ApplyPathSelfCheck(
+            if (!this.ApplyPlacePathCheck(
                     filePath,
                     nameInHtml,
                     issueCollector,
@@ -104,7 +104,7 @@ public sealed class ParseResultOrganizer
             pathPlaceMismatchRejections);
     }
 
-    private bool ApplyPathSelfCheck(
+    private bool ApplyPlacePathCheck(
         string filePath,
         string nameInHtml,
         ParsingIssueCollector issueCollector,

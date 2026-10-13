@@ -99,7 +99,6 @@ public sealed class ParsingReportWriterTests
         var sourceRoot = InMemoryFileSystem.UnderRoot(fileSystem, "html");
         fileSystem.Directory.CreateDirectory(sourceRoot);
         var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
-        var matchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "ok.html");
         var mismatchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "bad.html");
 
         var issueCollector = new ParsingIssueCollector(new PlaceConverter());
@@ -115,9 +114,39 @@ public sealed class ParsingReportWriterTests
             issueCollector);
 
         var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Path Check Summary", html, StringComparison.Ordinal);
         Assert.Contains("Place Path Mismatches", html, StringComparison.Ordinal);
         Assert.Contains(mismatchPath, html, StringComparison.Ordinal);
-        Assert.DoesNotContain(matchPath, html, StringComparison.Ordinal);
+        Assert.Contains("Place path check matches", html, StringComparison.Ordinal);
+        Assert.Contains("Place path check mismatches", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WriteReport_CleanRun_OmitsPlacePathMismatchesTable()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportDirectory = InMemoryFileSystem.UnderRoot(fileSystem, Guid.NewGuid().ToString("N"));
+        fileSystem.Directory.CreateDirectory(reportDirectory);
+        var reportPath = fileSystem.Path.Combine(reportDirectory, "result.html");
+        var sourceRoot = InMemoryFileSystem.UnderRoot(fileSystem, "html");
+        fileSystem.Directory.CreateDirectory(sourceRoot);
+        var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
+
+        var issueCollector = new ParsingIssueCollector(new PlaceConverter());
+        issueCollector.AddPathPlaceMatch("Kyiv");
+
+        WriteMinimalReport(
+            fileSystem,
+            reportPath,
+            sourcePath: sourceRoot,
+            isSevenZipSource: false,
+            parsedPath,
+            issueCollector);
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Path Check Summary", html, StringComparison.Ordinal);
+        Assert.Contains("Place path check matches", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Place Path Mismatches", html, StringComparison.Ordinal);
     }
 
     private static void WriteMinimalReport(

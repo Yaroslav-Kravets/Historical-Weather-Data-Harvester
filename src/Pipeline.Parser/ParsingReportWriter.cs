@@ -110,9 +110,9 @@ public sealed class ParsingReportWriter
         var placePathCheckTotals = issueCollector.GetPlacePathCheckTotals();
         if (placePathCheckTotals.FilesChecked > 0)
         {
-            metrics.Add(("Path place files checked", placePathCheckTotals.FilesChecked.ToString(CultureInfo.InvariantCulture)));
-            metrics.Add(("Path place matches", placePathCheckTotals.Matches.ToString(CultureInfo.InvariantCulture)));
-            metrics.Add(("Path place mismatches", placePathCheckTotals.Mismatches.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Place path check files checked", placePathCheckTotals.FilesChecked.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Place path check matches", placePathCheckTotals.Matches.ToString(CultureInfo.InvariantCulture)));
+            metrics.Add(("Place path check mismatches", placePathCheckTotals.Mismatches.ToString(CultureInfo.InvariantCulture)));
         }
 
         writer.WriteTable(
