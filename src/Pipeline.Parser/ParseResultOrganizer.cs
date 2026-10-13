@@ -35,18 +35,18 @@ public sealed class ParseResultOrganizer
         Argument.ThrowIfNull(issueCollector);
         var structuredResults = new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase);
         var parsedPlacesByTranslatedName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var pathPlaceMismatchRejections = 0;
+        var placePathMismatchRejections = 0;
 
         foreach (var (filePath, result) in parseResults
             .OrderBy(entry => entry.FilePath, StringComparer.OrdinalIgnoreCase))
         {
             var nameInHtml = result.CityName!.Trim();
 
-            if (!this.ApplyPathSelfCheck(
+            if (!this.ApplyPlacePathCheck(
                     filePath,
                     nameInHtml,
                     issueCollector,
-                    ref pathPlaceMismatchRejections))
+                    ref placePathMismatchRejections))
             {
                 continue;
             }
@@ -90,7 +90,7 @@ public sealed class ParseResultOrganizer
                 dateEntry => new ParsedSourceFileEntry(pair.Key, dateEntry.Key, dateEntry.Value.FilePath)))
             .ToList();
 
-        PlacePathSelfCheckLogger.LogPerPlaceSummary(this.logger, issueCollector);
+        PlacePathCheckLogger.LogPerPlaceSummary(this.logger, issueCollector);
 
         var parsedPlaces = parsedPlacesByTranslatedName
             .Select(pair => (EnglishName: pair.Key, NameInHtml: pair.Value))
@@ -101,14 +101,14 @@ public sealed class ParseResultOrganizer
             structuredResults,
             parsedPlaces,
             sourceFileEntries,
-            pathPlaceMismatchRejections);
+            placePathMismatchRejections);
     }
 
-    private bool ApplyPathSelfCheck(
+    private bool ApplyPlacePathCheck(
         string filePath,
         string nameInHtml,
         ParsingIssueCollector issueCollector,
-        ref int pathPlaceMismatchRejections)
+        ref int placePathMismatchRejections)
     {
         if (!this.placeConverter.TryFromFilePath(filePath, out var pathPlace))
         {
@@ -117,19 +117,19 @@ public sealed class ParseResultOrganizer
             // files under arbitrary folders would be grouped by HTML alone.
             var htmlPlaceWithoutPath = this.placeConverter.FromNameInHtml(nameInHtml, filePath);
             var htmlPlaceFromUnknownPath = this.placeConverter.ToDisplayName(htmlPlaceWithoutPath);
-            issueCollector.AddPathPlaceMismatch(
+            issueCollector.AddPlacePathMismatch(
                 filePath,
                 ParsingIssueCollector.UnknownPlace,
                 nameInHtml,
                 htmlPlaceFromUnknownPath);
 
             this.logger.LogError(
-                "Place path self-check failed for {FilePath}: path has no known place segment but HTML city is '{HtmlCityName}' ('{HtmlPlace}').",
+                "Place path check failed for {FilePath}: path has no known place segment but HTML city is '{HtmlCityName}' ('{HtmlPlace}').",
                 filePath,
                 nameInHtml,
                 htmlPlaceFromUnknownPath);
 
-            pathPlaceMismatchRejections++;
+            placePathMismatchRejections++;
             return false;
         }
 
@@ -139,28 +139,24 @@ public sealed class ParseResultOrganizer
 
         if (pathPlace != htmlPlace)
         {
-            issueCollector.AddPathPlaceMismatch(
+            issueCollector.AddPlacePathMismatch(
                 filePath,
                 pathPlaceDisplay,
                 nameInHtml,
                 htmlPlaceDisplay);
 
             this.logger.LogError(
-                "Place path self-check failed for {FilePath}: path place '{PathPlace}' does not match HTML city '{HtmlCityName}' ('{HtmlPlace}').",
+                "Place path check failed for {FilePath}: path place '{PathPlace}' does not match HTML city '{HtmlCityName}' ('{HtmlPlace}').",
                 filePath,
                 pathPlaceDisplay,
                 nameInHtml,
                 htmlPlaceDisplay);
 
-            pathPlaceMismatchRejections++;
+            placePathMismatchRejections++;
             return false;
         }
 
-        issueCollector.AddPathPlaceMatch(
-            filePath,
-            pathPlaceDisplay,
-            nameInHtml,
-            htmlPlaceDisplay);
+        issueCollector.AddPlacePathMatch(htmlPlaceDisplay);
 
         return true;
     }

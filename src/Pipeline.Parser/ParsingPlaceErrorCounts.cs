@@ -14,7 +14,7 @@ public sealed class ParsingPlaceErrorCounts
     private int parseFailures;
     private int skippedFiles;
     private int duplicateDates;
-    private int pathPlaceMismatches;
+    private int placePathMismatches;
 
     public ParsingPlaceErrorCounts(string place)
     {
@@ -29,9 +29,9 @@ public sealed class ParsingPlaceErrorCounts
 
     public int DuplicateDates => Volatile.Read(ref this.duplicateDates);
 
-    public int PathPlaceMismatches => Volatile.Read(ref this.pathPlaceMismatches);
+    public int PlacePathMismatches => Volatile.Read(ref this.placePathMismatches);
 
-    public int TotalIssues => this.ParseFailures + this.SkippedFiles + this.DuplicateDates + this.PathPlaceMismatches;
+    public int TotalIssues => this.ParseFailures + this.SkippedFiles + this.DuplicateDates + this.PlacePathMismatches;
 
     internal void IncrementParseFailures() => Interlocked.Increment(ref this.parseFailures);
 
@@ -39,13 +39,13 @@ public sealed class ParsingPlaceErrorCounts
 
     internal void IncrementDuplicateDates() => Interlocked.Increment(ref this.duplicateDates);
 
-    internal void IncrementPathPlaceMismatches() => Interlocked.Increment(ref this.pathPlaceMismatches);
+    internal void IncrementPlacePathMismatches() => Interlocked.Increment(ref this.placePathMismatches);
 
     internal void CopyCountsFrom(ParsingPlaceErrorCounts source)
     {
         Volatile.Write(ref this.parseFailures, source.ParseFailures);
         Volatile.Write(ref this.skippedFiles, source.SkippedFiles);
         Volatile.Write(ref this.duplicateDates, source.DuplicateDates);
-        Volatile.Write(ref this.pathPlaceMismatches, source.PathPlaceMismatches);
+        Volatile.Write(ref this.placePathMismatches, source.PlacePathMismatches);
     }
 }

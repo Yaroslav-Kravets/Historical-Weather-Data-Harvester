@@ -52,25 +52,25 @@ public sealed class ParsingIssueCollectorTests
     }
 
     [Fact]
-    public void AddPathPlaceMismatch_IncrementsPathPlaceMismatchesOnly_NotParseFailures()
+    public void AddPlacePathMismatch_IncrementsPlacePathMismatchesOnly_NotParseFailures()
     {
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
 
         var snapshot = this.collector.GetSnapshot();
         var kharkivCounts = snapshot["Kharkiv"];
         Assert.Equal(0, kharkivCounts.ParseFailures);
-        Assert.Equal(1, kharkivCounts.PathPlaceMismatches);
+        Assert.Equal(1, kharkivCounts.PlacePathMismatches);
         Assert.Equal(1, kharkivCounts.TotalIssues);
     }
 
     [Fact]
-    public void GetPathSelfCheckTotals_AggregatesMatchesAndMismatches()
+    public void GetPlacePathCheckTotals_AggregatesMatchesAndMismatches()
     {
-        this.collector.AddPathPlaceMatch("/Real/Kyiv/a.html", "Kyiv", "Киеве", "Kyiv");
-        this.collector.AddPathPlaceMatch("/Real/Kyiv/b.html", "Kyiv", "Киеве", "Kyiv");
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
 
-        var totals = this.collector.GetPathSelfCheckTotals();
+        var totals = this.collector.GetPlacePathCheckTotals();
 
         Assert.Equal(3, totals.FilesChecked);
         Assert.Equal(2, totals.Matches);
@@ -78,13 +78,13 @@ public sealed class ParsingIssueCollectorTests
     }
 
     [Fact]
-    public void GetPathSelfCheckSummaryByPlace_GroupsByHtmlPlace()
+    public void GetPlacePathCheckSummaryByPlace_GroupsByHtmlPlace()
     {
-        this.collector.AddPathPlaceMatch("/Real/Kyiv/a.html", "Kyiv", "Киеве", "Kyiv");
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/b.html", "Kyiv", "Харькове", "Kharkiv");
-        this.collector.AddPathPlaceMatch("/Real/Kharkiv/c.html", "Kharkiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/b.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kharkiv");
 
-        var summaryByPlace = this.collector.GetPathSelfCheckSummaryByPlace();
+        var summaryByPlace = this.collector.GetPlacePathCheckSummaryByPlace();
 
         Assert.Equal(2, summaryByPlace.Count);
 
@@ -97,5 +97,48 @@ public sealed class ParsingIssueCollectorTests
         Assert.Equal(2, kharkivSummary.FilesChecked);
         Assert.Equal(1, kharkivSummary.Matches);
         Assert.Equal(1, kharkivSummary.Mismatches);
+    }
+
+    [Fact]
+    public void GetPlacePathMismatches_ReturnsMismatchRowsOnly()
+    {
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/bad.html", "Kyiv", "Харькове", "Kharkiv");
+
+        var mismatches = this.collector.GetPlacePathMismatches();
+
+        Assert.Single(mismatches);
+        Assert.Equal("/Real/Kyiv/bad.html", mismatches[0].FilePath);
+        Assert.Equal("Kyiv", mismatches[0].PathPlace);
+        Assert.Equal("Харькове", mismatches[0].HtmlCityName);
+        Assert.Equal("Kharkiv", mismatches[0].HtmlPlace);
+    }
+
+    [Fact]
+    public void ConcurrentPlacePathChecks_AreAllRecorded()
+    {
+        Parallel.For(0, 100, i =>
+        {
+            this.collector.AddPlacePathMatch("Kyiv");
+            this.collector.AddPlacePathMismatch($"/Real/Kyiv/{i}.html", "Kyiv", "Харькове", "Kharkiv");
+        });
+
+        var totals = this.collector.GetPlacePathCheckTotals();
+        Assert.Equal(200, totals.FilesChecked);
+        Assert.Equal(100, totals.Matches);
+        Assert.Equal(100, totals.Mismatches);
+
+        var summaries = this.collector.GetPlacePathCheckSummaryByPlace();
+        var kyivSummary = summaries.Single(summary => summary.Place == "Kyiv");
+        Assert.Equal(100, kyivSummary.Matches);
+        Assert.Equal(0, kyivSummary.Mismatches);
+        Assert.Equal(100, kyivSummary.FilesChecked);
+
+        var kharkivSummary = summaries.Single(summary => summary.Place == "Kharkiv");
+        Assert.Equal(0, kharkivSummary.Matches);
+        Assert.Equal(100, kharkivSummary.Mismatches);
+        Assert.Equal(100, kharkivSummary.FilesChecked);
+
+        Assert.Equal(100, this.collector.GetPlacePathMismatches().Count);
     }
 }

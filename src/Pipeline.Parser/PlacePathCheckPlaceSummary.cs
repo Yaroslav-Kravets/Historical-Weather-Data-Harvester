@@ -9,7 +9,7 @@
 
 namespace Pipeline.Parser;
 
-public sealed record PlacePathSelfCheckPlaceSummary(
+public sealed record PlacePathCheckPlaceSummary(
     string Place,
     int FilesChecked,
     int Matches,

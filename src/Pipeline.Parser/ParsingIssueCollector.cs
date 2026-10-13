@@ -19,7 +19,10 @@ public sealed class ParsingIssueCollector
     private readonly ConcurrentDictionary<string, ParsingPlaceErrorCounts> countsByPlace =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentBag<PlacePathSelfCheckEntry> pathSelfChecks = new();
+    private readonly ConcurrentDictionary<string, PlacePathCheckPlaceCounts> placePathCheckCountsByPlace =
+        new(StringComparer.OrdinalIgnoreCase);
+
+    private readonly ConcurrentBag<PlacePathMismatch> placePathMismatches = new();
     private readonly PlaceConverter placeConverter;
 
     public ParsingIssueCollector(PlaceConverter placeConverter)
@@ -45,64 +48,60 @@ public sealed class ParsingIssueCollector
         this.GetOrAdd(placeDisplayName).IncrementDuplicateDates();
     }
 
-    public void AddPathPlaceMismatch(
+    public void AddPlacePathMismatch(
         string filePath,
         string pathPlaceDisplay,
         string htmlCityName,
         string htmlPlaceDisplay)
     {
-        this.GetOrAdd(htmlPlaceDisplay).IncrementPathPlaceMismatches();
+        this.GetOrAdd(htmlPlaceDisplay).IncrementPlacePathMismatches();
+        this.GetOrAddPlacePathCheckCounts(htmlPlaceDisplay).IncrementMismatches();
 
-        this.pathSelfChecks.Add(new PlacePathSelfCheckEntry(
+        this.placePathMismatches.Add(new PlacePathMismatch(
             filePath,
             pathPlaceDisplay,
             htmlCityName,
-            htmlPlaceDisplay,
-            IsMatch: false));
+            htmlPlaceDisplay));
     }
 
-    public void AddPathPlaceMatch(
-        string filePath,
-        string pathPlaceDisplay,
-        string htmlCityName,
-        string htmlPlaceDisplay)
+    public void AddPlacePathMatch(string htmlPlaceDisplay)
     {
-        this.pathSelfChecks.Add(new PlacePathSelfCheckEntry(
-            filePath,
-            pathPlaceDisplay,
-            htmlCityName,
-            htmlPlaceDisplay,
-            IsMatch: true));
+        this.GetOrAddPlacePathCheckCounts(htmlPlaceDisplay).IncrementMatches();
     }
 
-    public IReadOnlyList<PlacePathSelfCheckEntry> GetPathSelfChecks() =>
-        this.pathSelfChecks
+    public IReadOnlyList<PlacePathMismatch> GetPlacePathMismatches() =>
+        this.placePathMismatches
             .OrderBy(entry => entry.FilePath, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
-    public PathSelfCheckTotals GetPathSelfCheckTotals()
+    public PlacePathCheckTotals GetPlacePathCheckTotals()
     {
-        var entries = this.pathSelfChecks.ToList();
-        var matches = entries.Count(entry => entry.IsMatch);
-        return new PathSelfCheckTotals(entries.Count, matches, entries.Count - matches);
+        var matches = 0;
+        var mismatches = 0;
+        foreach (var counts in this.placePathCheckCountsByPlace.Values)
+        {
+            matches += counts.Matches;
+            mismatches += counts.Mismatches;
+        }
+
+        return new PlacePathCheckTotals(matches + mismatches, matches, mismatches);
     }
 
     /// <summary>
-    /// Groups self-check entries by HTML-derived place name (<see cref="PlacePathSelfCheckEntry.HtmlPlaceDisplay"/>).
+    /// Groups place-path check counts by HTML-derived place name.
     /// </summary>
-    /// <returns>Per-place self-check summaries ordered by place name.</returns>
-    public IReadOnlyList<PlacePathSelfCheckPlaceSummary> GetPathSelfCheckSummaryByPlace() =>
-        this.pathSelfChecks
-            .GroupBy(entry => entry.HtmlPlaceDisplay, StringComparer.OrdinalIgnoreCase)
-            .Select(group =>
+    /// <returns>Per-place place-path check summaries ordered by place name.</returns>
+    public IReadOnlyList<PlacePathCheckPlaceSummary> GetPlacePathCheckSummaryByPlace() =>
+        this.placePathCheckCountsByPlace.Values
+            .Select(counts =>
             {
-                var matches = group.Count(entry => entry.IsMatch);
-                var filesChecked = group.Count();
-                return new PlacePathSelfCheckPlaceSummary(
-                    group.Key,
-                    filesChecked,
+                var matches = counts.Matches;
+                var mismatches = counts.Mismatches;
+                return new PlacePathCheckPlaceSummary(
+                    counts.Place,
+                    matches + mismatches,
                     matches,
-                    filesChecked - matches);
+                    mismatches);
             })
             .OrderBy(summary => summary.Place, StringComparer.OrdinalIgnoreCase)
             .ToList();
@@ -136,5 +135,10 @@ public sealed class ParsingIssueCollector
     private ParsingPlaceErrorCounts GetOrAdd(string place)
     {
         return this.countsByPlace.GetOrAdd(place, static key => new ParsingPlaceErrorCounts(key));
+    }
+
+    private PlacePathCheckPlaceCounts GetOrAddPlacePathCheckCounts(string place)
+    {
+        return this.placePathCheckCountsByPlace.GetOrAdd(place, static key => new PlacePathCheckPlaceCounts(key));
     }
 }

@@ -89,12 +89,73 @@ public sealed class ParsingReportWriterTests
         Assert.DoesNotContain("<img src=x onerror=", html, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void WriteReport_PlacePathMismatches_IncludesMismatchPathsOnly()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportDirectory = InMemoryFileSystem.UnderRoot(fileSystem, Guid.NewGuid().ToString("N"));
+        fileSystem.Directory.CreateDirectory(reportDirectory);
+        var reportPath = fileSystem.Path.Combine(reportDirectory, "result.html");
+        var sourceRoot = InMemoryFileSystem.UnderRoot(fileSystem, "html");
+        fileSystem.Directory.CreateDirectory(sourceRoot);
+        var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
+        var mismatchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "bad.html");
+
+        var issueCollector = new ParsingIssueCollector(new PlaceConverter());
+        issueCollector.AddPlacePathMatch("Kyiv");
+        issueCollector.AddPlacePathMismatch(mismatchPath, "Kyiv", "Харькове", "Kharkiv");
+
+        WriteMinimalReport(
+            fileSystem,
+            reportPath,
+            sourcePath: sourceRoot,
+            isSevenZipSource: false,
+            parsedPath,
+            issueCollector);
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Path Check Summary", html, StringComparison.Ordinal);
+        Assert.Contains("Place Path Mismatches", html, StringComparison.Ordinal);
+        Assert.Contains(mismatchPath, html, StringComparison.Ordinal);
+        Assert.Contains("Place path check matches", html, StringComparison.Ordinal);
+        Assert.Contains("Place path check mismatches", html, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void WriteReport_CleanRun_OmitsPlacePathMismatchesTable()
+    {
+        var fileSystem = InMemoryFileSystem.Create();
+        var reportDirectory = InMemoryFileSystem.UnderRoot(fileSystem, Guid.NewGuid().ToString("N"));
+        fileSystem.Directory.CreateDirectory(reportDirectory);
+        var reportPath = fileSystem.Path.Combine(reportDirectory, "result.html");
+        var sourceRoot = InMemoryFileSystem.UnderRoot(fileSystem, "html");
+        fileSystem.Directory.CreateDirectory(sourceRoot);
+        var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
+
+        var issueCollector = new ParsingIssueCollector(new PlaceConverter());
+        issueCollector.AddPlacePathMatch("Kyiv");
+
+        WriteMinimalReport(
+            fileSystem,
+            reportPath,
+            sourcePath: sourceRoot,
+            isSevenZipSource: false,
+            parsedPath,
+            issueCollector);
+
+        var html = fileSystem.File.ReadAllText(reportPath);
+        Assert.Contains("Place Path Check Summary", html, StringComparison.Ordinal);
+        Assert.Contains("Place path check matches", html, StringComparison.Ordinal);
+        Assert.DoesNotContain("Place Path Mismatches", html, StringComparison.Ordinal);
+    }
+
     private static void WriteMinimalReport(
         IFileSystem fileSystem,
         string reportPath,
         string sourcePath,
         bool isSevenZipSource,
-        string filePath)
+        string filePath,
+        ParsingIssueCollector? issueCollector = null)
     {
         var date = new DateTime(2003, 1, 1);
 
@@ -135,7 +196,7 @@ public sealed class ParsingReportWriterTests
             totalTimeSeconds: 1,
             averageTimePerFileSeconds: 1,
             resultsByPlace: new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase),
-            issueCollector: new ParsingIssueCollector(new PlaceConverter()),
+            issueCollector: issueCollector ?? new ParsingIssueCollector(new PlaceConverter()),
             flattenedParseResults: flattened);
     }
 }

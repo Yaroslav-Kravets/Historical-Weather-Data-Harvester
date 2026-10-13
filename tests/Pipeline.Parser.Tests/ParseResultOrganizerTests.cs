@@ -25,7 +25,7 @@ public sealed class ParseResultOrganizerTests
     }
 
     [Fact]
-    public void OrganizeByPlaceAndDate_AcceptsFile_WhenPathPlaceMatchesHtmlCity()
+    public void OrganizeByPlaceAndDate_AcceptsFile_WhenPlacePathMatchesHtmlCity()
     {
         var collector = new ParsingIssueCollector(this.placeConverter);
         var parseResults = new[]
@@ -35,16 +35,16 @@ public sealed class ParseResultOrganizerTests
 
         var result = this.organizer.OrganizeByPlaceAndDate(parseResults, collector);
 
-        Assert.Equal(0, result.PathPlaceMismatchRejections);
+        Assert.Equal(0, result.PlacePathMismatchRejections);
         Assert.Single(result.ResultsByPlace);
         Assert.True(result.ResultsByPlace.ContainsKey("Kyiv"));
         Assert.Single(result.ResultsByPlace["Kyiv"]);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Matches);
-        Assert.Equal(0, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Matches);
+        Assert.Equal(0, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
-    public void OrganizeByPlaceAndDate_RejectsFile_WhenPathPlaceDoesNotMatchHtmlCity()
+    public void OrganizeByPlaceAndDate_RejectsFile_WhenPlacePathDoesNotMatchHtmlCity()
     {
         var collector = new ParsingIssueCollector(this.placeConverter);
         var parseResults = new[]
@@ -54,15 +54,15 @@ public sealed class ParseResultOrganizerTests
 
         var result = this.organizer.OrganizeByPlaceAndDate(parseResults, collector);
 
-        Assert.Equal(1, result.PathPlaceMismatchRejections);
+        Assert.Equal(1, result.PlacePathMismatchRejections);
         Assert.Empty(result.ResultsByPlace);
         Assert.Empty(result.SourceFileEntries);
 
         var snapshot = collector.GetSnapshot();
-        Assert.Equal(1, snapshot["Kharkiv"].PathPlaceMismatches);
+        Assert.Equal(1, snapshot["Kharkiv"].PlacePathMismatches);
         Assert.Equal(1, snapshot["Kharkiv"].TotalIssues);
-        Assert.Equal(0, collector.GetPathSelfCheckTotals().Matches);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(0, collector.GetPlacePathCheckTotals().Matches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
@@ -76,10 +76,10 @@ public sealed class ParseResultOrganizerTests
 
         var result = this.organizer.OrganizeByPlaceAndDate(parseResults, collector);
 
-        Assert.Equal(1, result.PathPlaceMismatchRejections);
+        Assert.Equal(1, result.PlacePathMismatchRejections);
         Assert.Empty(result.ResultsByPlace);
-        Assert.Equal(1, collector.GetSnapshot()["Kyiv"].PathPlaceMismatches);
-        Assert.Equal(1, collector.GetPathSelfCheckTotals().Mismatches);
+        Assert.Equal(1, collector.GetSnapshot()["Kyiv"].PlacePathMismatches);
+        Assert.Equal(1, collector.GetPlacePathCheckTotals().Mismatches);
     }
 
     [Fact]
@@ -149,7 +149,7 @@ public sealed class ParseResultOrganizerTests
 
         var result = this.organizer.OrganizeByPlaceAndDate(parseResults, collector);
 
-        Assert.Equal(1, result.PathPlaceMismatchRejections);
+        Assert.Equal(1, result.PlacePathMismatchRejections);
         Assert.Empty(result.ResultsByPlace);
     }
 }
