@@ -21,7 +21,7 @@ fi
 
 # Helper to feed stream into command/pipe without generating empty newline when empty
 to_stream() {
-    local val="$1"
+    local val="${1:-}"
     if [[ -n "$val" ]]; then
         printf "%s\n" "$val"
     fi
@@ -29,7 +29,7 @@ to_stream() {
 
 # Helper to get line count of non-empty variable
 count_lines() {
-    local val="$1"
+    local val="${1:-}"
     if [[ -z "$val" ]]; then
         echo 0
     else
@@ -38,10 +38,10 @@ count_lines() {
 }
 
 # 1. Get sorted list of rule files in .cursor/rules (*.mdc)
-cursor_rules=$(find "$CURSOR_RULES_DIR" -maxdepth 1 -name "*.mdc" -exec basename {} \; | sort)
+cursor_rules=$(find "$CURSOR_RULES_DIR" -maxdepth 1 -type f -name "*.mdc" -exec basename {} \; | sort)
 
 # 2. Extract referenced rule files from AGENTS.md (*.mdc)
-raw_agents_rules=$( (grep -oE '\.cursor/rules/[^)]+\.mdc' "$AGENTS_FILE" 2>/dev/null || true) | sed -E 's|.*/||' | sort)
+raw_agents_rules=$( (grep -oE '\.cursor/rules/[^/)[:space:]]+\.mdc' "$AGENTS_FILE" 2>/dev/null || true) | sed -E 's|.*/||' | sort)
 agents_rules=$(to_stream "$raw_agents_rules" | sort -u)
 duplicate_agents=$(to_stream "$raw_agents_rules" | uniq -d)
 
@@ -91,4 +91,3 @@ fi
 
 echo "SUCCESS: All $cursor_count rules in .cursor/rules/ and AGENTS.md are fully synchronized."
 exit 0
-
