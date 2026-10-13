@@ -102,8 +102,8 @@ public sealed class ParsingReportWriterTests
         var mismatchPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "bad.html");
 
         var issueCollector = new ParsingIssueCollector(new PlaceConverter());
-        issueCollector.AddPathPlaceMatch("Kyiv");
-        issueCollector.AddPathPlaceMismatch(mismatchPath, "Kyiv", "Харькове", "Kharkiv");
+        issueCollector.AddPlacePathMatch("Kyiv");
+        issueCollector.AddPlacePathMismatch(mismatchPath, "Kyiv", "Харькове", "Kharkiv");
 
         WriteMinimalReport(
             fileSystem,
@@ -133,7 +133,7 @@ public sealed class ParsingReportWriterTests
         var parsedPath = fileSystem.Path.Combine(sourceRoot, "Kyiv", "parsed.html");
 
         var issueCollector = new ParsingIssueCollector(new PlaceConverter());
-        issueCollector.AddPathPlaceMatch("Kyiv");
+        issueCollector.AddPlacePathMatch("Kyiv");
 
         WriteMinimalReport(
             fileSystem,

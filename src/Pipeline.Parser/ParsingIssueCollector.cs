@@ -22,7 +22,7 @@ public sealed class ParsingIssueCollector
     private readonly ConcurrentDictionary<string, PlacePathCheckPlaceCounts> placePathCheckCountsByPlace =
         new(StringComparer.OrdinalIgnoreCase);
 
-    private readonly ConcurrentBag<PlacePathMismatch> pathPlaceMismatches = new();
+    private readonly ConcurrentBag<PlacePathMismatch> placePathMismatches = new();
     private readonly PlaceConverter placeConverter;
 
     public ParsingIssueCollector(PlaceConverter placeConverter)
@@ -48,29 +48,29 @@ public sealed class ParsingIssueCollector
         this.GetOrAdd(placeDisplayName).IncrementDuplicateDates();
     }
 
-    public void AddPathPlaceMismatch(
+    public void AddPlacePathMismatch(
         string filePath,
         string pathPlaceDisplay,
         string htmlCityName,
         string htmlPlaceDisplay)
     {
-        this.GetOrAdd(htmlPlaceDisplay).IncrementPathPlaceMismatches();
+        this.GetOrAdd(htmlPlaceDisplay).IncrementPlacePathMismatches();
         this.GetOrAddPlacePathCheckCounts(htmlPlaceDisplay).IncrementMismatches();
 
-        this.pathPlaceMismatches.Add(new PlacePathMismatch(
+        this.placePathMismatches.Add(new PlacePathMismatch(
             filePath,
             pathPlaceDisplay,
             htmlCityName,
             htmlPlaceDisplay));
     }
 
-    public void AddPathPlaceMatch(string htmlPlaceDisplay)
+    public void AddPlacePathMatch(string htmlPlaceDisplay)
     {
         this.GetOrAddPlacePathCheckCounts(htmlPlaceDisplay).IncrementMatches();
     }
 
     public IReadOnlyList<PlacePathMismatch> GetPlacePathMismatches() =>
-        this.pathPlaceMismatches
+        this.placePathMismatches
             .OrderBy(entry => entry.FilePath, StringComparer.OrdinalIgnoreCase)
             .ToList();
 

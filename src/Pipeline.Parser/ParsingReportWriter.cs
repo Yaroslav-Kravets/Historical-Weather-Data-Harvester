@@ -128,17 +128,7 @@ public sealed class ParsingReportWriter
             return;
         }
 
-        var tableData = summaryByPlace
-            .Select(summary => new
-            {
-                summary.Place,
-                FilesChecked = summary.FilesChecked,
-                summary.Matches,
-                summary.Mismatches,
-            })
-            .ToList();
-
-        writer.WriteTable(tableData, "Place Path Check Summary");
+        writer.WriteTable(summaryByPlace, "Place Path Check Summary");
     }
 
     private static void WritePlacePathMismatchesTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
@@ -161,7 +151,7 @@ public sealed class ParsingReportWriter
                 counts.ParseFailures,
                 counts.SkippedFiles,
                 counts.DuplicateDates,
-                counts.PathPlaceMismatches,
+                counts.PlacePathMismatches,
                 counts.TotalIssues,
             })
             .ToList();

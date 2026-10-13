@@ -52,23 +52,23 @@ public sealed class ParsingIssueCollectorTests
     }
 
     [Fact]
-    public void AddPathPlaceMismatch_IncrementsPathPlaceMismatchesOnly_NotParseFailures()
+    public void AddPlacePathMismatch_IncrementsPlacePathMismatchesOnly_NotParseFailures()
     {
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
 
         var snapshot = this.collector.GetSnapshot();
         var kharkivCounts = snapshot["Kharkiv"];
         Assert.Equal(0, kharkivCounts.ParseFailures);
-        Assert.Equal(1, kharkivCounts.PathPlaceMismatches);
+        Assert.Equal(1, kharkivCounts.PlacePathMismatches);
         Assert.Equal(1, kharkivCounts.TotalIssues);
     }
 
     [Fact]
     public void GetPlacePathCheckTotals_AggregatesMatchesAndMismatches()
     {
-        this.collector.AddPathPlaceMatch("Kyiv");
-        this.collector.AddPathPlaceMatch("Kyiv");
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/c.html", "Kyiv", "Харькове", "Kharkiv");
 
         var totals = this.collector.GetPlacePathCheckTotals();
 
@@ -80,9 +80,9 @@ public sealed class ParsingIssueCollectorTests
     [Fact]
     public void GetPlacePathCheckSummaryByPlace_GroupsByHtmlPlace()
     {
-        this.collector.AddPathPlaceMatch("Kyiv");
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/b.html", "Kyiv", "Харькове", "Kharkiv");
-        this.collector.AddPathPlaceMatch("Kharkiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/b.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kharkiv");
 
         var summaryByPlace = this.collector.GetPlacePathCheckSummaryByPlace();
 
@@ -102,8 +102,8 @@ public sealed class ParsingIssueCollectorTests
     [Fact]
     public void GetPlacePathMismatches_ReturnsMismatchRowsOnly()
     {
-        this.collector.AddPathPlaceMatch("Kyiv");
-        this.collector.AddPathPlaceMismatch("/Real/Kyiv/bad.html", "Kyiv", "Харькове", "Kharkiv");
+        this.collector.AddPlacePathMatch("Kyiv");
+        this.collector.AddPlacePathMismatch("/Real/Kyiv/bad.html", "Kyiv", "Харькове", "Kharkiv");
 
         var mismatches = this.collector.GetPlacePathMismatches();
 
@@ -115,12 +115,12 @@ public sealed class ParsingIssueCollectorTests
     }
 
     [Fact]
-    public void ConcurrentPathPlaceChecks_AreAllRecorded()
+    public void ConcurrentPlacePathChecks_AreAllRecorded()
     {
         Parallel.For(0, 100, i =>
         {
-            this.collector.AddPathPlaceMatch("Kyiv");
-            this.collector.AddPathPlaceMismatch($"/Real/Kyiv/{i}.html", "Kyiv", "Харькове", "Kharkiv");
+            this.collector.AddPlacePathMatch("Kyiv");
+            this.collector.AddPlacePathMismatch($"/Real/Kyiv/{i}.html", "Kyiv", "Харькове", "Kharkiv");
         });
 
         var totals = this.collector.GetPlacePathCheckTotals();

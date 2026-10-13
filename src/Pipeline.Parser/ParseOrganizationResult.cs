@@ -13,4 +13,4 @@ public sealed record ParseOrganizationResult(
     Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>> ResultsByPlace,
     List<(string EnglishName, string NameInHtml)> ParsedPlaces,
     List<ParsedSourceFileEntry> SourceFileEntries,
-    int PathPlaceMismatchRejections);
+    int PlacePathMismatchRejections);

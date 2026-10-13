@@ -122,8 +122,8 @@ public sealed class ParsingPipeline
             out var totalFileProcessingTime);
 
         var organizationResult = this.parseResultOrganizer.OrganizeByPlaceAndDate(rawParseResultsWithPaths, issueCollector);
-        parsingSuccessfulCount -= organizationResult.PathPlaceMismatchRejections;
-        parsingUnsuccessfulCount += organizationResult.PathPlaceMismatchRejections;
+        parsingSuccessfulCount -= organizationResult.PlacePathMismatchRejections;
+        parsingUnsuccessfulCount += organizationResult.PlacePathMismatchRejections;
         var flattenedRawParseResults = this.parsedFileInfoFlattener.Flatten(organizationResult.ResultsByPlace).ToList();
 
         totalStopwatch.Stop();

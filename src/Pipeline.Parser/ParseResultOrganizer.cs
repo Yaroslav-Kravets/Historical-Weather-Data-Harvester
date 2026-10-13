@@ -35,7 +35,7 @@ public sealed class ParseResultOrganizer
         Argument.ThrowIfNull(issueCollector);
         var structuredResults = new Dictionary<string, SortedDictionary<DateTime, ParsedDateEntry>>(StringComparer.OrdinalIgnoreCase);
         var parsedPlacesByTranslatedName = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-        var pathPlaceMismatchRejections = 0;
+        var placePathMismatchRejections = 0;
 
         foreach (var (filePath, result) in parseResults
             .OrderBy(entry => entry.FilePath, StringComparer.OrdinalIgnoreCase))
@@ -46,7 +46,7 @@ public sealed class ParseResultOrganizer
                     filePath,
                     nameInHtml,
                     issueCollector,
-                    ref pathPlaceMismatchRejections))
+                    ref placePathMismatchRejections))
             {
                 continue;
             }
@@ -101,14 +101,14 @@ public sealed class ParseResultOrganizer
             structuredResults,
             parsedPlaces,
             sourceFileEntries,
-            pathPlaceMismatchRejections);
+            placePathMismatchRejections);
     }
 
     private bool ApplyPlacePathCheck(
         string filePath,
         string nameInHtml,
         ParsingIssueCollector issueCollector,
-        ref int pathPlaceMismatchRejections)
+        ref int placePathMismatchRejections)
     {
         if (!this.placeConverter.TryFromFilePath(filePath, out var pathPlace))
         {
@@ -117,7 +117,7 @@ public sealed class ParseResultOrganizer
             // files under arbitrary folders would be grouped by HTML alone.
             var htmlPlaceWithoutPath = this.placeConverter.FromNameInHtml(nameInHtml, filePath);
             var htmlPlaceFromUnknownPath = this.placeConverter.ToDisplayName(htmlPlaceWithoutPath);
-            issueCollector.AddPathPlaceMismatch(
+            issueCollector.AddPlacePathMismatch(
                 filePath,
                 ParsingIssueCollector.UnknownPlace,
                 nameInHtml,
@@ -129,7 +129,7 @@ public sealed class ParseResultOrganizer
                 nameInHtml,
                 htmlPlaceFromUnknownPath);
 
-            pathPlaceMismatchRejections++;
+            placePathMismatchRejections++;
             return false;
         }
 
@@ -139,7 +139,7 @@ public sealed class ParseResultOrganizer
 
         if (pathPlace != htmlPlace)
         {
-            issueCollector.AddPathPlaceMismatch(
+            issueCollector.AddPlacePathMismatch(
                 filePath,
                 pathPlaceDisplay,
                 nameInHtml,
@@ -152,11 +152,11 @@ public sealed class ParseResultOrganizer
                 nameInHtml,
                 htmlPlaceDisplay);
 
-            pathPlaceMismatchRejections++;
+            placePathMismatchRejections++;
             return false;
         }
 
-        issueCollector.AddPathPlaceMatch(htmlPlaceDisplay);
+        issueCollector.AddPlacePathMatch(htmlPlaceDisplay);
 
         return true;
     }

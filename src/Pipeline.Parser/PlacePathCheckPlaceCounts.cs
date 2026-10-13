@@ -29,8 +29,6 @@ internal sealed class PlacePathCheckPlaceCounts
 
     public int Mismatches => Volatile.Read(ref this.mismatches);
 
-    public int FilesChecked => this.Matches + this.Mismatches;
-
     internal void IncrementMatches() => Interlocked.Increment(ref this.matches);
 
     internal void IncrementMismatches() => Interlocked.Increment(ref this.mismatches);
