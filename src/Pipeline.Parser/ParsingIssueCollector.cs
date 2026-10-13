@@ -69,30 +69,40 @@ public sealed class ParsingIssueCollector
         this.GetOrAddPlacePathCheckCounts(htmlPlaceDisplay).IncrementMatches();
     }
 
-    public IReadOnlyList<PlacePathMismatch> GetPathPlaceMismatches() =>
+    public IReadOnlyList<PlacePathMismatch> GetPlacePathMismatches() =>
         this.pathPlaceMismatches
             .OrderBy(entry => entry.FilePath, StringComparer.OrdinalIgnoreCase)
             .ToList();
 
     public PlacePathCheckTotals GetPlacePathCheckTotals()
     {
-        var placeCounts = this.placePathCheckCountsByPlace.Values.ToList();
-        var matches = placeCounts.Sum(counts => counts.Matches);
-        var mismatches = placeCounts.Sum(counts => counts.Mismatches);
+        var matches = 0;
+        var mismatches = 0;
+        foreach (var counts in this.placePathCheckCountsByPlace.Values)
+        {
+            matches += counts.Matches;
+            mismatches += counts.Mismatches;
+        }
+
         return new PlacePathCheckTotals(matches + mismatches, matches, mismatches);
     }
 
     /// <summary>
-    /// Groups path-place check counts by HTML-derived place name.
+    /// Groups place-path check counts by HTML-derived place name.
     /// </summary>
-    /// <returns>Per-place path-place check summaries ordered by place name.</returns>
+    /// <returns>Per-place place-path check summaries ordered by place name.</returns>
     public IReadOnlyList<PlacePathCheckPlaceSummary> GetPlacePathCheckSummaryByPlace() =>
         this.placePathCheckCountsByPlace.Values
-            .Select(counts => new PlacePathCheckPlaceSummary(
-                counts.Place,
-                counts.FilesChecked,
-                counts.Matches,
-                counts.Mismatches))
+            .Select(counts =>
+            {
+                var matches = counts.Matches;
+                var mismatches = counts.Mismatches;
+                return new PlacePathCheckPlaceSummary(
+                    counts.Place,
+                    matches + mismatches,
+                    matches,
+                    mismatches);
+            })
             .OrderBy(summary => summary.Place, StringComparer.OrdinalIgnoreCase)
             .ToList();
 

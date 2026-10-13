@@ -143,23 +143,13 @@ public sealed class ParsingReportWriter
 
     private static void WritePlacePathMismatchesTable(HtmlLogWriter writer, ParsingIssueCollector issueCollector)
     {
-        var mismatches = issueCollector.GetPathPlaceMismatches();
+        var mismatches = issueCollector.GetPlacePathMismatches();
         if (mismatches.Count == 0)
         {
             return;
         }
 
-        var tableData = mismatches
-            .Select(entry => new
-            {
-                entry.FilePath,
-                PathPlace = entry.PathPlaceDisplay,
-                HtmlCityName = entry.HtmlCityName,
-                HtmlPlace = entry.HtmlPlaceDisplay,
-            })
-            .ToList();
-
-        writer.WriteTable(tableData, "Place Path Mismatches");
+        writer.WriteTable(mismatches, "Place Path Mismatches");
     }
 
     private static void WriteErrorsPerPlaceTable(HtmlLogWriter writer, IReadOnlyList<ParsingPlaceErrorCounts> errorCountsByPlace)

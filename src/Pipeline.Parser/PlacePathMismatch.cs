@@ -11,6 +11,6 @@ namespace Pipeline.Parser;
 
 public sealed record PlacePathMismatch(
     string FilePath,
-    string PathPlaceDisplay,
+    string PathPlace,
     string HtmlCityName,
-    string HtmlPlaceDisplay);
+    string HtmlPlace);

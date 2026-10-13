@@ -9,12 +9,16 @@
 
 namespace Pipeline.Parser;
 
+using Common;
 using Microsoft.Extensions.Logging;
 
 internal static class PlacePathCheckLogger
 {
     public static void LogRunSummary(ILogger logger, ParsingIssueCollector issueCollector)
     {
+        Argument.ThrowIfNull(logger);
+        Argument.ThrowIfNull(issueCollector);
+
         var totals = issueCollector.GetPlacePathCheckTotals();
         if (totals.FilesChecked == 0)
         {
@@ -30,26 +34,19 @@ internal static class PlacePathCheckLogger
 
     public static void LogPerPlaceSummary(ILogger logger, ParsingIssueCollector issueCollector)
     {
+        Argument.ThrowIfNull(logger);
+        Argument.ThrowIfNull(issueCollector);
+
         foreach (var placeSummary in issueCollector.GetPlacePathCheckSummaryByPlace())
         {
-            if (placeSummary.Mismatches > 0)
-            {
-                logger.LogWarning(
-                    "Place path check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
-                    placeSummary.Place,
-                    placeSummary.Matches,
-                    placeSummary.Mismatches,
-                    placeSummary.FilesChecked);
-            }
-            else
-            {
-                logger.LogInformation(
-                    "Place path check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
-                    placeSummary.Place,
-                    placeSummary.Matches,
-                    placeSummary.Mismatches,
-                    placeSummary.FilesChecked);
-            }
+            var logLevel = placeSummary.Mismatches > 0 ? LogLevel.Warning : LogLevel.Information;
+            logger.Log(
+                logLevel,
+                "Place path check for {Place}: {Matches} matched, {Mismatches} mismatched ({FilesChecked} files checked).",
+                placeSummary.Place,
+                placeSummary.Matches,
+                placeSummary.Mismatches,
+                placeSummary.FilesChecked);
         }
     }
 }

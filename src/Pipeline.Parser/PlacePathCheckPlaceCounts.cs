@@ -9,6 +9,8 @@
 
 namespace Pipeline.Parser;
 
+using Common;
+
 internal sealed class PlacePathCheckPlaceCounts
 {
     private int matches;
@@ -16,6 +18,8 @@ internal sealed class PlacePathCheckPlaceCounts
 
     internal PlacePathCheckPlaceCounts(string place)
     {
+        Argument.ThrowIfNull(place);
+
         this.Place = place;
     }
 

@@ -100,17 +100,45 @@ public sealed class ParsingIssueCollectorTests
     }
 
     [Fact]
-    public void GetPathPlaceMismatches_ReturnsMismatchRowsOnly()
+    public void GetPlacePathMismatches_ReturnsMismatchRowsOnly()
     {
         this.collector.AddPathPlaceMatch("Kyiv");
         this.collector.AddPathPlaceMismatch("/Real/Kyiv/bad.html", "Kyiv", "Харькове", "Kharkiv");
 
-        var mismatches = this.collector.GetPathPlaceMismatches();
+        var mismatches = this.collector.GetPlacePathMismatches();
 
         Assert.Single(mismatches);
         Assert.Equal("/Real/Kyiv/bad.html", mismatches[0].FilePath);
-        Assert.Equal("Kyiv", mismatches[0].PathPlaceDisplay);
+        Assert.Equal("Kyiv", mismatches[0].PathPlace);
         Assert.Equal("Харькове", mismatches[0].HtmlCityName);
-        Assert.Equal("Kharkiv", mismatches[0].HtmlPlaceDisplay);
+        Assert.Equal("Kharkiv", mismatches[0].HtmlPlace);
+    }
+
+    [Fact]
+    public void ConcurrentPathPlaceChecks_AreAllRecorded()
+    {
+        Parallel.For(0, 100, i =>
+        {
+            this.collector.AddPathPlaceMatch("Kyiv");
+            this.collector.AddPathPlaceMismatch($"/Real/Kyiv/{i}.html", "Kyiv", "Харькове", "Kharkiv");
+        });
+
+        var totals = this.collector.GetPlacePathCheckTotals();
+        Assert.Equal(200, totals.FilesChecked);
+        Assert.Equal(100, totals.Matches);
+        Assert.Equal(100, totals.Mismatches);
+
+        var summaries = this.collector.GetPlacePathCheckSummaryByPlace();
+        var kyivSummary = summaries.Single(summary => summary.Place == "Kyiv");
+        Assert.Equal(100, kyivSummary.Matches);
+        Assert.Equal(0, kyivSummary.Mismatches);
+        Assert.Equal(100, kyivSummary.FilesChecked);
+
+        var kharkivSummary = summaries.Single(summary => summary.Place == "Kharkiv");
+        Assert.Equal(0, kharkivSummary.Matches);
+        Assert.Equal(100, kharkivSummary.Mismatches);
+        Assert.Equal(100, kharkivSummary.FilesChecked);
+
+        Assert.Equal(100, this.collector.GetPlacePathMismatches().Count);
     }
 }
